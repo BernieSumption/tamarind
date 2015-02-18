@@ -1,5 +1,3 @@
-# tamarind
+# tamarind - A WebGL shader editor
 
-## THIS IS A WORK IN PROGRESS
-
-Initial development is happening on the v0-experimental branch and there won't be much to see until an initial 0.0.1 release.
+Tamarind is named after the [tamarind](http://en.wikipedia.org/wiki/Tamarind) fruit, which is not connected in any meaningful way with WebGL, but is delicious in aromatic currys and cocktails. I suggest that you use lowercase tamarind as component in a whisky sour cocktail to add complexity in taste, and uppercase Tamarind as a component in web applications to remove complexity in shader rendering.
