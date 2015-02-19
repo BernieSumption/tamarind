@@ -1,0 +1,28 @@
+{
+  "name": "tamarind",
+  "version": "0.0.1",
+  "description": "An embeddable WebGL shader editor and utilities",
+  "main": "dist/tamarind.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BernieSumption/tamarind.git"
+  },
+  "keywords": [
+    "WebGL",
+    "shader",
+    "editor",
+    "canvas"
+  ],
+  "author": "Bernie Sumption",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BernieSumption/tamarind/issues"
+  },
+  "homepage": "https://github.com/BernieSumption/tamarind",
+  "devDependencies": {
+    "auto-reload-brunch": ">= 1.0 < 1.8",
+    "coffee-script-brunch": "^1.8.1",
+    "javascript-brunch": ">= 1.0 < 1.8",
+    "uglify-js-brunch": "^1.7.7"
+  }
+}
