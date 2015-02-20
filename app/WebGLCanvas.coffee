@@ -21,7 +21,7 @@ void main() {
 
 """
 
-VERTEX_INDEX_LOCATION = 0
+VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
 
 # An object associated with a canvas element that manages the WebGL context
@@ -65,7 +65,7 @@ class WebGLCanvas
 
     @_createContext()
 
-    @_createGeometry()
+    @_updateGeometry()
 
     @_compileShader(@_vertexShader, DEFAULT_VSHADER_SOURCE)
     @_compileShader(@_fragmentShader, DEFAULT_FSHADER_SOURCE)
@@ -73,21 +73,14 @@ class WebGLCanvas
 
     @_linkProgram()
 
+    @_setData()
+
     @_render()
-
-  _render: ->
-
-
-
-    @gl.clearColor 0, 0, 0, 1
-    @gl.clear @gl.COLOR_BUFFER_BIT
-    @gl.drawArrays @gl.POINTS, 0, @vertexCount
 
 
 
   ##
-  ## Scene construction functions that implement the resource management graph (see
-  ## diagram on class comment)
+  ## Functions for each step in the resource management graph (see diagram on class comment)
   ##
 
   _createContext: ->
@@ -129,7 +122,7 @@ class WebGLCanvas
     gl.attachShader @_program, @_vertexShader
     gl.attachShader @_program, @_fragmentShader
 
-    gl.bindAttribLocation(@_program, VERTEX_INDEX_LOCATION, "a_VertexIndex")
+    gl.bindAttribLocation(@_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, "a_VertexIndex")
     # Link the program object
     gl.linkProgram @_program
     # Check the result of linking
@@ -140,15 +133,11 @@ class WebGLCanvas
       error = gl.getProgramInfoLog(@_program)
       @trace.log 'Failed to link program: ' + error
 
-
-
-
-  _createGeometry: =>
+  _updateGeometry: ->
 
     gl = @gl
 
 
-    #gl.viewport 0, 0, width, height
 
     # Create vertex buffer
     vertices = new Float32Array(@vertexCount)
@@ -158,8 +147,34 @@ class WebGLCanvas
     gl.bindBuffer gl.ARRAY_BUFFER, @_vertexBuffer
     gl.bufferData gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW
 
-    gl.vertexAttribPointer VERTEX_INDEX_LOCATION, 1, gl.FLOAT, false, 0, 0
-    gl.enableVertexAttribArray VERTEX_INDEX_LOCATION
+    gl.vertexAttribPointer VERTEX_INDEX_ATTRIBUTE_LOCATION, 1, gl.FLOAT, false, 0, 0
+    gl.enableVertexAttribArray VERTEX_INDEX_ATTRIBUTE_LOCATION
+
+
+  _setData: ->
+
+
+
+  _render: ->
+
+
+    width = @canvas.offsetWidth * (window.devicePixelRatio || 1)
+    height = @canvas.offsetHeight * (window.devicePixelRatio || 1)
+
+    unless width is @_width and height is @_height
+
+      @_width = @canvas.width = width
+      @_height = @canvas.height = height
+
+      @gl.viewport 0, 0, width, height
+
+
+
+    @gl.clearColor 0, 0, 0, 1
+    @gl.clear @gl.COLOR_BUFFER_BIT
+    @gl.drawArrays @gl.POINTS, 0, @vertexCount
+
+
 
 
 
