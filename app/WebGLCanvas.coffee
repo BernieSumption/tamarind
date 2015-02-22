@@ -30,18 +30,17 @@ VALID_DRAWING_MODES = "POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRI
 #
 #           -- VERT
 #         /         \
-#  CONTEXT -- FRAG -- LINK -- DATA -- RENDER
-#         \                         /
-#           -- GEOM ---------------
+#  CONTEXT -- FRAG -- LINK -- RENDER
+#         \                 /
+#           -- GEOM --------
 #
 #
-# CONTEXT:  create WebGL context
+# CONTEXT:  set up WebGL context
 # VERT:     compile vertex shader
 # FRAG:     compile fragment shader
 # LINK:     link program, look up and cache attribute and uniform locations
 # GEOM:     generate vertex buffer with geometry
-# DATA:     set values for uniforms and update viewport dimensions if required
-# RENDER:   render scene
+# RENDER:   set values for uniforms, update viewport dimensions, render scene
 #
 # When the object is first created, each step is performed in dependency order from context creation
 # to rendering. Various API methods will invalidate a specific step, requiring that it and all dependent steps
@@ -55,19 +54,28 @@ class WebGLCanvas
     unless browserSupportsRequiredFeatures()
       throw new Error "This browser does not support WebGL"
 
+    @_contextRequiresSetup = true
+    @_fragmentShaderIsDirty = false
+    @_vertexShaderIsDirty = false
+    @_geometryIsDirty = false
+    @_renderIsDirty = false
+
     # The number of vertices drawn
     @vertexCount = 4
 
+    # GLSL source code for the fragment shader
     @fragmentShaderSource = DEFAULT_FSHADER_SOURCE
+
+    # GLSL source code for the vertex shader
     @vertexShaderSource = DEFAULT_VSHADER_SOURCE
 
     @canvas.addEventListener "webglcontextcreationerror", (event) =>
       @trace.error event.statusMessage
 
-    # @type WebGLRenderingContext
-    @gl = null
-
     @_createContext()
+
+    unless @gl
+      throw new Error("Could not create WebGL context for canvas")
 
     # A string mode anme as used by WebGL's drawArrays method, i.e. one of:
     # POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
@@ -84,15 +92,26 @@ class WebGLCanvas
 
     @_frameScheduled = false
 
-    @_updateGeometry()
+    if @_contextRequiresSetup
+      @_setupContext()
+      @_contextRequiresSetup = false
 
-    @_compileShader(@_vertexShader, @vertexShaderSource)
-    @_compileShader(@_fragmentShader, @fragmentShaderSource)
+    if @_geometryIsDirty
+      @_updateGeometry()
+      @_geometryIsDirty = false
 
+    requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
 
-    @_linkProgram()
+    if @_vertexShaderIsDirty
+      @_compileShader(@_vertexShader, @vertexShaderSource)
+      @_vertexShaderIsDirty = false
 
-    @_setData()
+    if @_fragmentShaderIsDirty
+      @_compileShader(@_fragmentShader, @fragmentShaderSource)
+      @_fragmentShaderIsDirty = false
+
+    if requiresLink
+      @_linkProgram()
 
     @_render()
 
@@ -103,7 +122,7 @@ class WebGLCanvas
   ##
 
   _createContext: ->
-    # create the WebGL context
+
     @nativeContext = @canvas.getContext("webgl") || @canvas.getContext("experimental-webgl");
 
     # passing undefined as an argument to any WebGL function is an
@@ -116,15 +135,8 @@ class WebGLCanvas
 
     @debugContext = WebGLDebugUtils.makeDebugContext @nativeContext, null, throwErrorOnUndefinedArgument, null
 
-    @gl = gl = if @_debugMode then @debugContext else @nativeContext
 
-    # create all the object
-    @_vertexBuffer = gl.createBuffer()
-    @_program = gl.createProgram()
-    @_vertexShader = gl.createShader(gl.VERTEX_SHADER)
-    @_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
-    gl.attachShader @_program, @_vertexShader
-    gl.attachShader @_program, @_fragmentShader
+    @gl = if @_debugMode then @debugContext else @nativeContext
 
 
     @_drawingModeNames = {}
@@ -134,6 +146,17 @@ class WebGLCanvas
         throw new Error(mode + " is not a valid drawing mode")
       @_drawingModeNames[mode] = intMode
       @_drawingModeNames[intMode] = mode
+
+  _setupContext: ->
+    gl = @gl
+
+    # create all the object
+    @_vertexBuffer = gl.createBuffer()
+    @_program = gl.createProgram()
+    @_vertexShader = gl.createShader(gl.VERTEX_SHADER)
+    @_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.attachShader @_program, @_vertexShader
+    gl.attachShader @_program, @_fragmentShader
 
 
   _compileShader: (shader, source) ->
@@ -177,11 +200,6 @@ class WebGLCanvas
     gl.enableVertexAttribArray VERTEX_INDEX_ATTRIBUTE_LOCATION
 
 
-  _setData: ->
-
-    @gl.lineWidth(5)
-
-
   _render: ->
     gl = @gl
 
@@ -218,6 +236,7 @@ class WebGLCanvas
 
   _setFragmentShaderSource: (value) ->
     @_fragmentShaderSource = value
+    @_fragmentShaderIsDirty = true
     @_scheduleFrame()
 
 
@@ -226,6 +245,7 @@ class WebGLCanvas
 
   _setVertexShaderSource: (value) ->
     @_vertexShaderSource = value
+    @_vertexShaderIsDirty = true
     @_scheduleFrame()
 
 
@@ -233,6 +253,7 @@ class WebGLCanvas
 
   _setVertexCount: (value) ->
     @_vertexCount = value
+    @_geometryIsDirty = true
     @_scheduleFrame()
 
 
