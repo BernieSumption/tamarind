@@ -54,12 +54,6 @@ class WebGLCanvas
     unless browserSupportsRequiredFeatures()
       throw new Error "This browser does not support WebGL"
 
-    @_contextRequiresSetup = true
-    @_fragmentShaderIsDirty = false
-    @_vertexShaderIsDirty = false
-    @_geometryIsDirty = false
-    @_renderIsDirty = false
-
     # The number of vertices drawn
     @vertexCount = 4
 
@@ -71,6 +65,10 @@ class WebGLCanvas
 
     @canvas.addEventListener "webglcontextcreationerror", (event) =>
       @trace.error event.statusMessage
+
+    @canvas.addEventListener "webglcontextlost", => @_handleContextLost()
+    @canvas.addEventListener "webglcontextrestored", => @_handleContextRestored()
+
 
     @_createContext()
 
@@ -92,9 +90,13 @@ class WebGLCanvas
 
     @_frameScheduled = false
 
+    if @_contextLost
+      return
+
     if @_contextRequiresSetup
       @_setupContext()
       @_contextRequiresSetup = false
+      @_vertexShaderIsDirty = @_fragmentShaderIsDirty = @_geometryIsDirty = true
 
     if @_geometryIsDirty
       @_updateGeometry()
@@ -135,6 +137,7 @@ class WebGLCanvas
 
     @debugContext = WebGLDebugUtils.makeDebugContext @nativeContext, null, throwErrorOnUndefinedArgument, null
 
+    @_contextRequiresSetup = true
 
     @gl = if @_debugMode then @debugContext else @nativeContext
 
@@ -225,6 +228,16 @@ class WebGLCanvas
     gl.drawArrays @_drawingMode, 0, @vertexCount
 
 
+  _handleContextLost: (e) ->
+    @trace.log "WebGL context lost, suspending all GL calls"
+    @_contextLost = true
+    (e || window.event).preventDefault()
+
+  _handleContextRestored: (e) ->
+    @trace.log "WebGL context restored, resuming rendering"
+    @_contextLost = false
+    @_contextRequiresSetup = true
+    @_scheduleFrame()
 
 
 
