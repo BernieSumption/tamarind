@@ -4,8 +4,16 @@ DEFAULT_VSHADER_SOURCE = """
 attribute float a_VertexIndex;
 
 void main() {
-  gl_Position = vec4(a_VertexIndex * .1, 0, 0, 1);
-  gl_PointSize = 10.0;
+  // 4 points, one in each corner, clockwise from top left
+  if (a_VertexIndex == 0.0) {
+    gl_Position.xy = vec2(-1, -1);
+  } else if (a_VertexIndex == 1.0) {
+    gl_Position.xy = vec2(1, -1);
+  } else if (a_VertexIndex == 2.0) {
+    gl_Position.xy = vec2(1, 1);
+  } else if (a_VertexIndex == 3.0) {
+    gl_Position.xy = vec2(-1, 1);
+  }
 }
 """
 
@@ -77,7 +85,7 @@ class WebGLCanvas
 
     # A string mode anme as used by WebGL's drawArrays method, i.e. one of:
     # POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
-    @drawingMode = "POINTS"
+    @drawingMode = "TRIANGLE_FAN"
 
     @_scheduleFrame()
 
@@ -207,8 +215,8 @@ class WebGLCanvas
     gl = @gl
 
 
-    width = @canvas.offsetWidth * (window.devicePixelRatio || 1)
-    height = @canvas.offsetHeight * (window.devicePixelRatio || 1)
+    width = Math.round(@canvas.offsetWidth * (window.devicePixelRatio || 1))
+    height = Math.round(@canvas.offsetHeight * (window.devicePixelRatio || 1))
 
     u_CanvasSize = gl.getUniformLocation(@_program, "u_CanvasSize")
     gl.uniform2f(u_CanvasSize, width, height)
