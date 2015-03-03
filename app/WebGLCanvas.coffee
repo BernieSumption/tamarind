@@ -19,15 +19,19 @@ void main() {
 
 DEFAULT_FSHADER_SOURCE = """
 precision mediump float;
+uniform vec2 u_CanvasSize;
 
 void main() {
-  gl_FragColor = vec4(gl_PointCoord, 1, 1);
+  gl_FragColor.r = u_CanvasSize.x;
+  gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
 }
 """
 
 VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
 VALID_DRAWING_MODES = "POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN".split(",")
+
+SET_UNIFORM_FUNCTION_NAMES = [null, "uniform1f", "uniform2f", "uniform3f", "uniform4f"]
 
 
 # An object associated with a canvas element that manages the WebGL context
@@ -71,6 +75,9 @@ class WebGLCanvas
     # GLSL source code for the vertex shader
     @vertexShaderSource = DEFAULT_VSHADER_SOURCE
 
+
+    @_uniformInfoByName = {}
+
     @canvas.addEventListener "webglcontextcreationerror", (event) =>
       @trace.error event.statusMessage
 
@@ -102,26 +109,31 @@ class WebGLCanvas
       return
 
     if @_contextRequiresSetup
-      @_setupContext()
+      unless @_setupContext()
+        return
       @_contextRequiresSetup = false
       @_vertexShaderIsDirty = @_fragmentShaderIsDirty = @_geometryIsDirty = true
 
     if @_geometryIsDirty
-      @_updateGeometry()
+      unless @_updateGeometry()
+        return
       @_geometryIsDirty = false
 
     requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
 
     if @_vertexShaderIsDirty
-      @_compileShader(@_vertexShader, @vertexShaderSource)
+      unless @_compileShader(@_vertexShader, @vertexShaderSource)
+        return
       @_vertexShaderIsDirty = false
 
     if @_fragmentShaderIsDirty
-      @_compileShader(@_fragmentShader, @fragmentShaderSource)
+      unless @_compileShader(@_fragmentShader, @fragmentShaderSource)
+        return
       @_fragmentShaderIsDirty = false
 
     if requiresLink
-      @_linkProgram()
+      unless @_linkProgram()
+        return
 
     @_render()
 
@@ -161,13 +173,16 @@ class WebGLCanvas
   _setupContext: ->
     gl = @gl
 
-    # create all the object
-    @_vertexBuffer = gl.createBuffer()
-    @_program = gl.createProgram()
-    @_vertexShader = gl.createShader(gl.VERTEX_SHADER)
-    @_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+    unless (
+      (@_vertexBuffer = gl.createBuffer()) &&
+      (@_program = gl.createProgram()) &&
+      (@_vertexShader = gl.createShader(gl.VERTEX_SHADER)) &&
+      (@_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)))
+      return false
     gl.attachShader @_program, @_vertexShader
     gl.attachShader @_program, @_fragmentShader
+
+    return true
 
 
   _compileShader: (shader, source) ->
@@ -178,22 +193,39 @@ class WebGLCanvas
     unless compiled
       error = gl.getShaderInfoLog(shader)
       @trace.log 'Failed to compile shader: ' + error
+      return false
+
+    return true
 
 
   _linkProgram: () ->
     gl = @gl
     # Attach the shader objects
 
-    gl.bindAttribLocation(@_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, "a_VertexIndex")
+    gl.bindAttribLocation @_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, "a_VertexIndex"
+
     # Link the program object
     gl.linkProgram @_program
+
     # Check the result of linking
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
-    if linked
-      @gl.useProgram @_program
-    else
+    unless linked
       error = gl.getProgramInfoLog(@_program)
       @trace.log 'Failed to link program: ' + error
+      return false
+
+    gl.useProgram @_program
+
+    # get a list of uniforms
+    numUniforms = gl.getProgramParameter(@_program, gl.ACTIVE_UNIFORMS)
+    @_uniformInfoByName = {}
+    for i in [0..numUniforms-1] by 1
+      uniform = gl.getActiveUniform(@_program, i)
+      @_uniformInfoByName[uniform.name] =
+        location: gl.getUniformLocation(@_program, i)
+        type: uniform.type
+
+    return true
 
   _updateGeometry: ->
 
@@ -210,6 +242,8 @@ class WebGLCanvas
     gl.vertexAttribPointer VERTEX_INDEX_ATTRIBUTE_LOCATION, 1, gl.FLOAT, false, 0, 0
     gl.enableVertexAttribArray VERTEX_INDEX_ATTRIBUTE_LOCATION
 
+    return true
+
 
   _render: ->
     gl = @gl
@@ -218,9 +252,7 @@ class WebGLCanvas
     width = Math.round(@canvas.offsetWidth * (window.devicePixelRatio || 1))
     height = Math.round(@canvas.offsetHeight * (window.devicePixelRatio || 1))
 
-    u_CanvasSize = gl.getUniformLocation(@_program, "u_CanvasSize")
-    gl.uniform2f(u_CanvasSize, width, height)
-
+    @_setUniform "u_CanvasSize", width, height
 
     unless width is @_width and height is @_height
 
@@ -231,10 +263,28 @@ class WebGLCanvas
 
 
 
-    gl.clearColor 0, 0, 0, 1
+    gl.clearColor 0, 0, 0, 0
     gl.clear gl.COLOR_BUFFER_BIT
     gl.drawArrays @_drawingMode, 0, @vertexCount
 
+    return true
+
+  _setUniform: (name, args...) ->
+    gl = @gl
+    uniformInfo = @_uniformInfoByName[name]
+
+    unless uniformInfo
+      return false
+
+    uniformInfo.location = gl.getUniformLocation(@_program, "u_CanvasSize")
+
+    f = SET_UNIFORM_FUNCTION_NAMES[args.length]
+    unless f
+      throw new Error("Can't set uniform with #{args.length} values")
+
+    gl[f](uniformInfo.location, args...)
+
+    return true
 
   _handleContextLost: (e) ->
     @trace.log "WebGL context lost, suspending all GL calls"
