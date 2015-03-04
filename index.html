@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebGL playground</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
+    <style>
+        html, body, canvas {
+            width:100%;
+            height:100%;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        #viewport {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 350px;
+            bottom: 0;
+            padding: 20px;
+            border-left: solid 1px #999;
+        }
+        #controls {
+            width: 350px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <input type="number" id="vertexCount" min="1">
+    <select id="drawingMode">
+        <option>POINTS</option>
+        <option>LINES</option>
+        <option>LINE_LOOP</option>
+        <option>LINE_STRIP</option>
+        <option>TRIANGLES</option>
+        <option>TRIANGLE_STRIP</option>
+        <option>TRIANGLE_FAN</option>
+    </select>
+    <p>Vertex shader</p>
+    <textarea id="vertexShaderSource"></textarea>
+    <p>Fragment shader</p>
+    <textarea id="fragmentShaderSource"></textarea>
+    <p>Compile events</p>
+    <textarea id="compileEvents"></textarea>
+</div>
+<div id="viewport">
+    <canvas id="displayArea"></canvas>
+</div>
+<script src="tamarind.js"></script>
+<script>
+
+    canvas = new WebGLCanvas(document.getElementById("displayArea"), true);
+
+
+    bindInputToProperty("vertexCount");
+    bindInputToProperty("drawingMode");
+    bindInputToProperty("fragmentShaderSource");
+    bindInputToProperty("vertexShaderSource");
+
+
+    canvas.on(WebGLCanvas.COMPILE_ERROR, function(event) {
+        console.error(event);
+        var compileEvents = document.getElementById("compileEvents");
+        var prefix = compileEvents.value.length ? "\n" : ""
+        console.log ("'"+event+'"')
+        compileEvents.value = compileEvents.value + prefix + event
+    })
+
+    function bindInputToProperty(propertyName, type) {
+        var input = document.getElementById(propertyName);
+        input.value = canvas[propertyName];
+        var update = function() {
+            canvas[propertyName] = type ? type(input.value) : input.value;
+        }
+        input.addEventListener("input", update);
+    }
+</script>
+<noscript>JavaScript is disabled, so this demo won't work.</noscript>
+
+</body>
+</html>
