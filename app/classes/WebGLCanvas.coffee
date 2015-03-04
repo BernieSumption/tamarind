@@ -1,9 +1,38 @@
 
-VSHADER_HEADER = """
+
+###
+  An object associated with a canvas element that manages the WebGL context
+  and associated resources.
+
+  THE RESOURCE MANAGEMENT GRAPH
+
+
+             -- VERT
+           /         \
+    CONTEXT -- FRAG -- LINK -- RENDER
+           \                 /
+             -- GEOM --------
+
+
+  1. CONTEXT:  set up WebGL context
+  2. VERT:     compile vertex shader
+  3. FRAG:     compile fragment shader
+  4. LINK:     link program, look up and cache attribute and uniform locations
+  5. GEOM:     generate vertex buffer with geometry
+  6. RENDER:   set values for uniforms, update viewport dimensions, render scene
+
+  When the object is first created, each step is performed in dependency order from context creation
+  to rendering. Various API methods will invalidate a specific step, requiring that it and all dependent steps
+  are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
+  requires uniforms to be set again.
+###
+class WebGLCanvas extends EventEmitter
+
+  VSHADER_HEADER = """
 attribute float a_VertexIndex;
 """
 
-DEFAULT_VSHADER_SOURCE = """
+  DEFAULT_VSHADER_SOURCE = """
 void main() {
   // 4 points, one in each corner, clockwise from top left
   if (a_VertexIndex == 0.0) {
@@ -18,68 +47,60 @@ void main() {
 }
 """
 
-FSHADER_HEADER = """
+  FSHADER_HEADER = """
 precision mediump float;
 uniform vec2 u_CanvasSize;
 """
 
-DEFAULT_FSHADER_SOURCE = """
+  DEFAULT_FSHADER_SOURCE = """
 void main() {
   gl_FragColor.r = u_CanvasSize.x;
   gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
 }
 """
 
-VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
+  VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
-VALID_DRAWING_MODES = "POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN".split(",")
+  VALID_DRAWING_MODES = "POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN".split(",")
 
-SET_UNIFORM_FUNCTION_NAMES = [null, "uniform1f", "uniform2f", "uniform3f", "uniform4f"]
+  SET_UNIFORM_FUNCTION_NAMES = [null, "uniform1f", "uniform2f", "uniform3f", "uniform4f"]
 
-
-# An object associated with a canvas element that manages the WebGL context
-# and associated resources.
-#
-# THE RESOURCE MANAGEMENT GRAPH
-#
-#
-#           -- VERT
-#         /         \
-#  CONTEXT -- FRAG -- LINK -- RENDER
-#         \                 /
-#           -- GEOM --------
-#
-#
-# CONTEXT:  set up WebGL context
-# VERT:     compile vertex shader
-# FRAG:     compile fragment shader
-# LINK:     link program, look up and cache attribute and uniform locations
-# GEOM:     generate vertex buffer with geometry
-# RENDER:   set values for uniforms, update viewport dimensions, render scene
-#
-# When the object is first created, each step is performed in dependency order from context creation
-# to rendering. Various API methods will invalidate a specific step, requiring that it and all dependent steps
-# are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
-# requires uniforms to be set again.
-#
-class WebGLCanvas extends EventEmitter
-
+  # Event name for compilation error events
+  # @example
+  #     canvas.on WebGLCanvas.COMPILE_ERROR, (event) -> console.log event
   @COMPILE_ERROR = "compileError"
 
+  ##
+  ## PUBLIC MEMBER PROPERTIES
+  ##
+
+
+  # @property [int] vertexCount
+  # The number of vertices drawn.
+  # Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex
+  # shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
+  # `vertexCount - 1` that it can use to distinguish vertices
+  vertexCount: 4
+
+  # @property [string] GLSL source code for the fragment shader, excluding
+  # attribute and uniform definitions which will be added automatically
+  fragmentShaderSource: DEFAULT_FSHADER_SOURCE
+
+  # @property [string] GLSL source code for the vertex shader, excluding
+  # attribute and uniform definitions which will be added automatically
+  vertexShaderSource: DEFAULT_VSHADER_SOURCE
+
+  ##
+  ## PUBLIC API METHODS
+  ##
+
+  # @param [HTMLCanvasElement] @canvas the canvas element to render onto
+  # @param [boolean] @debugMode the initial value of the `debugMode` property
   constructor: (@canvas, @debugMode=false) ->
     super()
 
     unless browserSupportsRequiredFeatures()
       throw new Error "This browser does not support WebGL"
-
-    # The number of vertices drawn
-    @vertexCount = 4
-
-    # GLSL source code for the fragment shader
-    @fragmentShaderSource = DEFAULT_FSHADER_SOURCE
-
-    # GLSL source code for the vertex shader
-    @vertexShaderSource = DEFAULT_VSHADER_SOURCE
 
 
     @_uniformInfoByName = {}
@@ -102,11 +123,19 @@ class WebGLCanvas extends EventEmitter
 
     @_scheduleFrame()
 
+
+  ##
+  ## PRIVATE METHODS
+  ##
+
+
+  # @private
   _scheduleFrame: ->
     unless @_frameScheduled
       @_frameScheduled = true
-      requestAnimationFrame(@_doFrame)
+      requestAnimationFrame @_doFrame
 
+  # @private
   _doFrame: =>
 
     @_frameScheduled = false
@@ -145,10 +174,11 @@ class WebGLCanvas extends EventEmitter
 
 
 
-  ##
-  ## Functions for each step in the resource management graph (see diagram on class comment)
-  ##
+  #
+  # Functions for each step in the resource management graph (see diagram on class comment)
+  #
 
+  # @private
   _createContext: ->
 
     @nativeContext = @canvas.getContext("webgl") || @canvas.getContext("experimental-webgl");
@@ -176,6 +206,8 @@ class WebGLCanvas extends EventEmitter
       @_drawingModeNames[mode] = intMode
       @_drawingModeNames[intMode] = mode
 
+
+  # @private
   _setupContext: ->
     gl = @gl
 
@@ -191,6 +223,7 @@ class WebGLCanvas extends EventEmitter
     return true
 
 
+  # @private
   _compileShader: (shader, source) ->
     gl = @gl
     gl.shaderSource shader, source
@@ -204,6 +237,7 @@ class WebGLCanvas extends EventEmitter
     return true
 
 
+  # @private
   _linkProgram: () ->
     gl = @gl
     # Attach the shader objects
@@ -233,6 +267,8 @@ class WebGLCanvas extends EventEmitter
 
     return true
 
+
+  # @private
   _updateGeometry: ->
 
     gl = @gl
@@ -251,6 +287,7 @@ class WebGLCanvas extends EventEmitter
     return true
 
 
+  # @private
   _render: ->
     gl = @gl
 
@@ -275,6 +312,8 @@ class WebGLCanvas extends EventEmitter
 
     return true
 
+
+  # @private
   _setUniform: (name, args...) ->
     gl = @gl
     uniformInfo = @_uniformInfoByName[name]
@@ -292,11 +331,15 @@ class WebGLCanvas extends EventEmitter
 
     return true
 
+
+  # @private
   _handleContextLost: (e) ->
     @trace.log "WebGL context lost, suspending all GL calls"
     @_contextLost = true
     (e || window.event).preventDefault()
 
+
+  # @private
   _handleContextRestored: (e) ->
     @trace.log "WebGL context restored, resuming rendering"
     @_contextLost = false
@@ -308,33 +351,41 @@ class WebGLCanvas extends EventEmitter
   ## GETTERS AND SETTERS
   ##
 
+  # @private
   _getFragmentShaderSource: -> @_fragmentShaderSource
 
+  # @private
   _setFragmentShaderSource: (value) ->
     @_fragmentShaderSource = value
     @_fragmentShaderIsDirty = true
     @_scheduleFrame()
 
 
+  # @private
   _getVertexShaderSource: ->
     @_vertexShaderSource
 
+  # @private
   _setVertexShaderSource: (value) ->
     @_vertexShaderSource = value
     @_vertexShaderIsDirty = true
     @_scheduleFrame()
 
 
+  # @private
   _getVertexCount: -> @_vertexCount
 
+  # @private
   _setVertexCount: (value) ->
     @_vertexCount = value
     @_geometryIsDirty = true
     @_scheduleFrame()
 
 
+  # @private
   _getDrawingMode: -> @_drawingModeNames[@_drawingMode]
 
+  # @private
   _setDrawingMode: (value) ->
     intValue = @gl[value]
     if intValue == undefined
@@ -343,8 +394,10 @@ class WebGLCanvas extends EventEmitter
     @_scheduleFrame()
 
 
+  # @private
   _getDebugMode: -> @_debugMode
 
+  # @private
   _setDebugMode: (value) ->
     value = !!value
     if @_debugMode != value
@@ -356,7 +409,6 @@ class WebGLCanvas extends EventEmitter
       else
         @trace = new NullTracer
         @gl = @debugContext
-
 
 
 defineClassProperty(WebGLCanvas, "debugMode")

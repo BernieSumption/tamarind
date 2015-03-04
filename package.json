@@ -13,6 +13,12 @@
     "editor",
     "canvas"
   ],
+  "scripts": {
+    "clean": "rm -rf node_modules debug dist",
+    "build": "npm install && node_modules/brunch/bin/brunch build --production",
+    "docs": "npm install && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/branding && cp branding/logo.png docs/branding/logo.png",
+    "dist": "npm run clean && npm run build && npm run docs"
+  },
   "author": "Bernie Sumption",
   "license": "MIT",
   "bugs": {
@@ -21,6 +27,8 @@
   "homepage": "https://github.com/BernieSumption/tamarind",
   "devDependencies": {
     "auto-reload-brunch": ">= 1.0 < 1.8",
+    "brunch": "^1.7.20",
+    "codo": "https://github.com/coffeedoc/codo/archive/6e84a7d7837d95cbd9477d91fd4226652c16aa52.tar.gz",
     "coffee-script-brunch": "^1.8.1",
     "javascript-brunch": ">= 1.0 < 1.8",
     "uglify-js-brunch": "^1.7.7"

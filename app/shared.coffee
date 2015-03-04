@@ -1,53 +1,10 @@
 
-class ConsoleTracer
-
-  log: (m) ->
-    if window.console
-      console.log m
-
-  error: (m) ->
-    if window.console
-      console.error m
-
-class NullTracer
-  log: ->
-  error: ->
 
 
-class EventEmitter
-  constructor: ->
-    @_events = {}
 
-  on: (eventName, callback) ->
-    @_validateEventArgs eventName, callback
-    @_getEventList(eventName).push callback
-
-  off: (eventName, callback) ->
-    @_validateEventArgs eventName, callback
-    list = @_getEventList eventName
-    index = list.indexOf callback
-    unless index == -1
-      list.splice index, 1
-    return
-
-  emit: (eventName, event) ->
-    @_validateEventArgs eventName
-    for f in @_getEventList eventName
-      f.call this, event
-
-  _getEventList: (eventName) ->
-    unless @_events[eventName]
-      @_events[eventName] = []
-    @_events[eventName]
-
-
-  _validateEventArgs: (eventName, callback) ->
-    if typeof eventName != "string"
-      throw new Error("eventName must be a string")
-    if arguments.length > 1 && typeof callback != "function"
-      throw new Error("callback must be a function")
-
-
+###
+  Return false if the browser can't handle the awesome.
+###
 browserSupportsRequiredFeatures = ->
   if browserSupportsRequiredFeatures.__cache == undefined
 
@@ -60,10 +17,24 @@ browserSupportsRequiredFeatures = ->
   return browserSupportsRequiredFeatures.__cache
 
 
-# Define a property on a class. If the property is "fooBar" then this
-# method will require one or both of "_getFooBar()" or "_setFooBar(value)"
-# to exist on the class and create a read-write, read-only or write-only
-# property as appropiriate.
+###
+  Define a property on a class.
+
+  If the property is `"fooBar"` then this method will require one or both of
+  `_getFooBar()` or `_setFooBar(value)` to exist on the class and create a
+  read-write, read-only or write-only property as appropriate.
+
+  Additionally, a default value for the property can be provided in the class
+  definition alongside the method declarations.
+
+  @example
+    class Foo
+      prop: 4 # default value, will be set as prototype._prop = 4
+      _getProp: -> @_prop
+      _setProp: (val) -> @_prop = val
+
+    defineClassProperty Foo, "prop"
+###
 defineClassProperty = (cls, propertyName) ->
   PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1);
   getter = cls.prototype["_get" + PropertyName]
@@ -71,6 +42,10 @@ defineClassProperty = (cls, propertyName) ->
 
   unless getter or setter
     throw new Error(propertyName + " must name a getter or a setter")
+
+  initialValue = cls.prototype[propertyName]
+  unless initialValue == undefined
+    cls.prototype["_" + propertyName] = initialValue
 
   config =
     enumerable: true

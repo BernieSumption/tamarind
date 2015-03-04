@@ -1,0 +1,6 @@
+--name       "Tamarind"
+--readme     README.md
+--title      "Tamarind Documentation"
+--extension  coffee
+--output     ./docs
+./app
