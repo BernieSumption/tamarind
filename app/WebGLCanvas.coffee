@@ -1,8 +1,9 @@
 
+VSHADER_HEADER = """
+attribute float a_VertexIndex;
+"""
 
 DEFAULT_VSHADER_SOURCE = """
-attribute float a_VertexIndex;
-
 void main() {
   // 4 points, one in each corner, clockwise from top left
   if (a_VertexIndex == 0.0) {
@@ -17,10 +18,12 @@ void main() {
 }
 """
 
-DEFAULT_FSHADER_SOURCE = """
+FSHADER_HEADER = """
 precision mediump float;
 uniform vec2 u_CanvasSize;
+"""
 
+DEFAULT_FSHADER_SOURCE = """
 void main() {
   gl_FragColor.r = u_CanvasSize.x;
   gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
@@ -122,12 +125,12 @@ class WebGLCanvas
     requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
 
     if @_vertexShaderIsDirty
-      unless @_compileShader(@_vertexShader, @vertexShaderSource)
+      unless @_compileShader(@_vertexShader, VSHADER_HEADER + @vertexShaderSource)
         return
       @_vertexShaderIsDirty = false
 
     if @_fragmentShaderIsDirty
-      unless @_compileShader(@_fragmentShader, @fragmentShaderSource)
+      unless @_compileShader(@_fragmentShader, FSHADER_HEADER + @fragmentShaderSource)
         return
       @_fragmentShaderIsDirty = false
 
