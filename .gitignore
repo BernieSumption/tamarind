@@ -1,3 +1,5 @@
 node_modules
 debug
 .idea
+
+npm-debug.log

@@ -1,8 +1,12 @@
+
+
 exports.config =
   # See http://brunch.io/#documentation for docs.
   files:
     javascripts:
-      joinTo: 'tamarind.js'
+      joinTo:
+        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf(".tests.coffee") != -1
+        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf(".tests.coffee") == -1
       order:
         before: 'app/shared.coffee'
 

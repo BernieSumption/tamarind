@@ -15,9 +15,11 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules debug dist",
-    "build": "npm install && node_modules/brunch/bin/brunch build --production",
-    "docs": "npm install && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
-    "dist": "npm run clean && npm run build && npm run docs"
+    "test": "npm install && npm run build:debug && node_modules/.bin/karma start --browsers PhantomJS --single-run",
+    "build:debug": "npm install && node_modules/brunch/bin/brunch build",
+    "build:dist": "npm install && node_modules/brunch/bin/brunch build --production",
+    "docs": "npm install && node_modules/brunch/bin/brunch build && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
+    "dist": "npm run clean && npm run test && npm run build && npm run docs"
   },
   "author": "Bernie Sumption",
   "license": "MIT",
@@ -29,8 +31,16 @@
     "auto-reload-brunch": ">= 1.0 < 1.8",
     "brunch": "^1.7.20",
     "codo": "https://github.com/coffeedoc/codo/archive/6e84a7d7837d95cbd9477d91fd4226652c16aa52.tar.gz",
+    "coffee-script": "^1.9.1",
     "coffee-script-brunch": "^1.8.1",
+    "jasmine-core": "^2.2.0",
     "javascript-brunch": ">= 1.0 < 1.8",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-cli": "0.0.4",
+    "karma-jasmine": "^0.3.5",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "phantomjs": "^1.9.16",
     "uglify-js-brunch": "^1.7.7"
   }
 }
