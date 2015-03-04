@@ -1,4 +1,4 @@
-![](branding/logo.png)
+<img src="branding/logo.png" style="width: 100%">
 
 # Tamarind - A WebGL shader editor
 

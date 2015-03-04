@@ -16,7 +16,7 @@
   "scripts": {
     "clean": "rm -rf node_modules debug dist",
     "build": "npm install && node_modules/brunch/bin/brunch build --production",
-    "docs": "npm install && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/branding && cp branding/logo.png docs/branding/logo.png",
+    "docs": "npm install && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
     "dist": "npm run clean && npm run build && npm run docs"
   },
   "author": "Bernie Sumption",
