@@ -62,9 +62,12 @@ SET_UNIFORM_FUNCTION_NAMES = [null, "uniform1f", "uniform2f", "uniform3f", "unif
 # are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
 # requires uniforms to be set again.
 #
-class WebGLCanvas
+class WebGLCanvas extends EventEmitter
+
+  @COMPILE_ERROR = "compileError"
 
   constructor: (@canvas, @debugMode=false) ->
+    super()
 
     unless browserSupportsRequiredFeatures()
       throw new Error "This browser does not support WebGL"
@@ -194,8 +197,8 @@ class WebGLCanvas
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
     unless compiled
-      error = gl.getShaderInfoLog(shader)
-      @trace.log 'Failed to compile shader: ' + error
+      error = gl.getShaderInfoLog(shader).trim()
+      @emit WebGLCanvas.COMPILE_ERROR, error
       return false
 
     return true
@@ -299,7 +302,6 @@ class WebGLCanvas
     @_contextLost = false
     @_contextRequiresSetup = true
     @_scheduleFrame()
-
 
 
   ##

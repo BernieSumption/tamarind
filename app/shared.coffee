@@ -14,6 +14,39 @@ class NullTracer
   error: ->
 
 
+class EventEmitter
+  constructor: ->
+    @_events = {}
+
+  on: (eventName, callback) ->
+    @_validateEventArgs eventName, callback
+    @_getEventList(eventName).push callback
+
+  off: (eventName, callback) ->
+    @_validateEventArgs eventName, callback
+    list = @_getEventList eventName
+    index = list.indexOf callback
+    unless index == -1
+      list.splice index, 1
+    return
+
+  emit: (eventName, event) ->
+    @_validateEventArgs eventName
+    for f in @_getEventList eventName
+      f.call this, event
+
+  _getEventList: (eventName) ->
+    unless @_events[eventName]
+      @_events[eventName] = []
+    @_events[eventName]
+
+
+  _validateEventArgs: (eventName, callback) ->
+    if typeof eventName != "string"
+      throw new Error("eventName must be a string")
+    if arguments.length > 1 && typeof callback != "function"
+      throw new Error("callback must be a function")
+
 
 browserSupportsRequiredFeatures = ->
   if browserSupportsRequiredFeatures.__cache == undefined

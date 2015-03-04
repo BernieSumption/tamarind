@@ -48,6 +48,8 @@
     <textarea id="vertexShaderSource"></textarea>
     <p>Fragment shader</p>
     <textarea id="fragmentShaderSource"></textarea>
+    <p>Compile events</p>
+    <textarea id="compileEvents"></textarea>
 </div>
 <div id="viewport">
     <canvas id="displayArea"></canvas>
@@ -62,6 +64,15 @@
     bindInputToProperty("drawingMode");
     bindInputToProperty("fragmentShaderSource");
     bindInputToProperty("vertexShaderSource");
+
+
+    canvas.on(WebGLCanvas.COMPILE_ERROR, function(event) {
+        console.error(event);
+        var compileEvents = document.getElementById("compileEvents");
+        var prefix = compileEvents.value.length ? "\n" : ""
+        console.log ("'"+event+'"')
+        compileEvents.value = compileEvents.value + prefix + event
+    })
 
     function bindInputToProperty(propertyName, type) {
         var input = document.getElementById(propertyName);
