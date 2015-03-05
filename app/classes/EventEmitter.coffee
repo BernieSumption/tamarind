@@ -18,6 +18,7 @@ class EventEmitter
     list = @_getEventList(eventName)
     if list.indexOf(callback) == -1
       list.push callback
+    return
 
 
   # Remove an event callback added with `on()`
@@ -47,7 +48,7 @@ class EventEmitter
   _getEventList: (eventName) ->
     unless @_events[eventName]
       @_events[eventName] = []
-    @_events[eventName]
+    return @_events[eventName]
 
 
   # @private

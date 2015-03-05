@@ -9,7 +9,7 @@ browserSupportsRequiredFeatures = ->
   if browserSupportsRequiredFeatures.__cache == undefined
 
     try
-      canvas = document.createElement('canvas');
+      canvas = document.createElement 'canvas'
       ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
     browserSupportsRequiredFeatures.__cache = !!(ctx && Object.defineProperty)
@@ -36,7 +36,7 @@ browserSupportsRequiredFeatures = ->
     defineClassProperty Foo, "prop"
 ###
 defineClassProperty = (cls, propertyName) ->
-  PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1);
+  PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1)
   getter = cls.prototype["_get" + PropertyName]
   setter = cls.prototype["_set" + PropertyName]
 
@@ -53,3 +53,5 @@ defineClassProperty = (cls, propertyName) ->
     set: setter || -> throw new Error(propertyName + " is read-only")
 
   Object.defineProperty cls.prototype, propertyName, config
+
+  return
