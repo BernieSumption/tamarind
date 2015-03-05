@@ -15,7 +15,9 @@ class EventEmitter
   # @param [function] callback
   on: (eventName, callback) ->
     @_validateEventArgs eventName, callback
-    @_getEventList(eventName).push callback
+    list = @_getEventList(eventName)
+    if list.indexOf(callback) == -1
+      list.push callback
 
 
   # Remove an event callback added with `on()`

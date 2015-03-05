@@ -2,6 +2,10 @@ module.exports = (config) -> config.set
   # base path, that will be used to resolve files and exclude
   basePath: ''
 
+
+  preprocessors:
+    '**/*.js': ['sourcemap']
+
   frameworks: ['jasmine']
 
   # list of files / patterns to load in the browser
