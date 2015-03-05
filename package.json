@@ -15,11 +15,11 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules debug dist",
-    "test": "npm install && npm run build:debug && node_modules/.bin/karma start --browsers PhantomJS --single-run",
+    "test": "npm install && npm run build:debug && node_modules/.bin/karma start --single-run",
     "build:debug": "npm install && node_modules/brunch/bin/brunch build",
     "build:dist": "npm install && node_modules/brunch/bin/brunch build --production",
     "docs": "npm install && node_modules/brunch/bin/brunch build && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
-    "dist": "npm run clean && npm run test && npm run build && npm run docs"
+    "dist": "npm run clean && npm run test && npm run build:dist && npm run docs"
   },
   "author": "Bernie Sumption",
   "license": "MIT",
