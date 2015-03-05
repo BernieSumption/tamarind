@@ -12,6 +12,7 @@ module.exports = (config) -> config.set
   files: [
     'debug/tamarind.js'
     'debug/tamarind.tests.js'
+    {pattern: 'debug/test/**/*.png', watched: true, served: true, included: false}
   ]
 
   # list of files to exclude

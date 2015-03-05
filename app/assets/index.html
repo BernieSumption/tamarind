@@ -52,7 +52,7 @@
     <textarea id="compileEvents"></textarea>
     <p>Image generation</p>
     <input type="button" value="generate" onclick="generateImage()">
-    <canvas width="20" height="20" id="generatedImageDisplay"></canvas>
+    <img id="generatedImageDisplay">
 </div>
 <div id="viewport">
     <canvas id="displayArea"></canvas>
@@ -90,15 +90,7 @@
 
     function generateImage() {
         var display = document.getElementById("generatedImageDisplay");
-        var captured = canvas.captureImage(display.width, display.height);
-        var ctx = display.getContext("2d")
-        var imageData = ctx.getImageData(0, 0, display.width, display.height);
-        for (var i=0; i<imageData.data.length; i++) {
-            imageData.data[i] = captured[i];
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-        ctx.fillStyle="red";
+        display.src = canvas.captureImage(100, 100)
     }
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>

@@ -90,6 +90,15 @@ void main() {
   # attribute and uniform definitions which will be added automatically
   vertexShaderSource: DEFAULT_VSHADER_SOURCE
 
+  # @property [boolean] Whether to log more data, including all WebGL errors. This
+  # requires checking with WebGL for an error after each operation, which is very
+  # slow. Don't use this in production
+  debugMode: false
+
+  # @property [boolean] `false` to log WebGL errors to the console, `true` to throw an
+  # exception. Only applies when `debugMode` is `true`
+  throwOnWebGLError: false
+
   ##
   ## PUBLIC API METHODS
   ##
@@ -107,6 +116,7 @@ void main() {
 
     @canvas.addEventListener "webglcontextcreationerror", (event) =>
       @trace.error event.statusMessage
+      return
 
     @canvas.addEventListener "webglcontextlost", => @_handleContextLost()
     @canvas.addEventListener "webglcontextrestored", => @_handleContextRestored()
@@ -123,6 +133,8 @@ void main() {
 
     @_scheduleFrame()
 
+    return
+
 
   ##
   ## PRIVATE METHODS
@@ -134,6 +146,8 @@ void main() {
     unless @_frameScheduled
       @_frameScheduled = true
       requestAnimationFrame @_doFrame
+
+    return
 
   # @private
   _doFrame: =>
@@ -172,6 +186,8 @@ void main() {
 
     @_render()
 
+    return
+
 
 
   #
@@ -181,17 +197,18 @@ void main() {
   # @private
   _createContext: ->
 
-    @nativeContext = @canvas.getContext("webgl") || @canvas.getContext("experimental-webgl");
+    @nativeContext = @canvas.getContext("webgl") || @canvas.getContext("experimental-webgl")
 
     # passing undefined as an argument to any WebGL function is an
     # error, so throw an exception to catch it early
-    throwErrorOnUndefinedArgument = (functionName, args) ->
+    onFunctionCall = (functionName, args) ->
       for arg in args
         if arg == undefined
           throw new Error('undefined passed to gl.' + functionName + '(' + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ')')
       return
 
-    @debugContext = WebGLDebugUtils.makeDebugContext @nativeContext, null, throwErrorOnUndefinedArgument, null
+
+    @debugContext = WebGLDebugUtils.makeDebugContext @nativeContext, null, onFunctionCall, null
 
     @_contextRequiresSetup = true
 
@@ -205,6 +222,8 @@ void main() {
         throw new Error(mode + " is not a valid drawing mode")
       @_drawingModeNames[mode] = intMode
       @_drawingModeNames[intMode] = mode
+
+    return
 
 
   # @private
@@ -288,12 +307,12 @@ void main() {
 
 
   # @private
-  _render: ->
+  _render: (explicitWidth, explicitHeight) ->
     gl = @gl
 
 
-    width = Math.round(@canvas.offsetWidth * (window.devicePixelRatio || 1))
-    height = Math.round(@canvas.offsetHeight * (window.devicePixelRatio || 1))
+    width = explicitWidth || Math.round(@canvas.offsetWidth * (window.devicePixelRatio || 1))
+    height = explicitHeight || Math.round(@canvas.offsetHeight * (window.devicePixelRatio || 1))
 
     @_setUniform "u_CanvasSize", width, height
 
@@ -311,6 +330,19 @@ void main() {
     gl.drawArrays @_drawingMode, 0, @vertexCount
 
     return true
+
+
+  # Take a snapshot of the current scene and return it as a PNG encoded data url
+  #
+  # @param [int] width the width of the rendered image
+  # @param [int] height the height of the rendered image
+  captureImage: (width, height) ->
+    @_doFrame()
+    @_render(width, height)
+    image = @canvas.toDataURL "image/png"
+    @_render() # restore previous size
+
+    return image
 
 
   # @private
@@ -338,6 +370,8 @@ void main() {
     @_contextLost = true
     (e || window.event).preventDefault()
 
+    return
+
 
   # @private
   _handleContextRestored: (e) ->
@@ -345,6 +379,8 @@ void main() {
     @_contextLost = false
     @_contextRequiresSetup = true
     @_scheduleFrame()
+
+    return
 
 
   ##
@@ -360,16 +396,19 @@ void main() {
     @_fragmentShaderIsDirty = true
     @_scheduleFrame()
 
+    return
+
 
   # @private
-  _getVertexShaderSource: ->
-    @_vertexShaderSource
+  _getVertexShaderSource: -> @_vertexShaderSource
 
   # @private
   _setVertexShaderSource: (value) ->
     @_vertexShaderSource = value
     @_vertexShaderIsDirty = true
     @_scheduleFrame()
+
+    return
 
 
   # @private
@@ -380,6 +419,8 @@ void main() {
     @_vertexCount = value
     @_geometryIsDirty = true
     @_scheduleFrame()
+
+    return
 
 
   # @private
@@ -392,6 +433,8 @@ void main() {
       throw new Error(value + " is not a valid drawing mode.")
     @_drawingMode = intValue
     @_scheduleFrame()
+
+    return
 
 
   # @private
@@ -409,6 +452,8 @@ void main() {
       else
         @trace = new NullTracer
         @gl = @debugContext
+
+    return
 
 
 defineClassProperty(WebGLCanvas, "debugMode")
