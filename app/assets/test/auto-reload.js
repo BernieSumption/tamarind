@@ -1,4 +1,8 @@
 (function() {
+    if (document.location.port != 3333) {
+        // don't attempt websocket magic if we're not being served through Brunch
+        return;
+    }
     var WebSocket = window.WebSocket || window.MozWebSocket;
     var br = window.brunch = (window.brunch || {});
     var ar = br['auto-reload'] = (br['auto-reload'] || {});

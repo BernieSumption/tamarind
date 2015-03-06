@@ -24,8 +24,7 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
           window.open expectedData
           window.open actualData
         else
-
-          console.log "PRO TIP: append ?bad-image to the Karma runner URL and reload to view these images"
+          console.log "PRO TIP: append ?bad-images to the Karma runner URL and reload to view these images"
         expect(false).toBeTruthy()
       done()
 

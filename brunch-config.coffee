@@ -11,6 +11,9 @@ exports.config =
       order:
         before: 'app/shared.coffee'
 
+    stylesheets:
+      joinTo: 'tamarind.css'
+
   modules:
     definition: false
     wrapper: false
