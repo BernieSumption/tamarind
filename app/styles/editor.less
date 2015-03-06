@@ -1,0 +1,126 @@
+body {
+  padding: 20px;
+}
+
+@padding: 5px;
+@menu-width: 50px;
+@editor-width: 300px;
+
+@light-color: #EEE;
+@dark-color: #555;
+
+.tamarind {
+  position: relative;
+  width: 1000px;
+  height: 500px;
+  border-radius: @padding;
+  background-color: @dark-color;
+  color: @light-color;
+
+  &:extend(.tamarind-emboss);
+}
+
+.tamarind-logo {
+  position: absolute;
+  bottom: @padding * 2;
+  left: @menu-width;
+
+
+
+
+  transform: rotate(-90deg);
+  transform-origin: left bottom 0;
+
+
+  font-family: "tamarind-logo";
+  font-size: @menu-width - @padding * 4;
+  line-height: @menu-width;
+  color: darken(@dark-color, 5%);
+
+  &:before {
+    content: "Tamarind";
+  }
+}
+
+.tamarind-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: @menu-width;
+}
+
+.tamarind-menu-button {
+
+  color: @light-color;
+  text-decoration: none;
+  margin: @padding 0 0 @padding;
+  display: block;
+  width: @menu-width;
+  height: @menu-width;
+  font-size: @menu-width * 0.5;
+  text-align: center;
+  line-height: @menu-width + @padding;
+  border-radius: @padding;
+  padding-right: @padding;
+  box-sizing: border-box;
+
+  &:extend(.tamarind-inset-text);
+
+  &:hover {
+    color: #FFF;
+    text-shadow: 0 0 10px #FFF;
+  }
+
+  &.is-selected {
+    background-color: @light-color;
+    color: @dark-color;
+    text-shadow: none;
+    &:extend(.tamarind-inset);
+    &:extend(.tamarind-emboss-text);
+  }
+}
+
+.tamarind-editor {
+  position: absolute;
+  top: @padding;
+  left: @menu-width;
+  bottom: @padding;
+  width: @editor-width;
+  border-radius: @padding;
+
+  background-color: @light-color;
+
+  &:extend(.tamarind-inset);
+}
+
+.tamarind-render-panel {
+  position: absolute;
+  top: @padding;
+  left: @menu-width + @editor-width + @padding * 1;
+  right: @padding;
+  bottom: @padding;
+
+}
+
+
+.tamarind-inset {
+  box-shadow: 0.5px 0.5px 1px 0 rgba(255,255,255,.25);
+}
+.tamarind-inset-text {
+  text-shadow: 1px 1px 1px rgba(255,255,255,0.25);
+}
+.tamarind-emboss {
+  box-shadow: inset 1px 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 1px rgba(0,0,0,.25);
+}
+.tamarind-emboss-text {
+  text-shadow: -1px -1px 1px rgba(255,255,255,1), 0.5px 0.5px 1px rgba(0,0,0,0.25);
+}
+
+.tamarind-render-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: @padding;
+
+  &:extend(.tamarind-inset);
+}

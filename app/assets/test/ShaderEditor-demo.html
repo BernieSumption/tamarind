@@ -35,11 +35,10 @@
 <body>
 
 <div class="tamarind">
-  <div class="tamarind-menu-panel">
-    <span class="tamarind-icon tamarind-icon-logo"></span>
-    <span class="tamarind-icon tamarind-icon-config"></span>
-    <span class="tamarind-icon tamarind-icon-fragment-shader"></span>
-    <span class="tamarind-icon tamarind-icon-vertex-shader"></span>
+  <div class="tamarind-menu">
+    <a href="javascript:void(0)" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
+    <a href="javascript:void(0)" class="tamarind-menu-button is-selected tamarind-icon-fragment-shader" title="Fragment shader"></a>
+    <a href="javascript:void(0)" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
   </div>
   <div class="tamarind-editor-panel">
     <div class="tamarind-editor tamarind-editor-tamarind-logo"></div>
@@ -47,12 +46,16 @@
     <div class="tamarind-editor tamarind-editor-fragment-shader"></div>
     <div class="tamarind-editor tamarind-editor-vertex-shader"></div>
   </div>
-  <div class="tamarind-canvas"></div>
+  <div class="tamarind-render-panel">
+    <canvas class="tamarind-render-canvas"></canvas>
+  </div>
+  <span class="tamarind-logo"></span>
 </div>
 
 <script src="auto-reload.js"></script>
 <script src="../tamarind.js"></script>
 <script>
+  var webGLCanvas = new WebGLCanvas(document.getElementsByClassName("tamarind-render-canvas")[0]);
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 
