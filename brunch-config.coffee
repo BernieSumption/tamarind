@@ -19,13 +19,11 @@ exports.config =
     wrapper: false
 
   paths:
-    public: "debug"
+    public: "build"
 
   overrides:
     production:
       sourceMaps: true
-      paths:
-        public: "dist"
 
   plugins:
     coffeelint:

@@ -25,9 +25,9 @@ class ShaderEditor extends EventEmitter
 
   TEMPLATE = """
     <div class="tamarind-menu">
-      <input type='checkbox' data-event="menu-click" data-arg="config" class="tamarind-menu-button tamarind-icon-config" title="Scene setup">
-      <a href="javascript:void(0)" data-event="menu-click" data-arg="fragment-shader" class="tamarind-menu-button is-selected tamarind-icon-fragment-shader" title="Fragment shader"></a>
-      <a href="javascript:void(0)" data-event="menu-click" data-arg="vertex-shader" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+      <a href="javascript:void(0)" name="config" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
+      <a href="javascript:void(0)" name="fragment-shader" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
+      <a href="javascript:void(0)" name="vertex-shader" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
     </div>
     <div class="tamarind-editor-panel">
       <div class="tamarind-editor tamarind-editor-config"></div>
@@ -39,6 +39,8 @@ class ShaderEditor extends EventEmitter
     </div>
     <span class="tamarind-logo"></span>
   """
+
+  MENU_ITEM_SELECT = "menu-item-select"
 
 
 
@@ -53,8 +55,7 @@ class ShaderEditor extends EventEmitter
 
     @_canvas = new WebGLCanvas(@element.querySelector(".tamarind-render-canvas"))
 
-    for panel in ["config", "fragment-shader", "vertex-shader"]
-      @element.querySelector("tamarind-icon-" + panel)
+    new ToggleBar(@element.querySelector(".tamarind-menu"), @, MENU_ITEM_SELECT)
 
 
   _handleClick: (event) =>
@@ -65,5 +66,26 @@ class ShaderEditor extends EventEmitter
 
 
     return
+
+
+# A set of links where at any one time, one link.
+class ToggleBar
+
+  constructor: (@_parent, @_events, @_eventName) ->
+    @_parent.addEventListener "click", (event) => @selectChild(event.target)
+    @_children = @_parent.querySelectorAll "a"
+    @_selectedChild = null
+    @selectChild(@_children[0])
+
+  selectChild: (childToSelect) =>
+    if @_selectedChild == childToSelect
+      return
+    @_selectedChild = childToSelect
+    for child in @_children
+      if child == childToSelect
+        child.classList.add("is-selected")
+      else
+        child.classList.remove("is-selected")
+
 
 

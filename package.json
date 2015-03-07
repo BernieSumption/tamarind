@@ -14,12 +14,12 @@
     "canvas"
   ],
   "scripts": {
-    "clean": "rm -rf node_modules debug dist",
+    "clean": "rm -rf node_modules build",
     "test": "npm install && npm run build:debug && node_modules/.bin/karma start --single-run",
     "build:debug": "npm install && node_modules/brunch/bin/brunch build",
     "build:dist": "npm install && node_modules/brunch/bin/brunch build --production",
     "docs": "npm install && node_modules/brunch/bin/brunch build && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
-    "dist": "npm run clean && npm run test && npm run build:dist && npm run docs"
+    "dist": "npm run clean && npm run test && npm run build:dist && npm run docs && rm -rf dist && mv build dist"
   },
   "author": "Bernie Sumption",
   "license": "MIT",
