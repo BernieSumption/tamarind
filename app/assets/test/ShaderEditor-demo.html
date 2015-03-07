@@ -1,61 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>WebGL playground</title>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
-    <style>
-  html, body, #displayArea {
-      width:100%;
-      height:100%;
-      margin: 0;
-      padding: 0;
-      position: relative;
-  }
-  #viewport {
-      position: absolute;
-      top: 0;
-      right: 0;
-      left: 350px;
-      bottom: 0;
-      padding: 20px;
-      border-left: solid 1px #999;
-  }
-  #controls {
-      width: 350px;
-      padding: 20px;
-      box-sizing: border-box;
-  }
-  textarea {
+  <title>ShaderEditor demo</title>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
+  <style>
+    textarea {
       width: 100%;
       height: 100px;
-  }
-    </style>
-    <link rel="stylesheet" href="../tamarind.css">
+    }
+    body {
+      padding: 20px;
+    }
+  </style>
+  <link rel="stylesheet" href="../tamarind.css">
 </head>
 <body>
 
-<div class="tamarind">
-  <div class="tamarind-menu">
-    <a href="javascript:void(0)" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
-    <a href="javascript:void(0)" class="tamarind-menu-button is-selected tamarind-icon-fragment-shader" title="Fragment shader"></a>
-    <a href="javascript:void(0)" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
-  </div>
-  <div class="tamarind-editor-panel">
-    <div class="tamarind-editor tamarind-editor-tamarind-logo"></div>
-    <div class="tamarind-editor tamarind-editor-config"></div>
-    <div class="tamarind-editor tamarind-editor-fragment-shader"></div>
-    <div class="tamarind-editor tamarind-editor-vertex-shader"></div>
-  </div>
-  <div class="tamarind-render-panel">
-    <canvas class="tamarind-render-canvas"></canvas>
-  </div>
-  <span class="tamarind-logo"></span>
-</div>
+<div id="insertEditorHere"></div>
 
 <script src="auto-reload.js"></script>
 <script src="../tamarind.js"></script>
+
+<script type="application/x-tamarind-editor">
+  {
+    "foo": 3
+  }
+</script>
+
 <script>
-  var webGLCanvas = new WebGLCanvas(document.getElementsByClassName("tamarind-render-canvas")[0]);
+  replaceScriptTemplates();
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 

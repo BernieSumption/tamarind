@@ -4,11 +4,6 @@
 ###
 class EventEmitter
 
-  # Create a new EventEmitter
-  constructor: ->
-    @_events = {}
-
-
   # Register an event callback
   #
   # @param [string] eventName
@@ -46,6 +41,8 @@ class EventEmitter
 
   # @private
   _getEventList: (eventName) ->
+    unless @_events
+      @_events = {}
     unless @_events[eventName]
       @_events[eventName] = []
     return @_events[eventName]

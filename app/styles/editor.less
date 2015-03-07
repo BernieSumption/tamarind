@@ -1,6 +1,4 @@
-body {
-  padding: 20px;
-}
+
 
 @padding: 5px;
 @menu-width: 50px;
@@ -35,7 +33,9 @@ body {
   font-family: "tamarind-logo";
   font-size: @menu-width - @padding * 4;
   line-height: @menu-width;
-  color: darken(@dark-color, 5%);
+  color: darken(@dark-color, 2%);
+
+  text-shadow: -1px 1px 1px rgba(255,255,255,0.075), 1px -1px 1px rgba(0,0,0,0.25);
 
   &:before {
     content: "Tamarind";
@@ -76,6 +76,7 @@ body {
     background-color: @light-color;
     color: @dark-color;
     text-shadow: none;
+    cursor: default;
     &:extend(.tamarind-inset);
     &:extend(.tamarind-emboss-text);
   }

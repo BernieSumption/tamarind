@@ -106,7 +106,6 @@ void main() {
   # @param [HTMLCanvasElement] @canvas the canvas element to render onto
   # @param [boolean] @debugMode the initial value of the `debugMode` property
   constructor: (@canvas, @debugMode=false) ->
-    super()
 
     unless browserSupportsRequiredFeatures()
       throw new Error "This browser does not support WebGL"
