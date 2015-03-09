@@ -11,7 +11,7 @@ class EventEmitter
   on: (eventName, callback) ->
     @_validateEventArgs eventName, callback
     list = @_getEventList(eventName)
-    if list.indexOf(callback) == -1
+    if list.indexOf(callback) is -1
       list.push callback
     return
 
@@ -24,7 +24,7 @@ class EventEmitter
     @_validateEventArgs eventName, callback
     list = @_getEventList eventName
     index = list.indexOf callback
-    unless index == -1
+    unless index is -1
       list.splice index, 1
     return
 
@@ -50,7 +50,7 @@ class EventEmitter
 
   # @private
   _validateEventArgs: (eventName, callback) ->
-    if typeof eventName != "string"
-      throw new Error("eventName must be a string")
-    if arguments.length > 1 && typeof callback != "function"
-      throw new Error("callback must be a function")
+    unless typeof eventName is 'string'
+      throw new Error('eventName must be a string')
+    if arguments.length > 1 and typeof callback isnt 'function'
+      throw new Error('callback must be a function')

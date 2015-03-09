@@ -6,7 +6,7 @@ replaceScriptTemplates = ->
       try
         config = JSON.parse(configJSON)
       catch e
-        console.error "Failed to parse Tamarind config: \"" + e + "\" in source:\n" + configJSON
+        console.error 'Failed to parse Tamarind config: "' + e + '" in source:\n' + configJSON
         continue
     else
       config = {}
@@ -49,8 +49,8 @@ class ShaderEditor extends EventEmitter
   # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
   constructor: (location, @_config = {}) ->
 
-    @element = document.createElement("div")
-    @element.className = "tamarind"
+    @element = document.createElement('div')
+    @element.className = 'tamarind'
     @element.innerHTML = TEMPLATE
     @element.editor = @
 
@@ -58,20 +58,20 @@ class ShaderEditor extends EventEmitter
     location.parentNode.removeChild location
 
 
-    new ToggleBar(@element.querySelector(".tamarind-menu"), @, MENU_ITEM_SELECT)
+    new ToggleBar(@element.querySelector('.tamarind-menu'), @, MENU_ITEM_SELECT)
 
-    @_canvas = new WebGLCanvas(@element.querySelector(".tamarind-render-canvas"))
+    @_canvas = new WebGLCanvas(@element.querySelector('.tamarind-render-canvas'))
 
 
     @_fragmentShaderDoc = @_bindDocumentToCanvas('fragmentShaderSource')
     @_vertexShaderDoc = @_bindDocumentToCanvas('vertexShaderSource')
 
-    @_codemirror = CodeMirror(@element.querySelector(".tamarind-editor-code"),
+    @_codemirror = CodeMirror(@element.querySelector('.tamarind-editor-code'),
       value: @_fragmentShaderDoc
       lineNumbers: true
       lineWrapping: true
     )
-    @_codemirror.on "renderLine", @_addLineWrapIndent
+    @_codemirror.on 'renderLine', @_addLineWrapIndent
     @_codemirror.refresh()
 
     @on MENU_ITEM_SELECT, @_handleMenuItemSelect
@@ -94,9 +94,9 @@ class ShaderEditor extends EventEmitter
 
     basePadding = 4
     indentChars = 2
-    offset = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * @_codeCharWidth
-    elt.style.textIndent = "-" + (offset + @_codeCharWidth * indentChars) + "px"
-    elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + "px"
+    offset = CodeMirror.countColumn(line.text, null, cm.getOption('tabSize')) * @_codeCharWidth
+    elt.style.textIndent = '-' + (offset + @_codeCharWidth * indentChars) + 'px'
+    elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + 'px'
     return
 
   _handleMenuItemSelect: (item) ->
@@ -112,20 +112,20 @@ class ShaderEditor extends EventEmitter
 class ToggleBar
 
   constructor: (@_parent, @_events, @_eventName) ->
-    @_parent.addEventListener "click", (event) => @selectChild(event.target)
-    @_children = @_parent.querySelectorAll "a"
+    @_parent.addEventListener 'click', (event) => @selectChild(event.target)
+    @_children = @_parent.querySelectorAll 'a'
     @_selectedChild = null
     @selectChild(@_children[0])
 
   selectChild: (childToSelect) =>
-    if @_selectedChild == childToSelect
+    if @_selectedChild is childToSelect
       return
     @_selectedChild = childToSelect
     for child in @_children
-      if child == childToSelect
-        child.classList.add("is-selected")
+      if child is childToSelect
+        child.classList.add('is-selected')
       else
-        child.classList.remove("is-selected")
+        child.classList.remove('is-selected')
 
     setTimeout (=> @_events.emit @_eventName, @_selectedChild.name), 1
     return

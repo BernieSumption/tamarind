@@ -13,10 +13,10 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
   handleLoad = =>
     ++loaded
-    if loaded == 2
+    if loaded is 2
       expectedData = imageToDataUrl(expected)
       actualData = imageToDataUrl(actual)
-      if expectedData != actualData
+      unless expectedData is actualData
         window.focus()
         console.log "EXPECTED DATA: " + expectedData
         console.log "ACTUAL DATA: " + actualData

@@ -28,11 +28,11 @@
 ###
 class WebGLCanvas extends EventEmitter
 
-  VSHADER_HEADER = """
+  VSHADER_HEADER = '''
 attribute float a_VertexIndex;
-"""
+'''
 
-  DEFAULT_VSHADER_SOURCE = """
+  DEFAULT_VSHADER_SOURCE = '''
 void main() {
   // 4 points, one in each corner, clockwise from top left
   if (a_VertexIndex == 0.0) {
@@ -45,30 +45,30 @@ void main() {
     gl_Position.xy = vec2(-1, 1);
   }
 }
-"""
+'''
 
-  FSHADER_HEADER = """
+  FSHADER_HEADER = '''
 precision mediump float;
 uniform vec2 u_CanvasSize;
-"""
+'''
 
-  DEFAULT_FSHADER_SOURCE = """
+  DEFAULT_FSHADER_SOURCE = '''
 void main() {
   gl_FragColor.r = u_CanvasSize.x;
   gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
 }
-"""
+'''
 
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
-  VALID_DRAWING_MODES = "POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN".split(",")
+  VALID_DRAWING_MODES = 'POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN'.split(',')
 
-  SET_UNIFORM_FUNCTION_NAMES = [null, "uniform1f", "uniform2f", "uniform3f", "uniform4f"]
+  SET_UNIFORM_FUNCTION_NAMES = [null, 'uniform1f', 'uniform2f', 'uniform3f', 'uniform4f']
 
   # Event name for compilation error events
   # @example
   #     canvas.on WebGLCanvas.COMPILE_ERROR, (event) -> console.log event
-  @COMPILE_ERROR = "compileError"
+  @COMPILE_ERROR = 'compileError'
 
   ##
   ## PUBLIC MEMBER PROPERTIES
@@ -105,29 +105,29 @@ void main() {
 
   # @param [HTMLCanvasElement] @canvas the canvas element to render onto
   # @param [boolean] @debugMode the initial value of the `debugMode` property
-  constructor: (@canvas, @debugMode=false) ->
+  constructor: (@canvas, @debugMode = false) ->
 
     unless browserSupportsRequiredFeatures()
-      throw new Error "This browser does not support WebGL"
+      throw new Error 'This browser does not support WebGL'
 
 
     @_uniformInfoByName = {}
 
-    @canvas.addEventListener "webglcontextcreationerror", (event) =>
+    @canvas.addEventListener 'webglcontextcreationerror', (event) =>
       @trace.error event.statusMessage
       return
 
-    @canvas.addEventListener "webglcontextlost", => @_handleContextLost()
-    @canvas.addEventListener "webglcontextrestored", => @_handleContextRestored()
+    @canvas.addEventListener 'webglcontextlost', => @_handleContextLost()
+    @canvas.addEventListener 'webglcontextrestored', => @_handleContextRestored()
 
     @_createContext()
 
     unless @gl
-      throw new Error("Could not create WebGL context for canvas")
+      throw new Error('Could not create WebGL context for canvas')
 
     # A string mode anme as used by WebGL's drawArrays method, i.e. one of:
     # POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
-    @drawingMode = "TRIANGLE_FAN"
+    @drawingMode = 'TRIANGLE_FAN'
 
     @_scheduleFrame()
 
@@ -195,13 +195,13 @@ void main() {
   # @private
   _createContext: ->
     opts = {premultipliedAlpha: false}
-    @nativeContext = @canvas.getContext("webgl", opts) || @canvas.getContext("experimental-webgl", opts)
+    @nativeContext = @canvas.getContext('webgl', opts) or @canvas.getContext('experimental-webgl', opts)
 
     # passing undefined as an argument to any WebGL function is an
     # error, so throw an exception to catch it early
     onFunctionCall = (functionName, args) ->
       for arg in args
-        if arg == undefined
+        if arg is undefined
           throw new Error('undefined passed to gl.' + functionName + '(' + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ')')
       return
 
@@ -216,8 +216,8 @@ void main() {
     @_drawingModeNames = {}
     for mode in VALID_DRAWING_MODES
       intMode = @gl[mode]
-      if intMode == undefined
-        throw new Error(mode + " is not a valid drawing mode")
+      if intMode is undefined
+        throw new Error(mode + ' is not a valid drawing mode')
       @_drawingModeNames[mode] = intMode
       @_drawingModeNames[intMode] = mode
 
@@ -229,9 +229,9 @@ void main() {
     gl = @gl
 
     unless (
-      (@_vertexBuffer = gl.createBuffer()) &&
-      (@_program = gl.createProgram()) &&
-      (@_vertexShader = gl.createShader(gl.VERTEX_SHADER)) &&
+      (@_vertexBuffer = gl.createBuffer()) and
+      (@_program = gl.createProgram()) and
+      (@_vertexShader = gl.createShader(gl.VERTEX_SHADER)) and
       (@_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)))
       return false
     gl.attachShader @_program, @_vertexShader
@@ -259,7 +259,7 @@ void main() {
     gl = @gl
     # Attach the shader objects
 
-    gl.bindAttribLocation @_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, "a_VertexIndex"
+    gl.bindAttribLocation @_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, 'a_VertexIndex'
 
     # Link the program object
     gl.linkProgram @_program
@@ -276,7 +276,7 @@ void main() {
     # get a list of uniforms
     numUniforms = gl.getProgramParameter(@_program, gl.ACTIVE_UNIFORMS)
     @_uniformInfoByName = {}
-    for i in [0..numUniforms-1] by 1
+    for i in [0..numUniforms - 1] by 1
       uniform = gl.getActiveUniform(@_program, i)
       @_uniformInfoByName[uniform.name] =
         location: gl.getUniformLocation(@_program, i)
@@ -309,10 +309,10 @@ void main() {
     gl = @gl
 
 
-    width = explicitWidth || Math.round(@canvas.offsetWidth * (window.devicePixelRatio || 1))
-    height = explicitHeight || Math.round(@canvas.offsetHeight * (window.devicePixelRatio || 1))
+    width = explicitWidth or Math.round(@canvas.offsetWidth * (window.devicePixelRatio or 1))
+    height = explicitHeight or Math.round(@canvas.offsetHeight * (window.devicePixelRatio or 1))
 
-    @_setUniform "u_CanvasSize", width, height
+    @_setUniform 'u_CanvasSize', width, height
 
     unless width is @_width and height is @_height
 
@@ -337,7 +337,7 @@ void main() {
   captureImage: (width, height) ->
     @_doFrame()
     @_render(width, height)
-    image = @canvas.toDataURL "image/png"
+    image = @canvas.toDataURL 'image/png'
     @_render() # restore previous size
 
     return image
@@ -351,7 +351,7 @@ void main() {
     unless uniformInfo
       return false
 
-    uniformInfo.location = gl.getUniformLocation(@_program, "u_CanvasSize")
+    uniformInfo.location = gl.getUniformLocation(@_program, 'u_CanvasSize')
 
     f = SET_UNIFORM_FUNCTION_NAMES[args.length]
     unless f
@@ -364,16 +364,16 @@ void main() {
 
   # @private
   _handleContextLost: (e) ->
-    @trace.log "WebGL context lost, suspending all GL calls"
+    @trace.log 'WebGL context lost, suspending all GL calls'
     @_contextLost = true
-    (e || window.event).preventDefault()
+    (e or window.event).preventDefault()
 
     return
 
 
   # @private
   _handleContextRestored: (e) ->
-    @trace.log "WebGL context restored, resuming rendering"
+    @trace.log 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
     @_scheduleFrame()
@@ -427,8 +427,8 @@ void main() {
   # @private
   _setDrawingMode: (value) ->
     intValue = @gl[value]
-    if intValue == undefined
-      throw new Error(value + " is not a valid drawing mode.")
+    if intValue is undefined
+      throw new Error(value + ' is not a valid drawing mode.')
     @_drawingMode = intValue
     @_scheduleFrame()
 
@@ -441,11 +441,11 @@ void main() {
   # @private
   _setDebugMode: (value) ->
     value = !!value
-    if @_debugMode != value
+    unless @_debugMode is value
       @_debugMode = value
       if @_debugMode
         @trace = new ConsoleTracer
-        @trace.log "Using WebGL API debugging proxy - turn off debug mode for production apps, it hurts performance"
+        @trace.log 'Using WebGL API debugging proxy - turn off debug mode for production apps, it hurts performance'
         @gl = @debugContext
       else
         @trace = new NullTracer
@@ -454,8 +454,8 @@ void main() {
     return
 
 
-defineClassProperty(WebGLCanvas, "debugMode")
-defineClassProperty(WebGLCanvas, "drawingMode")
-defineClassProperty(WebGLCanvas, "vertexCount")
-defineClassProperty(WebGLCanvas, "vertexShaderSource")
-defineClassProperty(WebGLCanvas, "fragmentShaderSource")
+defineClassProperty(WebGLCanvas, 'debugMode')
+defineClassProperty(WebGLCanvas, 'drawingMode')
+defineClassProperty(WebGLCanvas, 'vertexCount')
+defineClassProperty(WebGLCanvas, 'vertexShaderSource')
+defineClassProperty(WebGLCanvas, 'fragmentShaderSource')

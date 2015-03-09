@@ -6,13 +6,13 @@
   Return false if the browser can't handle the awesome.
 ###
 browserSupportsRequiredFeatures = ->
-  if browserSupportsRequiredFeatures.__cache == undefined
+  if browserSupportsRequiredFeatures.__cache is undefined
 
     try
       canvas = document.createElement 'canvas'
-      ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      ctx = canvas.getContext('webgl') or canvas.getContext('experimental-webgl')
 
-    browserSupportsRequiredFeatures.__cache = !!(ctx && Object.defineProperty)
+    browserSupportsRequiredFeatures.__cache = !!(ctx and Object.defineProperty)
 
   return browserSupportsRequiredFeatures.__cache
 
@@ -37,20 +37,20 @@ browserSupportsRequiredFeatures = ->
 ###
 defineClassProperty = (cls, propertyName) ->
   PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1)
-  getter = cls.prototype["_get" + PropertyName]
-  setter = cls.prototype["_set" + PropertyName]
+  getter = cls.prototype['_get' + PropertyName]
+  setter = cls.prototype['_set' + PropertyName]
 
   unless getter or setter
-    throw new Error(propertyName + " must name a getter or a setter")
+    throw new Error(propertyName + ' must name a getter or a setter')
 
   initialValue = cls.prototype[propertyName]
-  unless initialValue == undefined
-    cls.prototype["_" + propertyName] = initialValue
+  unless initialValue is undefined
+    cls.prototype['_' + propertyName] = initialValue
 
   config =
     enumerable: true
-    get: getter || -> throw new Error(propertyName + " is write-only")
-    set: setter || -> throw new Error(propertyName + " is read-only")
+    get: getter or -> throw new Error(propertyName + ' is write-only')
+    set: setter or -> throw new Error(propertyName + ' is read-only')
 
   Object.defineProperty cls.prototype, propertyName, config
 

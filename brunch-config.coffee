@@ -6,8 +6,8 @@ exports.config =
   files:
     javascripts:
       joinTo:
-        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') != -1
-        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') == -1
+        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') isnt -1
+        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') is -1
         'vendor.js': (path) -> /^vendor/.test(path)
       order:
         before: 'app/shared.coffee'
@@ -31,6 +31,16 @@ exports.config =
       pattern:
         test: (path) -> /^app\/.*\.coffee$/.test(path) && path.indexOf('.tests.coffee') == -1
       options:
+        no_unnecessary_double_quotes:
+          level: 'error'
+        no_interpolation_in_single_quotes:
+          level: 'error'
+        prefer_english_operator:
+          level: 'error'
+        space_operators:
+          level: 'error'
+        spacing_after_comma:
+          level: 'error'
         no_implicit_returns:
           module: 'coffeelint-no-implicit-returns'
         max_line_length:
