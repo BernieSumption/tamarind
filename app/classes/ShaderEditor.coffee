@@ -34,7 +34,23 @@ class ShaderEditor extends EventEmitter
     </div>
     <div class="tamarind-editor-panel">
       <div class="tamarind-editor tamarind-editor-code"></div>
-      <!--<div class="tamarind-editor tamarind-editor-config"></div>-->
+      <div class="tamarind-editor tamarind-editor-config">
+
+        Render
+        <input type="number" name="vertexCount" min="1" class="tamarind-number-input">
+
+        vertices as
+
+        <select name="drawingMode">
+            <option>POINTS</option>
+            <option>LINES</option>
+            <option>LINE_LOOP</option>
+            <option>LINE_STRIP</option>
+            <option>TRIANGLES</option>
+            <option>TRIANGLE_STRIP</option>
+            <option>TRIANGLE_FAN</option>
+        </select>
+      </div>
     </div>
     <div class="tamarind-render-panel">
       <canvas class="tamarind-render-canvas"></canvas>
@@ -52,21 +68,31 @@ class ShaderEditor extends EventEmitter
   #
   constructor: (location, config = {}) ->
 
-    @element = document.createElement('div')
-    @element.className = 'tamarind'
-    @element.innerHTML = TEMPLATE
-    @element.editor = @
+    @_element = document.createElement('div')
+    @_element.className = 'tamarind'
+    @_element.innerHTML = TEMPLATE
+    @_element.editor = @
+
+    @_editorCodeElement = @_element.querySelector('.tamarind-editor-code')
+    @_editorConfigElement = @_element.querySelector('.tamarind-editor-config')
+    @_renderCanvasElement = @_element.querySelector('.tamarind-render-canvas')
+    @_menuElement = @_element.querySelector('.tamarind-menu')
+    @_vertexCountInputElement = @_element.querySelector('[name="vertexCount"]')
+    @_drawingModeInputElement = @_element.querySelector('[name="drawingMode"]')
 
 
-    new ToggleBar(@element.querySelector('.tamarind-menu'), @, MENU_ITEM_SELECT)
+    new ToggleBar(@_menuElement, @, MENU_ITEM_SELECT)
 
-    @canvas = new WebGLCanvas(@element.querySelector('.tamarind-render-canvas'))
-
+    @canvas = new WebGLCanvas(@_renderCanvasElement)
 
     @_fragmentShaderDoc = @_bindDocumentToCanvas('fragmentShaderSource')
     @_vertexShaderDoc = @_bindDocumentToCanvas('vertexShaderSource')
+    @_bindInputToCanvas(@_vertexCountInputElement, 'vertexCount', parseInt)
+    @_bindInputToCanvas(@_drawingModeInputElement, 'drawingMode')
 
-    @_codemirror = CodeMirror(@element.querySelector('.tamarind-editor-code'),
+
+
+    @_codemirror = CodeMirror(@_editorCodeElement,
       value: @_fragmentShaderDoc
       lineNumbers: true
       lineWrapping: true
@@ -80,7 +106,7 @@ class ShaderEditor extends EventEmitter
     mergeObjects(config, @)
 
 
-    location.parentNode.insertBefore @element, location
+    location.parentNode.insertBefore @_element, location
     location.parentNode.removeChild location
 
 
@@ -90,6 +116,17 @@ class ShaderEditor extends EventEmitter
       @canvas[propertyName] = doc.getValue()
       return
     return doc
+
+
+  _bindInputToCanvas: (input, propertyName, type) ->
+    input.value = @canvas[propertyName]
+
+    update = =>
+      @canvas[propertyName] = if type then type(input.value) else input.value
+      return
+
+    input.addEventListener 'input', update
+    return
 
 
   # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this
@@ -106,6 +143,13 @@ class ShaderEditor extends EventEmitter
     return
 
   _handleMenuItemSelect: (item) ->
+    if item is CONFIG
+      @_editorCodeElement.style.display = 'none'
+      @_editorConfigElement.style.display = ''
+    else
+      @_editorCodeElement.style.display = ''
+      @_editorConfigElement.style.display = 'none'
+
     if item is FRAGMENT_SHADER
       @_codemirror.swapDoc(@_fragmentShaderDoc)
     if item is VERTEX_SHADER

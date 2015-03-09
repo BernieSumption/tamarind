@@ -43,6 +43,8 @@ void main() {
     gl_Position.xy = vec2(1, 1);
   } else if (a_VertexIndex == 3.0) {
     gl_Position.xy = vec2(-1, 1);
+  } else {
+    gl_Position.xy = vec2(0);
   }
 }
 '''
