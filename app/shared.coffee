@@ -1,5 +1,8 @@
 
 
+Tamarind =
+  FRAGMENT_SHADER: 'fragment-shader'
+  VERTEX_SHADER:   'vertex-shader'
 
 
 ###

@@ -21,15 +21,13 @@ replaceScriptTemplates = ->
 
 class ShaderEditor extends EventEmitter
 
-  FRAGMENT_SHADER = 'fragment-shader'
-  VERTEX_SHADER = 'vertex-shader'
   CONFIG = 'config'
   MENU_ITEM_SELECT = 'menu-item-select'
 
   TEMPLATE = """
     <div class="tamarind-menu">
-      <a href="javascript:void(0)" name="#{FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
-      <a href="javascript:void(0)" name="#{VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+      <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
+      <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
       <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
     </div>
     <div class="tamarind-editor-panel">
@@ -85,18 +83,25 @@ class ShaderEditor extends EventEmitter
 
     @canvas = new WebGLCanvas(@_renderCanvasElement)
 
-    @_fragmentShaderDoc = @_bindDocumentToCanvas('fragmentShaderSource')
-    @_vertexShaderDoc = @_bindDocumentToCanvas('vertexShaderSource')
+    @canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
+
+    @_activeCodeEditor = Tamarind.FRAGMENT_SHADER
+    @_fragmentShaderDoc = CodeMirror.Doc(@canvas.fragmentShaderSource, 'clike')
+    @_vertexShaderDoc = CodeMirror.Doc(@canvas.vertexShaderSource, 'clike')
     @_bindInputToCanvas(@_vertexCountInputElement, 'vertexCount', parseInt)
     @_bindInputToCanvas(@_drawingModeInputElement, 'drawingMode')
-
 
 
     @_codemirror = CodeMirror(@_editorCodeElement,
       value: @_fragmentShaderDoc
       lineNumbers: true
       lineWrapping: true
+      gutters: ['CodeMirror-lint-markers'],
+      lint:
+        getAnnotations: @_handleCodeMirrorLint
+        async: true
     )
+
     @_codemirror.on 'renderLine', @_addLineWrapIndent
     @_codemirror.refresh()
 
@@ -110,13 +115,6 @@ class ShaderEditor extends EventEmitter
     location.parentNode.removeChild location
 
 
-  _bindDocumentToCanvas: (propertyName) ->
-    doc = CodeMirror.Doc(@canvas[propertyName], 'clike')
-    doc.on 'change', =>
-      @canvas[propertyName] = doc.getValue()
-      return
-    return doc
-
 
   _bindInputToCanvas: (input, propertyName, type) ->
     input.value = @canvas[propertyName]
@@ -127,6 +125,21 @@ class ShaderEditor extends EventEmitter
 
     input.addEventListener 'input', update
     return
+
+
+  _handleCodeMirrorLint: (value, callback, options, cm) =>
+    if @_activeCodeEditor is Tamarind.FRAGMENT_SHADER
+      @canvas.fragmentShaderSource = value
+    else
+      @canvas.vertexShaderSource = value
+    @_lintingCallback = callback
+    return
+
+  _handleShaderCompile: (compileEvent) =>
+    if compileEvent.shaderType is @_activeCodeEditor
+      @_lintingCallback @_codemirror, compileEvent.errors
+    return
+
 
 
   # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this
@@ -149,10 +162,11 @@ class ShaderEditor extends EventEmitter
     else
       @_editorCodeElement.style.display = ''
       @_editorConfigElement.style.display = 'none'
+      @_activeCodeEditor = item
 
-    if item is FRAGMENT_SHADER
+    if item is Tamarind.FRAGMENT_SHADER
       @_codemirror.swapDoc(@_fragmentShaderDoc)
-    if item is VERTEX_SHADER
+    if item is Tamarind.VERTEX_SHADER
       @_codemirror.swapDoc(@_vertexShaderDoc)
 
     return
@@ -206,3 +220,20 @@ mergeObjects = (source, dest) ->
       dest[prop] = sourceValue;
   return
 
+
+CodeMirror.registerHelper 'lint', 'json', (text) ->
+  found = []
+
+  jsonlint.parseError = (str, hash) ->
+    loc = hash.loc
+    found.push
+      from: CodeMirror.Pos(loc.first_line - 1, loc.first_column)
+      to: CodeMirror.Pos(loc.last_line - 1, loc.last_column)
+      message: str
+    return
+
+  try
+    jsonlint.parse text
+  catch e
+
+  return found

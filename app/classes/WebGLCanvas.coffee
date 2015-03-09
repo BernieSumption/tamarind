@@ -61,6 +61,9 @@ void main() {
 }
 '''
 
+  VSHADER_HEADER_SIZE = VSHADER_HEADER.split('\n').length
+  FSHADER_HEADER_SIZE = FSHADER_HEADER.split('\n').length
+
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
   VALID_DRAWING_MODES = 'POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN'.split(',')
@@ -69,16 +72,15 @@ void main() {
 
   # Event name for compilation error events
   # @example
-  #     canvas.on WebGLCanvas.COMPILE_ERROR, (event) -> console.log event
-  @COMPILE_ERROR = 'compileError'
+  #     canvas.on WebGLCanvas.COMPILE, (event) -> console.log event
+  @COMPILE = 'compile'
 
   ##
   ## PUBLIC MEMBER PROPERTIES
   ##
 
 
-  # @property [int] vertexCount
-  # The number of vertices drawn.
+  # @property [int] The number of vertices drawn.
   # Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex
   # shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
   # `vertexCount - 1` that it can use to distinguish vertices
@@ -171,12 +173,12 @@ void main() {
     requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
 
     if @_vertexShaderIsDirty
-      unless @_compileShader(@_vertexShader, VSHADER_HEADER + @vertexShaderSource)
+      unless @_compileShader(Tamarind.VERTEX_SHADER, VSHADER_HEADER + @vertexShaderSource)
         return
       @_vertexShaderIsDirty = false
 
     if @_fragmentShaderIsDirty
-      unless @_compileShader(@_fragmentShader, FSHADER_HEADER + @fragmentShaderSource)
+      unless @_compileShader(Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + @fragmentShaderSource)
         return
       @_fragmentShaderIsDirty = false
 
@@ -243,17 +245,23 @@ void main() {
 
 
   # @private
-  _compileShader: (shader, source) ->
+  _compileShader: (shaderType, source) ->
+    if shaderType is Tamarind.FRAGMENT_SHADER
+      shader = @_fragmentShader
+      headerSize = FSHADER_HEADER_SIZE
+    else
+      shader = @_vertexShader
+      headerSize = VSHADER_HEADER_SIZE
     gl = @gl
     gl.shaderSource shader, source
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
-    unless compiled
-      error = gl.getShaderInfoLog(shader).trim()
-      @emit WebGLCanvas.COMPILE_ERROR, error
-      return false
 
-    return true
+
+    error = if compiled then null else gl.getShaderInfoLog(shader).trim()
+    @emit WebGLCanvas.COMPILE, new CompileStatus(shaderType, error, headerSize)
+
+    return compiled
 
 
   # @private
@@ -461,3 +469,30 @@ defineClassProperty(WebGLCanvas, 'drawingMode')
 defineClassProperty(WebGLCanvas, 'vertexCount')
 defineClassProperty(WebGLCanvas, 'vertexShaderSource')
 defineClassProperty(WebGLCanvas, 'fragmentShaderSource')
+
+
+class CompileStatus
+
+  # @property [array] an array of error objects like {message, severity ('warning' | 'error'), line}
+  errors: []
+
+  constructor: (@shaderType, error, headerSize) ->
+
+    @errors = []
+
+    if error
+
+      for line in error.split('\n')
+
+        parts = /ERROR:\s*(\d+)\s*:\s*(\d+)\s*:\s*(.*)/.exec(line)
+
+        if parts
+          line = parseInt(parts[2])
+          @errors.push(
+            message: parts[3]
+            severity: 'error'
+            from:
+              line: line - headerSize
+            to:
+              line: line - headerSize
+          )

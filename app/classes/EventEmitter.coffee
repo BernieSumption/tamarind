@@ -37,6 +37,7 @@ class EventEmitter
     @_validateEventArgs eventName
     for f in @_getEventList eventName
       f.call this, event
+    return
 
 
   # @private

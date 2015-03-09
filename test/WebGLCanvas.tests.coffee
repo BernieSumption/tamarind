@@ -85,4 +85,18 @@ describe 'WebGLCanvas', ->
     compareAgainstReferenceImage canvas, "/base/build/test/reference-images/plain-shader.png", done
 
 
+  it 'should dispatch CompileStatus events', (done) ->
+
+    canvas = new WebGLCanvas(document.createElement("canvas"), true)
+    canvas.throwOnWebGLError = true
+
+    canvas.on WebGLCanvas.COMPILE, (event) ->
+      if event.type is @_activeCodeEditor
+        console.log
+
+
+
+
+
+
 
