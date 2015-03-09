@@ -6,8 +6,9 @@ exports.config =
   files:
     javascripts:
       joinTo:
-        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf(".tests.coffee") != -1
-        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf(".tests.coffee") == -1
+        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') != -1
+        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') == -1
+        'vendor.js': (path) -> /^vendor/.test(path)
       order:
         before: 'app/shared.coffee'
 
@@ -19,7 +20,7 @@ exports.config =
     wrapper: false
 
   paths:
-    public: "build"
+    public: 'build'
 
   overrides:
     production:
@@ -28,9 +29,9 @@ exports.config =
   plugins:
     coffeelint:
       pattern:
-        test: (path) -> /^app\/.*\.coffee$/.test(path) && path.indexOf(".tests.coffee") == -1
+        test: (path) -> /^app\/.*\.coffee$/.test(path) && path.indexOf('.tests.coffee') == -1
       options:
         no_implicit_returns:
-          module: "coffeelint-no-implicit-returns"
+          module: 'coffeelint-no-implicit-returns'
         max_line_length:
           value: 200

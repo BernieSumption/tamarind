@@ -2,15 +2,19 @@
 
 @padding: 5px;
 @menu-width: 50px;
-@editor-width: 300px;
+@editor-width: 400px;
 
 @light-color: #EEE;
 @dark-color: #555;
 
+//
+// FURNITURE
+//
+
 .tamarind {
   position: relative;
   width: 1000px;
-  height: 500px;
+  height: 400px;
   border-radius: @padding;
   background-color: @dark-color;
   color: @light-color;
@@ -38,6 +42,10 @@
     content: "Tamarind";
   }
 }
+
+//
+// MENU PANEL
+//
 
 .tamarind-menu {
   position: absolute;
@@ -79,7 +87,11 @@
   }
 }
 
-.tamarind-editor {
+//
+// EDITOR PANEL
+//
+
+.tamarind-editor-panel {
   position: absolute;
   top: @padding;
   left: @menu-width;
@@ -92,14 +104,40 @@
   &:extend(.tamarind-inset);
 }
 
+.tamarind-editor-code {
+  height: 100%;
+  padding: @padding;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tamarind-editor-code .CodeMirror {
+  height: 100%;
+  background: @light-color;
+}
+.tamarind-editor-code .CodeMirror-gutters {
+  background: @light-color;
+}
+
+
+//
+// RENDER PANEL
+//
+
 .tamarind-render-panel {
   position: absolute;
   top: @padding;
   left: @menu-width + @editor-width + @padding * 1;
   right: @padding;
   bottom: @padding;
+  border-radius: @padding;
 
+  background: data-uri("checkerboard.png");
 }
+
+//
+// TEXT STYLES
+//
 
 
 .tamarind-inset {

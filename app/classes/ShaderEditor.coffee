@@ -11,9 +11,7 @@ replaceScriptTemplates = ->
     else
       config = {}
 
-    editor = new ShaderEditor(config)
-    scriptTemplate.parentNode.insertBefore(editor.element, scriptTemplate)
-    scriptTemplate.parentNode.removeChild(scriptTemplate)
+    editor = new ShaderEditor(scriptTemplate, config)
 
 
   return
@@ -23,16 +21,20 @@ replaceScriptTemplates = ->
 
 class ShaderEditor extends EventEmitter
 
+  FRAGMENT_SHADER = 'fragment-shader'
+  VERTEX_SHADER = 'vertex-shader'
+  CONFIG = 'config'
+  MENU_ITEM_SELECT = 'menu-item-select'
+
   TEMPLATE = """
     <div class="tamarind-menu">
-      <a href="javascript:void(0)" name="config" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
-      <a href="javascript:void(0)" name="fragment-shader" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
-      <a href="javascript:void(0)" name="vertex-shader" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+      <a href="javascript:void(0)" name="#{FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
+      <a href="javascript:void(0)" name="#{VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+      <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
     </div>
     <div class="tamarind-editor-panel">
-      <div class="tamarind-editor tamarind-editor-config"></div>
-      <div class="tamarind-editor tamarind-editor-fragment-shader"></div>
-      <div class="tamarind-editor tamarind-editor-vertex-shader"></div>
+      <div class="tamarind-editor tamarind-editor-code"></div>
+      <!--<div class="tamarind-editor tamarind-editor-config"></div>-->
     </div>
     <div class="tamarind-render-panel">
       <canvas class="tamarind-render-canvas"></canvas>
@@ -40,35 +42,73 @@ class ShaderEditor extends EventEmitter
     <span class="tamarind-logo"></span>
   """
 
-  MENU_ITEM_SELECT = "menu-item-select"
 
 
 
-  constructor: (@_config = {}) ->
+  # Create a new Tamarind editor
+  # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
+  constructor: (location, @_config = {}) ->
 
     @element = document.createElement("div")
     @element.className = "tamarind"
     @element.innerHTML = TEMPLATE
     @element.editor = @
 
-    @element.addEventListener "click", @_handleClick
+    location.parentNode.insertBefore @element, location
+    location.parentNode.removeChild location
 
-    @_canvas = new WebGLCanvas(@element.querySelector(".tamarind-render-canvas"))
 
     new ToggleBar(@element.querySelector(".tamarind-menu"), @, MENU_ITEM_SELECT)
 
+    @_canvas = new WebGLCanvas(@element.querySelector(".tamarind-render-canvas"))
 
-  _handleClick: (event) =>
-    eventName = event.target.getAttribute("data-event")
-    if eventName
-      eventArg = event.target.getAttribute("data-arg")
-      @emit eventName, eventArg
 
+    @_fragmentShaderDoc = @_bindDocumentToCanvas('fragmentShaderSource')
+    @_vertexShaderDoc = @_bindDocumentToCanvas('vertexShaderSource')
+
+    @_codemirror = CodeMirror(@element.querySelector(".tamarind-editor-code"),
+      value: @_fragmentShaderDoc
+      lineNumbers: true
+      lineWrapping: true
+    )
+    @_codemirror.on "renderLine", @_addLineWrapIndent
+    @_codemirror.refresh()
+
+    @on MENU_ITEM_SELECT, @_handleMenuItemSelect
+
+
+
+  _bindDocumentToCanvas: (propertyName) ->
+    doc = CodeMirror.Doc(@_canvas[propertyName], 'clike')
+    doc.on 'change', =>
+      @_canvas[propertyName] = doc.getValue()
+      return
+    return doc
+
+
+  # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this
+  # version indents the wrapped line by a further 2 characters
+  _addLineWrapIndent: (cm, line, elt) =>
+    unless @_codeCharWidth
+      @_codeCharWidth = @_codemirror.defaultCharWidth()
+
+    basePadding = 4
+    indentChars = 2
+    offset = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * @_codeCharWidth
+    elt.style.textIndent = "-" + (offset + @_codeCharWidth * indentChars) + "px"
+    elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + "px"
+    return
+
+  _handleMenuItemSelect: (item) ->
+    if item is FRAGMENT_SHADER
+      @_codemirror.swapDoc(@_fragmentShaderDoc)
+    if item is VERTEX_SHADER
+      @_codemirror.swapDoc(@_vertexShaderDoc)
 
     return
 
 
-# A set of links where at any one time, one link.
+# A set of links where at any one time, one link is .
 class ToggleBar
 
   constructor: (@_parent, @_events, @_eventName) ->
@@ -87,5 +127,7 @@ class ToggleBar
       else
         child.classList.remove("is-selected")
 
+    setTimeout (=> @_events.emit @_eventName, @_selectedChild.name), 1
+    return
 
 

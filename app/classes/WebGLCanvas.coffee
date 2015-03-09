@@ -120,7 +120,6 @@ void main() {
     @canvas.addEventListener "webglcontextlost", => @_handleContextLost()
     @canvas.addEventListener "webglcontextrestored", => @_handleContextRestored()
 
-
     @_createContext()
 
     unless @gl
@@ -195,8 +194,8 @@ void main() {
 
   # @private
   _createContext: ->
-
-    @nativeContext = @canvas.getContext("webgl") || @canvas.getContext("experimental-webgl")
+    opts = {premultipliedAlpha: false}
+    @nativeContext = @canvas.getContext("webgl", opts) || @canvas.getContext("experimental-webgl", opts)
 
     # passing undefined as an argument to any WebGL function is an
     # error, so throw an exception to catch it early
