@@ -82,7 +82,7 @@ describe 'WebGLCanvas', ->
       }
     """
 
-    compareAgainstReferenceImage canvas, "/base/debug/test/reference-images/plain-shader.png", done
+    compareAgainstReferenceImage canvas, "/base/build/test/reference-images/plain-shader.png", done
 
 
 

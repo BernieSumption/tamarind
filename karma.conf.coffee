@@ -10,9 +10,9 @@ module.exports = (config) -> config.set
 
   # list of files / patterns to load in the browser
   files: [
-    'debug/tamarind.js'
-    'debug/tamarind.tests.js'
-    {pattern: 'debug/test/**/*.png', watched: true, served: true, included: false}
+    'build/tamarind.js'
+    'build/tamarind.tests.js'
+    {pattern: 'build/test/**/*.png', watched: true, served: true, included: false}
   ]
 
   # list of files to exclude

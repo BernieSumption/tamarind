@@ -47,20 +47,17 @@ class ShaderEditor extends EventEmitter
 
   # Create a new Tamarind editor
   # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
-  constructor: (location, @_config = {}) ->
+  constructor: (location, config = {}) ->
 
     @element = document.createElement('div')
     @element.className = 'tamarind'
     @element.innerHTML = TEMPLATE
     @element.editor = @
 
-    location.parentNode.insertBefore @element, location
-    location.parentNode.removeChild location
-
 
     new ToggleBar(@element.querySelector('.tamarind-menu'), @, MENU_ITEM_SELECT)
 
-    @_canvas = new WebGLCanvas(@element.querySelector('.tamarind-render-canvas'))
+    @canvas = new WebGLCanvas(@element.querySelector('.tamarind-render-canvas'))
 
 
     @_fragmentShaderDoc = @_bindDocumentToCanvas('fragmentShaderSource')
@@ -77,11 +74,17 @@ class ShaderEditor extends EventEmitter
     @on MENU_ITEM_SELECT, @_handleMenuItemSelect
 
 
+    mergeObjects(config, @)
+
+
+    location.parentNode.insertBefore @element, location
+    location.parentNode.removeChild location
+
 
   _bindDocumentToCanvas: (propertyName) ->
-    doc = CodeMirror.Doc(@_canvas[propertyName], 'clike')
+    doc = CodeMirror.Doc(@canvas[propertyName], 'clike')
     doc.on 'change', =>
-      @_canvas[propertyName] = doc.getValue()
+      @canvas[propertyName] = doc.getValue()
       return
     return doc
 
@@ -130,4 +133,29 @@ class ToggleBar
     setTimeout (=> @_events.emit @_eventName, @_selectedChild.name), 1
     return
 
+
+# merge all properties of one object onto another, so for example
+#
+# `mergeObjects({x: 1, y: {z: 2}}, dest)`
+#
+# is the same as
+#
+# `dest.x = 1; dest.y.z = 2`
+mergeObjects = (source, dest) ->
+  for prop of source
+    destValue = dest[prop]
+    destType = typeof destValue
+    sourceValue = source[prop]
+    sourceType = typeof sourceValue
+    unless sourceType is destType
+      throw new Error("Can't merge property '#{prop}': source is #{sourceType} destination is #{destType}")
+
+
+    if typeof destValue is 'object'
+      unless typeof sourceValue is 'object'
+        throw new Error("Can't merge simple source onto complex destination for property '#{prop}'")
+      mergeObjects(sourceValue, destValue)
+    else
+      dest[prop] = sourceValue;
+  return
 

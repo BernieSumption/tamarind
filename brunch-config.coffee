@@ -6,8 +6,8 @@ exports.config =
   files:
     javascripts:
       joinTo:
-        'tamarind.tests.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') isnt -1
-        'tamarind.js': (path) -> /^app/.test(path) && path.indexOf('.tests.coffee') is -1
+        'tamarind.js': (path) -> /^app/.test(path)
+        'tamarind.tests.js': (path) -> /^test/.test(path)
         'vendor.js': (path) -> /^vendor/.test(path)
       order:
         before: 'app/shared.coffee'
