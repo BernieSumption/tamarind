@@ -47,6 +47,9 @@ class ShaderEditor extends EventEmitter
 
   # Create a new Tamarind editor
   # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
+  # @param [object] config, an map of values to be copied onto this object. Values are recursively merged into this
+  #                         object, so e.g. {canvas: {vertexCount: 4}} will set `myShaderEditor.canvas.vertexCount = 4`
+  #
   constructor: (location, config = {}) ->
 
     @element = document.createElement('div')
