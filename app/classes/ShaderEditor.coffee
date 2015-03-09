@@ -100,6 +100,7 @@ class ShaderEditor extends EventEmitter
       lint:
         getAnnotations: @_handleCodeMirrorLint
         async: true
+        delay: 200
     )
 
     @_codemirror.on 'renderLine', @_addLineWrapIndent

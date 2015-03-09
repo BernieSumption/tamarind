@@ -1,6 +1,6 @@
 {
   "name": "",
-  "css_prefix_text": "tamarind-icon",
+  "css_prefix_text": "tamarind-icon-",
   "css_use_suffix": false,
   "hinting": true,
   "units_per_em": 1000,
@@ -31,16 +31,16 @@
       "src": "entypo"
     },
     {
-      "uid": "91426c82d94428a33353e495418435e3",
-      "css": "vertex-shader",
-      "code": 59399,
-      "src": "entypo"
-    },
-    {
       "uid": "39c4d0e225a1263a398a47523cb5b9bd",
       "css": "fragment-shader",
       "code": 59393,
       "src": "entypo"
+    },
+    {
+      "uid": "500cde26773d15aaac1bfaa2a33cc5a9",
+      "css": "vertex-shader",
+      "code": 59395,
+      "src": "mfglabs"
     }
   ]
 }
