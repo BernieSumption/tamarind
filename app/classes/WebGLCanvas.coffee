@@ -492,12 +492,12 @@ class CompileStatus
 
       for line in error.split('\n')
 
-        parts = /ERROR:\s*(\d+)\s*:\s*(\d+)\s*:\s*(.*)/.exec(line)
+        parts = /^ERROR:\s*\d+\s*:\s*(\d+)\s*:\s*(.*)/.exec(line) or /^\((\d+),\s*\d+\):\s*(.*)/.exec(line)
 
         if parts
-          line = parseInt(parts[2])
+          line = parseInt(parts[1])
           @errors.push(
-            message: parts[3]
+            message: parts[2]
             line: line - headerSize
           )
 
