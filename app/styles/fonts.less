@@ -47,5 +47,13 @@
 .tamarind-icon-config:before { content: '\e802'; } /* '' */
 .tamarind-icon-vertex-shader:before { content: '\e803'; } /* '' */
 .tamarind-icon-help:before { content: '\e804'; } /* '' */
-.tamarind-icon-logo:before { content: '\e805'; } /* '' */
+.tamarind-icon-unhappy:before { content: '\e805'; } /* '' */
+.tamarind-icon-resize-normal:before { content: '\e806'; } /* '' */
+.tamarind-icon-resize-big:before { content: '\e807'; } /* '' */
 .tamarind-icon-reference:before { content: '\e808'; } /* '' */
+
+// move this icon left because the particular glyph we're using seems aligned a bit too far right
+.tamarind-icon-vertex-shader:before {
+  position: relative;
+  left: -3px;
+}

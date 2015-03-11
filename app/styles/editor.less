@@ -23,6 +23,16 @@
   &:extend(.tamarind-emboss);
 }
 
+.tamarind-unsupported {
+  height: auto;
+  padding: 20px;
+}
+
+.tamarind-unsupported-icon {
+  margin-right: 20px;
+  font-size: 30px;
+}
+
 .tamarind-logo {
   position: absolute;
   bottom: @padding * 2;
@@ -152,8 +162,13 @@
   right: @padding;
   bottom: @padding;
   border-radius: @padding;
+  overflow: hidden;
 
   background: data-uri("checkerboard.png");
+  overflow: hidden;
+
+  // Hack to force the rounded corners to clip the child canvas in safari.
+  -webkit-mask-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC"); /* this fixes the overflow:hidden in Chrome/Opera */
 }
 
 //

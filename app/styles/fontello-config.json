@@ -7,6 +7,12 @@
   "ascent": 850,
   "glyphs": [
     {
+      "uid": "53ed8570225581269cd7eff5795e8bea",
+      "css": "unhappy",
+      "code": 59397,
+      "src": "fontelico"
+    },
+    {
       "uid": "98687378abd1faf8f6af97c254eb6cd6",
       "css": "config",
       "code": 59394,
@@ -35,6 +41,18 @@
       "css": "fragment-shader",
       "code": 59393,
       "src": "entypo"
+    },
+    {
+      "uid": "cdfalpadi7huwv9ah4fef2gpfpb4c6qm",
+      "css": "resize-big",
+      "code": 59399,
+      "src": "typicons"
+    },
+    {
+      "uid": "8d2bc2d959a55e76466bbef6e84c8373",
+      "css": "resize-normal",
+      "code": 59398,
+      "src": "typicons"
     },
     {
       "uid": "500cde26773d15aaac1bfaa2a33cc5a9",

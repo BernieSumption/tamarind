@@ -24,6 +24,11 @@ class ShaderEditor extends EventEmitter
   CONFIG = 'config'
   MENU_ITEM_SELECT = 'menu-item-select'
 
+  NOT_SUPPORTED_HTML = '''
+    <span class="tamarind-icon-unhappy tamarind-unsupported-icon" title="And lo there shall be no editor, and in that place there shall be wailing and gnashing of teeth."></span>
+    Your browser doesn't support this feature. Try Internet Explorer 11+ or recent versions of Chrome, Firefox or Safari.
+  '''
+
   TEMPLATE = """
     <div class="tamarind-menu">
       <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
@@ -58,7 +63,6 @@ class ShaderEditor extends EventEmitter
     <div class="tamarind-render-panel">
       <canvas class="tamarind-render-canvas"></canvas>
     </div>
-    <span class="tamarind-logo"></span>
   """
 
 
@@ -75,8 +79,19 @@ class ShaderEditor extends EventEmitter
 
     @_element = document.createElement('div')
     @_element.className = 'tamarind'
-    @_element.innerHTML = TEMPLATE
     @_element.editor = @
+    location.parentNode.insertBefore @_element, location
+    location.parentNode.removeChild location
+
+    unless browserSupportsRequiredFeatures()
+      @_element.innerHTML = NOT_SUPPORTED_HTML
+      @_element.className += ' tamarind-unsupported'
+      return
+    else
+      @_element.className = 'tamarind'
+
+
+    @_element.innerHTML = TEMPLATE
 
     @_editorCodeElement = @_element.querySelector('.tamarind-editor-code')
     @_editorConfigElement = @_element.querySelector('.tamarind-editor-config')
@@ -88,14 +103,14 @@ class ShaderEditor extends EventEmitter
 
     new ToggleBar(@_menuElement, @, MENU_ITEM_SELECT)
 
-    @canvas = new WebGLCanvas(@_renderCanvasElement)
+    @_canvas = new WebGLCanvas(@_renderCanvasElement)
 
-    @canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
-    @canvas.on WebGLCanvas.LINK, @_setProgramError
+    @_canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
+    @_canvas.on WebGLCanvas.LINK, @_setProgramError
 
     @_activeCodeEditor = Tamarind.FRAGMENT_SHADER
-    @_fragmentShaderDoc = CodeMirror.Doc(@canvas.fragmentShaderSource, 'clike')
-    @_vertexShaderDoc = CodeMirror.Doc(@canvas.vertexShaderSource, 'clike')
+    @_fragmentShaderDoc = CodeMirror.Doc(@_canvas.fragmentShaderSource, 'clike')
+    @_vertexShaderDoc = CodeMirror.Doc(@_canvas.vertexShaderSource, 'clike')
     @_bindInputToCanvas(@_vertexCountInputElement, 'vertexCount', parseInt)
     @_bindInputToCanvas(@_drawingModeInputElement, 'drawingMode')
 
@@ -130,17 +145,13 @@ class ShaderEditor extends EventEmitter
     mergeObjects(config, @)
 
 
-    location.parentNode.insertBefore @_element, location
-    location.parentNode.removeChild location
-
-
 
   # @private
   _bindInputToCanvas: (input, propertyName, parseFunction = String) ->
-    input.value = @canvas[propertyName]
+    input.value = @_canvas[propertyName]
 
     input.addEventListener 'input', =>
-      @canvas[propertyName] = parseFunction(input.value)
+      @_canvas[propertyName] = parseFunction(input.value)
       return
 
     return
@@ -150,9 +161,9 @@ class ShaderEditor extends EventEmitter
   # has finished typing in an editor window, and we use them to update the shader source
   _handleCodeMirrorLint: (value, callback, options, cm) =>
     if @_activeCodeEditor is Tamarind.FRAGMENT_SHADER
-      @canvas.fragmentShaderSource = value
+      @_canvas.fragmentShaderSource = value
     else
-      @canvas.vertexShaderSource = value
+      @_canvas.vertexShaderSource = value
     @_lintingCallback = callback
     return
 
@@ -170,7 +181,9 @@ class ShaderEditor extends EventEmitter
   _setProgramError: (error) =>
     if error
       @_programErrorElement.style.display = ''
-      @_programErrorElement.querySelector('.tamarind-program-error-message').innerText = 'Program error: ' + error
+      msgElement = @_programErrorElement.querySelector('.tamarind-program-error-message')
+      msgElement.innerHTML = ''
+      msgElement.appendChild(document.createTextNode('Program error: ' + error))
     else
       @_programErrorElement.style.display = 'none'
 
@@ -208,7 +221,13 @@ class ShaderEditor extends EventEmitter
     return
 
 
-# A set of links where at any one time, one link is .
+  _getCanvas: -> @_canvas
+
+
+defineClassProperty(ShaderEditor, 'canvas')
+
+
+# A set of links where at any one time, one link is highlighted with the 'is-selected' class.
 class ToggleBar
 
   constructor: (@_parent, @_events, @_eventName) ->
@@ -218,6 +237,8 @@ class ToggleBar
     @selectChild(@_children[0])
 
   selectChild: (childToSelect) =>
+    if childToSelect not in @_children
+      return
     if @_selectedChild is childToSelect
       return
     @_selectedChild = childToSelect
