@@ -29,7 +29,7 @@ exports.config =
   plugins:
     coffeelint:
       pattern:
-        test: (path) -> /^app\/.*\.coffee$/.test(path) && path.indexOf('.tests.coffee') == -1
+        test: (path) -> /^(app|test)\/.*\.coffee$/.test(path)
       options:
         no_unnecessary_double_quotes:
           level: 'error'

@@ -10,6 +10,7 @@ module.exports = (config) -> config.set
 
   # list of files / patterns to load in the browser
   files: [
+    'build/vendor.js'
     'build/tamarind.js'
     'build/tamarind.tests.js'
     {pattern: 'build/test/**/*.png', watched: true, served: true, included: false}

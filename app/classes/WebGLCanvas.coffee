@@ -86,6 +86,11 @@ void main() {
   # `vertexCount - 1` that it can use to distinguish vertices
   vertexCount: 4
 
+
+  # @property [String] A string mode name as used by WebGL's drawArrays method
+  # i.e. one of: POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
+  drawingMode: 'TRIANGLE_FAN'
+
   # @property [string] GLSL source code for the fragment shader, excluding
   # attribute and uniform definitions which will be added automatically
   fragmentShaderSource: DEFAULT_FSHADER_SOURCE
@@ -99,38 +104,31 @@ void main() {
   # slow. Don't use this in production
   debugMode: false
 
-  # @property [boolean] `false` to log WebGL errors to the console, `true` to throw an
-  # exception. Only applies when `debugMode` is `true`
-  throwOnWebGLError: false
-
   ##
   ## PUBLIC API METHODS
   ##
 
-  # @param [HTMLCanvasElement] @canvas the canvas element to render onto
+  # @param [HTMLCanvasElement] @@canvasElement the canvas element to render onto
   # @param [boolean] @debugMode the initial value of the `debugMode` property
-  constructor: (@canvas, @debugMode = false) ->
+  constructor: (@canvasElement, @debugMode = false) ->
 
     unless browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
 
-
-    @_uniformInfoByName = {}
-
-    @canvas.addEventListener 'webglcontextcreationerror', (event) =>
+    @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
       @trace.error event.statusMessage
       return
 
-    @canvas.addEventListener 'webglcontextlost', => @_handleContextLost()
-    @canvas.addEventListener 'webglcontextrestored', => @_handleContextRestored()
+    @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
+    @canvasElement.addEventListener 'webglcontextrestored', @_handleContextRestored
+
+    @_shaders = {}
 
     @_createContext()
 
     unless @gl
       throw new Error('Could not create WebGL context for canvas')
 
-    # A string mode anme as used by WebGL's drawArrays method, i.e. one of:
-    # POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
     @drawingMode = 'TRIANGLE_FAN'
 
     @_scheduleFrame()
@@ -173,12 +171,12 @@ void main() {
     requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
 
     if @_vertexShaderIsDirty
-      unless @_compileShader(Tamarind.VERTEX_SHADER, VSHADER_HEADER + @vertexShaderSource)
+      unless @_compileShader(Tamarind.VERTEX_SHADER, VSHADER_HEADER + @vertexShaderSource, VSHADER_HEADER_SIZE)
         return
       @_vertexShaderIsDirty = false
 
     if @_fragmentShaderIsDirty
-      unless @_compileShader(Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + @fragmentShaderSource)
+      unless @_compileShader(Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + @fragmentShaderSource, FSHADER_HEADER_SIZE)
         return
       @_fragmentShaderIsDirty = false
 
@@ -199,7 +197,7 @@ void main() {
   # @private
   _createContext: ->
     opts = {premultipliedAlpha: false}
-    @nativeContext = @canvas.getContext('webgl', opts) or @canvas.getContext('experimental-webgl', opts)
+    @nativeContext = @canvasElement.getContext('webgl', opts) or @canvasElement.getContext('experimental-webgl', opts)
 
     # passing undefined as an argument to any WebGL function is an
     # error, so throw an exception to catch it early
@@ -222,7 +220,6 @@ void main() {
       intMode = @gl[mode]
       if intMode is undefined
         throw new Error(mode + ' is not a valid drawing mode')
-      @_drawingModeNames[mode] = intMode
       @_drawingModeNames[intMode] = mode
 
     return
@@ -232,33 +229,44 @@ void main() {
   _setupContext: ->
     gl = @gl
 
-    unless (
-      (@_vertexBuffer = gl.createBuffer()) and
-      (@_program = gl.createProgram()) and
-      (@_vertexShader = gl.createShader(gl.VERTEX_SHADER)) and
-      (@_fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)))
+    unless @_program = gl.createProgram()
       return false
-    gl.attachShader @_program, @_vertexShader
-    gl.attachShader @_program, @_fragmentShader
+
+    @_shaders = {}
+
+    unless @_vertexBuffer = gl.createBuffer()
+      return false
 
     return true
 
 
   # @private
-  _compileShader: (shaderType, source) ->
-    if shaderType is Tamarind.FRAGMENT_SHADER
-      shader = @_fragmentShader
-      headerSize = FSHADER_HEADER_SIZE
-    else
-      shader = @_vertexShader
-      headerSize = VSHADER_HEADER_SIZE
+  _compileShader: (shaderType, source, headerSize) ->
+
     gl = @gl
+
+    oldShader = @_shaders[shaderType]
+
+    if oldShader
+      # Note - deliberately not reusing shader objects. According to the spec we should be able to
+      # reuse a shader object for compiling new source, but a Firefox bug makes gl.getShaderParameter
+      # unreliable except on the first use of a shader object
+      gl.detachShader(@_program, oldShader)
+      gl.deleteShader(oldShader)
+
+
+    @_shaders[shaderType] = shader = gl.createShader(gl[shaderType])
+
+    unless shader
+      return false
+
+    gl.attachShader @_program, shader
+
     gl.shaderSource shader, source
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
-
-    error = if compiled then null else gl.getShaderInfoLog(shader).trim()
+    error = if compiled then null else gl.getShaderInfoLog(shader)
     @emit WebGLCanvas.COMPILE, new CompileStatus(shaderType, error, headerSize)
 
     return compiled
@@ -267,14 +275,12 @@ void main() {
   # @private
   _linkProgram: () ->
     gl = @gl
-    # Attach the shader objects
+
 
     gl.bindAttribLocation @_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, 'a_VertexIndex'
 
-    # Link the program object
     gl.linkProgram @_program
 
-    # Check the result of linking
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
       error = gl.getProgramInfoLog(@_program)
@@ -283,7 +289,7 @@ void main() {
 
     gl.useProgram @_program
 
-    # get a list of uniforms
+    # get and cache a list of uniform names to locations
     numUniforms = gl.getProgramParameter(@_program, gl.ACTIVE_UNIFORMS)
     @_uniformInfoByName = {}
     for i in [0..numUniforms - 1] by 1
@@ -319,15 +325,15 @@ void main() {
     gl = @gl
 
 
-    width = explicitWidth or Math.round(@canvas.offsetWidth * (window.devicePixelRatio or 1))
-    height = explicitHeight or Math.round(@canvas.offsetHeight * (window.devicePixelRatio or 1))
+    width = explicitWidth or Math.round(@canvasElement.offsetWidth * (window.devicePixelRatio or 1))
+    height = explicitHeight or Math.round(@canvasElement.offsetHeight * (window.devicePixelRatio or 1))
 
     @_setUniform 'u_CanvasSize', width, height
 
     unless width is @_width and height is @_height
 
-      @_width = @canvas.width = width
-      @_height = @canvas.height = height
+      @_width = @canvasElement.width = width
+      @_height = @canvasElement.height = height
 
       gl.viewport 0, 0, width, height
 
@@ -347,7 +353,7 @@ void main() {
   captureImage: (width, height) ->
     @_doFrame()
     @_render(width, height)
-    image = @canvas.toDataURL 'image/png'
+    image = @canvasElement.toDataURL 'image/png'
     @_render() # restore previous size
 
     return image
@@ -373,7 +379,7 @@ void main() {
 
 
   # @private
-  _handleContextLost: (e) ->
+  _handleContextLost: (e) =>
     @trace.log 'WebGL context lost, suspending all GL calls'
     @_contextLost = true
     (e or window.event).preventDefault()
@@ -382,7 +388,7 @@ void main() {
 
 
   # @private
-  _handleContextRestored: (e) ->
+  _handleContextRestored: =>
     @trace.log 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
@@ -490,9 +496,8 @@ class CompileStatus
           line = parseInt(parts[2])
           @errors.push(
             message: parts[3]
-            severity: 'error'
-            from:
-              line: line - headerSize
-            to:
-              line: line - headerSize
+            line: line - headerSize
           )
+
+  toString: ->
+    return "CompileStatus('#{@shaderType}', [#{@errors.length} errors])"

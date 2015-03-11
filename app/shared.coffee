@@ -1,8 +1,8 @@
 
 
 Tamarind =
-  FRAGMENT_SHADER: 'fragment-shader'
-  VERTEX_SHADER:   'vertex-shader'
+  FRAGMENT_SHADER: 'FRAGMENT_SHADER'
+  VERTEX_SHADER:   'VERTEX_SHADER'
 
 
 ###

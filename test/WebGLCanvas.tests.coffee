@@ -2,31 +2,32 @@
 compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
   imageToDataUrl = (imageElement) ->
-    canvasElement = document.createElement "canvas"
+    canvasElement = document.createElement 'canvas'
     canvasElement.width = imageElement.width
     canvasElement.height = imageElement.height
-    ctx = canvasElement.getContext "2d"
+    ctx = canvasElement.getContext '2d'
     ctx.drawImage(imageElement, 0, 0)
-    return canvasElement.toDataURL("image/png")
+    return canvasElement.toDataURL('image/png')
 
   loaded = 0
 
-  handleLoad = =>
+  handleLoad = ->
     ++loaded
     if loaded is 2
       expectedData = imageToDataUrl(expected)
       actualData = imageToDataUrl(actual)
       unless expectedData is actualData
         window.focus()
-        console.log "EXPECTED DATA: " + expectedData
-        console.log "ACTUAL DATA: " + actualData
-        if document.location.href.indexOf("bad-images") != -1
+        console.log 'EXPECTED DATA: ' + expectedData
+        console.log 'ACTUAL DATA: ' + actualData
+        unless document.location.href.indexOf('bad-images') is -1
           window.open expectedData
           window.open actualData
         else
-          console.log "PRO TIP: append ?bad-images to the Karma runner URL and reload to view these images"
+          console.log 'PRO TIP: append ?bad-images to the Karma runner URL and reload to view these images'
         expect(false).toBeTruthy()
       done()
+    return
 
   actual = new Image()
   actual.onload = handleLoad
@@ -37,6 +38,8 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
   expected.onerror = -> throw new Error("Couldn't load " + referenceImageUrl)
   expected.src = referenceImageUrl
 
+  return
+
 
 describe 'WebGLCanvas', ->
 
@@ -44,23 +47,25 @@ describe 'WebGLCanvas', ->
 
   beforeEach ->
     console.error = (message) ->
-      oldError.call(console, message)
+      unless message is 'this error is expected'
+        oldError.call(console, message)
       throw new Error(message)
+
+    return
 
   afterEach ->
     console.error = oldError
+    return
 
   it 'should throw an exception on console errors', ->
-    expect(-> console.error("this error is expected")).toThrow(new Error("this error is expected"))
+    expect(-> console.error('this error is expected')).toThrow(new Error('this error is expected'))
+    return
 
   it 'should render a test image', (done) ->
 
+    canvas = new WebGLCanvas(document.createElement('canvas'), true)
 
-    canvas = new WebGLCanvas(document.createElement("canvas"), true)
-    canvas.throwOnWebGLError = true
-
-
-    canvas.vertexShaderSource = """
+    canvas.vertexShaderSource = '''
       void main() {
         // 4 points, one in each corner, clockwise from top left
         if (a_VertexIndex == 0.0) {
@@ -73,26 +78,67 @@ describe 'WebGLCanvas', ->
           gl_Position.xy = vec2(-1, 1);
         }
       }
-    """
+    '''
 
-    canvas.fragmentShaderSource = """
+    canvas.fragmentShaderSource = '''
       void main() {
-        gl_FragColor.r = u_CanvasSize.x;
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
-    """
+    '''
 
-    compareAgainstReferenceImage canvas, "/base/build/test/reference-images/plain-shader.png", done
+    compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
 
+    return
 
-  it 'should dispatch CompileStatus events', (done) ->
+  expectErrorCountFromSource = (done, expectedErrorLines, fragmentShaderSource) ->
 
-    canvas = new WebGLCanvas(document.createElement("canvas"), true)
-    canvas.throwOnWebGLError = true
+    canvas = new WebGLCanvas(document.createElement('canvas'))
+
+    canvas.fragmentShaderSource = fragmentShaderSource
 
     canvas.on WebGLCanvas.COMPILE, (event) ->
-      if event.type is @_activeCodeEditor
-        console.log
+      if event.shaderType is Tamarind.FRAGMENT_SHADER
+        actualErrorLines = (err.line for err in event.errors)
+        expect(actualErrorLines).toEqual(expectedErrorLines)
+        done()
+
+      return
+
+    return
+
+  it 'should dispatch CompileStatus events on sucessful compilation', (done) ->
+
+    expectErrorCountFromSource done, [], '''
+      void main() {
+        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+      }
+    '''
+
+    return
+
+  it 'should have one error if there is a syntax problem', (done) ->
+
+    expectErrorCountFromSource done, [1],  '''
+      void main() {
+        gl_FragColor vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1); // error: missing equals
+      }
+    '''
+
+    return
+
+  it 'should have multiple errors if there are multiple validation problems', (done) ->
+
+    expectErrorCountFromSource done, [1, 3],  '''
+      void main() {
+        foo = 1.0; // first error
+        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+        bar = 2.0; // second error
+      }
+    '''
+
+    return
+
+  return
 
 
 

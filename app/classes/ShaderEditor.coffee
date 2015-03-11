@@ -57,6 +57,8 @@ class ShaderEditor extends EventEmitter
   """
 
 
+  # @property [WebGLCanvas] the rendering canvas for this editor. Read-only.
+  canvas: null
 
 
   # Create a new Tamarind editor
@@ -117,17 +119,19 @@ class ShaderEditor extends EventEmitter
 
 
 
-  _bindInputToCanvas: (input, propertyName, type) ->
+  # @private
+  _bindInputToCanvas: (input, propertyName, parseFunction = String) ->
     input.value = @canvas[propertyName]
 
-    update = =>
-      @canvas[propertyName] = if type then type(input.value) else input.value
+    input.addEventListener 'input', =>
+      @canvas[propertyName] = parseFunction(input.value)
       return
 
-    input.addEventListener 'input', update
     return
 
-
+  # @private
+  # Handle CodeMirror lint events. These are fired a few hundred milliseconds after the user
+  # has finished typing in an editor window, and we use them to update the shader source
   _handleCodeMirrorLint: (value, callback, options, cm) =>
     if @_activeCodeEditor is Tamarind.FRAGMENT_SHADER
       @canvas.fragmentShaderSource = value
@@ -138,11 +142,17 @@ class ShaderEditor extends EventEmitter
 
   _handleShaderCompile: (compileEvent) =>
     if compileEvent.shaderType is @_activeCodeEditor
-      @_lintingCallback @_codemirror, compileEvent.errors
+      errors = for err in compileEvent.errors
+        message: err.message
+        from: {line: err.line}
+        to: {line: err.line}
+
+      @_lintingCallback @_codemirror, errors
     return
 
 
 
+  # @private
   # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this
   # version indents the wrapped line by a further 2 characters
   _addLineWrapIndent: (cm, line, elt) =>
@@ -156,6 +166,7 @@ class ShaderEditor extends EventEmitter
     elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + 'px'
     return
 
+  # @private
   _handleMenuItemSelect: (item) ->
     if item is CONFIG
       @_editorCodeElement.style.display = 'none'
