@@ -70,10 +70,12 @@ void main() {
 
   SET_UNIFORM_FUNCTION_NAMES = [null, 'uniform1f', 'uniform2f', 'uniform3f', 'uniform4f']
 
-  # Event name for compilation error events
-  # @example
-  #     canvas.on WebGLCanvas.COMPILE, (event) -> console.log event
+  # Event name for compilation events. The event argument is a CompileStatus object
   @COMPILE = 'compile'
+
+  # Event name for compilation error events. The event argument is `false` if there was no error or
+  # an error message if there was an error.
+  @LINK = 'link'
 
   ##
   ## PUBLIC MEMBER PROPERTIES
@@ -276,16 +278,16 @@ void main() {
   _linkProgram: () ->
     gl = @gl
 
-
     gl.bindAttribLocation @_program, VERTEX_INDEX_ATTRIBUTE_LOCATION, 'a_VertexIndex'
 
     gl.linkProgram @_program
 
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
-      error = gl.getProgramInfoLog(@_program)
-      @trace.log 'Failed to link program: ' + error
+      @emit WebGLCanvas.LINK, gl.getProgramInfoLog(@_program).trim()
       return false
+
+    @emit WebGLCanvas.LINK, false
 
     gl.useProgram @_program
 
@@ -457,7 +459,7 @@ void main() {
   # @private
   _setDebugMode: (value) ->
     value = !!value
-    unless @_debugMode is value
+    if @_debugMode isnt value or not @trace
       @_debugMode = value
       if @_debugMode
         @trace = new ConsoleTracer

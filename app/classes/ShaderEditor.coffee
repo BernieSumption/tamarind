@@ -31,7 +31,12 @@ class ShaderEditor extends EventEmitter
       <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
     </div>
     <div class="tamarind-editor-panel">
-      <div class="tamarind-editor tamarind-editor-code"></div>
+      <div class="tamarind-editor tamarind-editor-code">
+        <div class="tamarind-program-error">
+          <span class="CodeMirror-lint-marker-error"></span>
+          <span class="tamarind-program-error-message"></span>
+        </div>
+      </div>
       <div class="tamarind-editor tamarind-editor-config">
 
         Render
@@ -86,6 +91,7 @@ class ShaderEditor extends EventEmitter
     @canvas = new WebGLCanvas(@_renderCanvasElement)
 
     @canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
+    @canvas.on WebGLCanvas.LINK, @_setProgramError
 
     @_activeCodeEditor = Tamarind.FRAGMENT_SHADER
     @_fragmentShaderDoc = CodeMirror.Doc(@canvas.fragmentShaderSource, 'clike')
@@ -107,6 +113,16 @@ class ShaderEditor extends EventEmitter
 
     @_codemirror.on 'renderLine', @_addLineWrapIndent
     @_codemirror.refresh()
+
+
+    @_programErrorElement = @_element.querySelector('.tamarind-program-error')
+    @_setProgramError false
+
+    # A bit hacky. This inserts out element into the start of the CodeMirror instance, which seems to be
+    # the easiest way of getting the CodeMirror editing area to take up all the available height
+    # minus the height used by the error notice. It's bad manners to tamper with a component's DOM, but
+    # CodeMirror doesn't seem to mind.
+    @_codemirror.display.wrapper.insertBefore @_programErrorElement, @_codemirror.display.wrapper.firstChild
 
     @on MENU_ITEM_SELECT, @_handleMenuItemSelect
 
@@ -151,6 +167,14 @@ class ShaderEditor extends EventEmitter
     return
 
 
+  _setProgramError: (error) =>
+    if error
+      @_programErrorElement.style.display = ''
+      @_programErrorElement.querySelector('.tamarind-program-error-message').innerText = 'Program error: ' + error
+    else
+      @_programErrorElement.style.display = 'none'
+
+    return
 
   # @private
   # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this

@@ -138,6 +138,54 @@ describe 'WebGLCanvas', ->
 
     return
 
+  it 'should dispatch a link event on sucessful linking', (done) ->
+
+    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+
+    canvas.fragmentShaderSource = '''
+      void main() {
+        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+      }
+    '''
+    canvas.vertexShaderSource = '''
+      void main() {
+        gl_Position = vec4(0);
+      }
+    '''
+
+    canvas.on WebGLCanvas.LINK, (error) ->
+      expect(error).toBeFalsy()
+      done()
+
+      return
+
+    return
+
+  it 'should dispatch a link error message event on failed linking', (done) ->
+
+    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+
+    canvas.fragmentShaderSource = '''
+      varying vec4 doesntExist; // not present in vertex shader, that's a link error
+      void main() {
+        gl_FragColor = doesntExist;
+      }
+    '''
+    canvas.vertexShaderSource = '''
+      void main() {
+        gl_Position = vec4(0);
+      }
+    '''
+
+    canvas.on WebGLCanvas.LINK, (error) ->
+      expect(error).toContain('doesntExist')
+      done()
+
+      return
+
+    return
+
+
   return
 
 
