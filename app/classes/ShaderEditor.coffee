@@ -108,18 +108,24 @@ class ShaderEditor extends EventEmitter
     @_canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
     @_canvas.on WebGLCanvas.LINK, @_setProgramError
 
-    @_activeCodeEditor = Tamarind.FRAGMENT_SHADER
-    @_fragmentShaderDoc = CodeMirror.Doc(@_canvas.fragmentShaderSource, 'clike')
-    @_vertexShaderDoc = CodeMirror.Doc(@_canvas.vertexShaderSource, 'clike')
+    @_shaderDocs = {}
+    createDoc = (shaderType) =>
+      doc = CodeMirror.Doc(@_canvas.getShaderSource(shaderType), 'clike')
+      doc.shaderType = shaderType
+      @_shaderDocs[shaderType] = doc
+      return
+    createDoc Tamarind.FRAGMENT_SHADER
+    createDoc Tamarind.VERTEX_SHADER
+
     @_bindInputToCanvas(@_vertexCountInputElement, 'vertexCount', parseInt)
     @_bindInputToCanvas(@_drawingModeInputElement, 'drawingMode')
 
 
     @_codemirror = CodeMirror(@_editorCodeElement,
-      value: @_fragmentShaderDoc
+      value: @_shaderDocs[Tamarind.FRAGMENT_SHADER]
       lineNumbers: true
       lineWrapping: true
-      gutters: ['CodeMirror-lint-markers'],
+      gutters: ['CodeMirror-lint-markers']
       lint:
         getAnnotations: @_handleCodeMirrorLint
         async: true
@@ -160,10 +166,8 @@ class ShaderEditor extends EventEmitter
   # Handle CodeMirror lint events. These are fired a few hundred milliseconds after the user
   # has finished typing in an editor window, and we use them to update the shader source
   _handleCodeMirrorLint: (value, callback, options, cm) =>
-    if @_activeCodeEditor is Tamarind.FRAGMENT_SHADER
-      @_canvas.fragmentShaderSource = value
-    else
-      @_canvas.vertexShaderSource = value
+    if @_codemirror
+      @_canvas.setShaderSource(@_codemirror.getDoc().shaderType,  value)
     @_lintingCallback = callback
     return
 
@@ -212,11 +216,7 @@ class ShaderEditor extends EventEmitter
       @_editorCodeElement.style.display = ''
       @_editorConfigElement.style.display = 'none'
       @_activeCodeEditor = item
-
-    if item is Tamarind.FRAGMENT_SHADER
-      @_codemirror.swapDoc(@_fragmentShaderDoc)
-    if item is Tamarind.VERTEX_SHADER
-      @_codemirror.swapDoc(@_vertexShaderDoc)
+      @_codemirror.swapDoc(@_shaderDocs[item])
 
     return
 
@@ -277,20 +277,3 @@ mergeObjects = (source, dest) ->
       dest[prop] = sourceValue;
   return
 
-
-CodeMirror.registerHelper 'lint', 'json', (text) ->
-  found = []
-
-  jsonlint.parseError = (str, hash) ->
-    loc = hash.loc
-    found.push
-      from: CodeMirror.Pos(loc.first_line - 1, loc.first_column)
-      to: CodeMirror.Pos(loc.last_line - 1, loc.last_column)
-      message: str
-    return
-
-  try
-    jsonlint.parse text
-  catch e
-
-  return found

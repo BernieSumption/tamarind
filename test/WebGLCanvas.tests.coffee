@@ -1,4 +1,13 @@
 
+VSHADER_HEADER = '''
+attribute float a_VertexIndex;
+'''
+
+FSHADER_HEADER = '''
+precision mediump float;
+uniform vec2 u_CanvasSize;
+'''
+
 compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
   imageToDataUrl = (imageElement) ->
@@ -65,7 +74,7 @@ describe 'WebGLCanvas', ->
 
     canvas = new WebGLCanvas(document.createElement('canvas'), true)
 
-    canvas.vertexShaderSource = '''
+    canvas.vertexShaderSource = VSHADER_HEADER + '''
       void main() {
         // 4 points, one in each corner, clockwise from top left
         if (a_VertexIndex == 0.0) {
@@ -80,13 +89,35 @@ describe 'WebGLCanvas', ->
       }
     '''
 
-    canvas.fragmentShaderSource = '''
+    canvas.fragmentShaderSource = FSHADER_HEADER + '''
       void main() {
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
     '''
 
     compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
+
+    return
+
+  it 'test image rendering should work even if the scene is invalid', ->
+
+    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+
+    canvas.vertexShaderSource = VSHADER_HEADER + '''
+      void main() {
+        blarty foo
+      }
+    '''
+
+    canvas.fragmentShaderSource = FSHADER_HEADER + '''
+      void main() {
+        gl_FragColor = nark;
+      }
+    '''
+
+
+    image = canvas.captureImage(100, 100)
+    expect(image).toContain('image/png')
 
     return
 
@@ -108,7 +139,7 @@ describe 'WebGLCanvas', ->
 
   it 'should dispatch CompileStatus events on sucessful compilation', (done) ->
 
-    expectErrorCountFromSource done, [], '''
+    expectErrorCountFromSource done, [], FSHADER_HEADER + '''
       void main() {
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
@@ -118,7 +149,7 @@ describe 'WebGLCanvas', ->
 
   it 'should have one error if there is a syntax problem', (done) ->
 
-    expectErrorCountFromSource done, [1],  '''
+    expectErrorCountFromSource done, [2],  FSHADER_HEADER + '''
       void main() {
         gl_FragColor vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1); // error: missing equals
       }
@@ -128,7 +159,7 @@ describe 'WebGLCanvas', ->
 
   it 'should have multiple errors if there are multiple validation problems', (done) ->
 
-    expectErrorCountFromSource done, [1, 3],  '''
+    expectErrorCountFromSource done, [2, 4],  FSHADER_HEADER + '''
       void main() {
         foo = 1.0; // first error
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
@@ -142,12 +173,12 @@ describe 'WebGLCanvas', ->
 
     canvas = new WebGLCanvas(document.createElement('canvas'), true)
 
-    canvas.fragmentShaderSource = '''
+    canvas.fragmentShaderSource = FSHADER_HEADER + '''
       void main() {
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
     '''
-    canvas.vertexShaderSource = '''
+    canvas.vertexShaderSource = VSHADER_HEADER + '''
       void main() {
         gl_Position = vec4(0);
       }
@@ -165,13 +196,13 @@ describe 'WebGLCanvas', ->
 
     canvas = new WebGLCanvas(document.createElement('canvas'), true)
 
-    canvas.fragmentShaderSource = '''
+    canvas.fragmentShaderSource = FSHADER_HEADER + '''
       varying vec4 doesntExist; // not present in vertex shader, that's a link error
       void main() {
         gl_FragColor = doesntExist;
       }
     '''
-    canvas.vertexShaderSource = '''
+    canvas.vertexShaderSource = VSHADER_HEADER + '''
       void main() {
         gl_Position = vec4(0);
       }

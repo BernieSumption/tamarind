@@ -28,11 +28,8 @@
 ###
 class WebGLCanvas extends EventEmitter
 
-  VSHADER_HEADER = '''
-attribute float a_VertexIndex;
-'''
-
   DEFAULT_VSHADER_SOURCE = '''
+attribute float a_VertexIndex;
 varying vec2 position;
 
 void main() {
@@ -52,21 +49,16 @@ void main() {
 }
 '''
 
-  FSHADER_HEADER = '''
-precision mediump float;
-uniform vec2 u_CanvasSize;
-'''
 
   DEFAULT_FSHADER_SOURCE = '''
+precision mediump float;
+uniform vec2 u_CanvasSize;
 varying vec2 position;
 
 void main() {
   gl_FragColor = vec4(position, 1, 1);
 }
 '''
-
-  VSHADER_HEADER_SIZE = VSHADER_HEADER.split('\n').length
-  FSHADER_HEADER_SIZE = FSHADER_HEADER.split('\n').length
 
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
@@ -97,14 +89,6 @@ void main() {
   # i.e. one of: POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
   drawingMode: 'TRIANGLE_FAN'
 
-  # @property [string] GLSL source code for the fragment shader, excluding
-  # attribute and uniform definitions which will be added automatically
-  fragmentShaderSource: DEFAULT_FSHADER_SOURCE
-
-  # @property [string] GLSL source code for the vertex shader, excluding
-  # attribute and uniform definitions which will be added automatically
-  vertexShaderSource: DEFAULT_VSHADER_SOURCE
-
   # @property [boolean] Whether to log more data, including all WebGL errors. This
   # requires checking with WebGL for an error after each operation, which is very
   # slow. Don't use this in production
@@ -128,7 +112,11 @@ void main() {
     @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
     @canvasElement.addEventListener 'webglcontextrestored', @_handleContextRestored
 
-    @_shaders = {}
+    @_shaders = {} # OpenGL shader object references
+    @_shaderSources = {} # GLSL source code
+    @_shaderSources[Tamarind.FRAGMENT_SHADER] = DEFAULT_FSHADER_SOURCE
+    @_shaderSources[Tamarind.VERTEX_SHADER] = DEFAULT_VSHADER_SOURCE
+    @_shaderDirty = {} # boolean flag indicating source has changed
 
     @_createContext()
 
@@ -161,38 +149,33 @@ void main() {
     @_frameScheduled = false
 
     if @_contextLost
-      return
+      return false
+
+    isNewContext = @_contextRequiresSetup
 
     if @_contextRequiresSetup
       unless @_setupContext()
-        return
+        return false
       @_contextRequiresSetup = false
-      @_vertexShaderIsDirty = @_fragmentShaderIsDirty = @_geometryIsDirty = true
 
-    if @_geometryIsDirty
+
+    if @_geometryIsDirty or isNewContext
       unless @_updateGeometry()
-        return
+        return false
       @_geometryIsDirty = false
 
-    requiresLink = @_vertexShaderIsDirty or @_fragmentShaderIsDirty
-
-    if @_vertexShaderIsDirty
-      unless @_compileShader(Tamarind.VERTEX_SHADER, VSHADER_HEADER + @vertexShaderSource, VSHADER_HEADER_SIZE)
-        return
-      @_vertexShaderIsDirty = false
-
-    if @_fragmentShaderIsDirty
-      unless @_compileShader(Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + @fragmentShaderSource, FSHADER_HEADER_SIZE)
-        return
-      @_fragmentShaderIsDirty = false
+    for shaderType in [Tamarind.VERTEX_SHADER, Tamarind.FRAGMENT_SHADER]
+      if @_shaderDirty[shaderType] or isNewContext
+        unless @_compileShader(shaderType)
+          return false
+        @_shaderDirty[shaderType]
+        requiresLink = true
 
     if requiresLink
       unless @_linkProgram()
-        return
+        return false
 
-    @_render()
-
-    return
+    return @_render()
 
 
 
@@ -247,9 +230,11 @@ void main() {
 
 
   # @private
-  _compileShader: (shaderType, source, headerSize) ->
+  _compileShader: (shaderType) ->
 
     gl = @gl
+
+    source = @_shaderSources[shaderType]
 
     oldShader = @_shaders[shaderType]
 
@@ -273,7 +258,7 @@ void main() {
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
     error = if compiled then null else gl.getShaderInfoLog(shader)
-    @emit WebGLCanvas.COMPILE, new CompileStatus(shaderType, error, headerSize)
+    @emit WebGLCanvas.COMPILE, new CompileStatus(shaderType, error)
 
     return compiled
 
@@ -357,10 +342,12 @@ void main() {
   # @param [int] width the width of the rendered image
   # @param [int] height the height of the rendered image
   captureImage: (width, height) ->
-    @_doFrame()
-    @_render(width, height)
+    valid = @_doFrame()
+    if valid
+      @_render(width, height)
     image = @canvasElement.toDataURL 'image/png'
-    @_render() # restore previous size
+    if valid
+      @_render() # restore previous size
 
     return image
 
@@ -407,29 +394,39 @@ void main() {
   ## GETTERS AND SETTERS
   ##
 
+  # Get the source code for a shader
+  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  getShaderSource: (shaderType) -> @_shaderSources[shaderType]
+
+  # Set the source code for a shader
+  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # @param value GLSL source code for the shader
+  setShaderSource: (shaderType, value) ->
+    @_shaderSources[shaderType] = value
+    @_shaderDirty[shaderType] = true
+    @_scheduleFrame()
+
+    return
+
+
   # @private
-  _getFragmentShaderSource: -> @_fragmentShaderSource
+  _getFragmentShaderSource: -> @getShaderSource(Tamarind.FRAGMENT_SHADER)
 
   # @private
   _setFragmentShaderSource: (value) ->
-    @_fragmentShaderSource = value
-    @_fragmentShaderIsDirty = true
-    @_scheduleFrame()
+    @setShaderSource(Tamarind.FRAGMENT_SHADER, value)
 
     return
 
 
   # @private
-  _getVertexShaderSource: -> @_vertexShaderSource
+  _getVertexShaderSource: -> @getShaderSource(Tamarind.VERTEX_SHADER)
 
   # @private
   _setVertexShaderSource: (value) ->
-    @_vertexShaderSource = value
-    @_vertexShaderIsDirty = true
-    @_scheduleFrame()
+    @setShaderSource(Tamarind.VERTEX_SHADER, value)
 
     return
-
 
   # @private
   _getVertexCount: -> @_vertexCount
@@ -488,7 +485,7 @@ class CompileStatus
   # @property [array] an array of error objects like {message, severity ('warning' | 'error'), line}
   errors: []
 
-  constructor: (@shaderType, error, headerSize) ->
+  constructor: (@shaderType, error) ->
 
     @errors = []
 
@@ -502,7 +499,7 @@ class CompileStatus
           line = parseInt(parts[1]) or 0
           @errors.push(
             message: parts[2]
-            line: Math.max(0, line - headerSize)
+            line: line - 1 # GLSL lines are 1 indexed, CodeMirror expects 0 indexed
           )
 
   toString: ->
