@@ -2,3 +2,4 @@ node_modules
 build
 .idea
 npm-debug.log
+bower_components

@@ -1,0 +1,45 @@
+{
+  "name": "tamarind",
+  "version": "0.0.0",
+  "homepage": "https://github.com/BernieSumption/tamarind",
+  "authors": [
+    "Bernie Sumption <bernie@berniecode.com>"
+  ],
+  "description": "WebGL shader editor",
+  "keywords": [
+    "WebGL",
+    "shader",
+    "editor",
+    "canvas"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "codemirror": "~5.0.0"
+  },
+  "overrides": {
+    "codemirror": {
+      "main": [
+        "lib/codemirror.js",
+        "lib/codemirror.css",
+
+        "mode/clike/clike.js",
+
+        "addon/dialog/dialog.js",
+        "addon/dialog/dialog.css",
+
+        "addon/lint/lint.js",
+        "addon/lint/lint.css",
+
+        "addon/search/search.js",
+        "addon/search/searchcursor.js"
+      ]
+    }
+  }
+}

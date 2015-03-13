@@ -8,7 +8,7 @@ exports.config =
       joinTo:
         'tamarind.js': (path) -> /^app/.test(path)
         'tamarind.tests.js': (path) -> /^test/.test(path)
-        'vendor.js': (path) -> /^vendor/.test(path)
+        'tamarind.vendor.js': (path) -> /^bower_components/.test(path)
       order:
         before: 'app/shared.coffee'
 

@@ -496,13 +496,13 @@ class CompileStatus
 
       for line in error.split('\n')
 
-        parts = /^ERROR:\s*\d+\s*:\s*(\d+)\s*:\s*(.*)/.exec(line) or /^\((\d+),\s*\d+\):\s*(.*)/.exec(line)
+        parts = /^ERROR:\s*\d+\s*:\s*(\d+|\?)\s*:\s*(.*)/.exec(line) or /^\((\d+),\s*\d+\):\s*(.*)/.exec(line)
 
         if parts
-          line = parseInt(parts[1])
+          line = parseInt(parts[1]) or 0
           @errors.push(
             message: parts[2]
-            line: line - headerSize
+            line: Math.max(0, line - headerSize)
           )
 
   toString: ->
