@@ -33,19 +33,22 @@ attribute float a_VertexIndex;
 '''
 
   DEFAULT_VSHADER_SOURCE = '''
+varying vec2 position;
+
 void main() {
-  // 4 points, one in each corner, clockwise from top left
+  // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
   if (a_VertexIndex == 0.0) {
-    gl_Position.xy = vec2(-1, -1);
+    position = vec2(-1, -1);
   } else if (a_VertexIndex == 1.0) {
-    gl_Position.xy = vec2(1, -1);
+    position = vec2(1, -1);
   } else if (a_VertexIndex == 2.0) {
-    gl_Position.xy = vec2(1, 1);
+    position = vec2(1, 1);
   } else if (a_VertexIndex == 3.0) {
-    gl_Position.xy = vec2(-1, 1);
+    position = vec2(-1, 1);
   } else {
-    gl_Position.xy = vec2(0);
+    position = vec2(0);
   }
+  gl_Position.xy = position;
 }
 '''
 
@@ -55,9 +58,10 @@ uniform vec2 u_CanvasSize;
 '''
 
   DEFAULT_FSHADER_SOURCE = '''
+varying vec2 position;
+
 void main() {
-  gl_FragColor.r = u_CanvasSize.x;
-  gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+  gl_FragColor = vec4(position, 1, 1);
 }
 '''
 
