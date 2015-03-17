@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>WebGL playground</title>
+    <title>WebGLCanvas demo</title>
     <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
     <style>
-        html, body, canvas {
+        html, body, #displayArea {
             width:100%;
             height:100%;
             margin: 0;
@@ -50,11 +50,16 @@
     <textarea id="fragmentShaderSource"></textarea>
     <p>Compile events</p>
     <textarea id="compileEvents"></textarea>
+    <p>Image generation</p>
+    <input type="button" value="generate" onclick="generateImage()">
+    <img id="generatedImageDisplay">
 </div>
 <div id="viewport">
     <canvas id="displayArea"></canvas>
 </div>
-<script src="tamarind.js"></script>
+<script src="auto-reload.js"></script>
+<script src="../tamarind.vendor.js"></script>
+<script src="../tamarind.js"></script>
 <script>
 
     canvas = new WebGLCanvas(document.getElementById("displayArea"), true);
@@ -66,13 +71,13 @@
     bindInputToProperty("vertexShaderSource");
 
 
-    canvas.on(WebGLCanvas.COMPILE_ERROR, function(event) {
-        console.error(event);
+    canvas.on(WebGLCanvas.COMPILE, function(event) {
         var compileEvents = document.getElementById("compileEvents");
         var prefix = compileEvents.value.length ? "\n" : ""
         console.log ("'"+event+'"')
         compileEvents.value = compileEvents.value + prefix + event
     })
+
 
     function bindInputToProperty(propertyName, type) {
         var input = document.getElementById(propertyName);
@@ -81,6 +86,11 @@
             canvas[propertyName] = type ? type(input.value) : input.value;
         }
         input.addEventListener("input", update);
+    }
+
+    function generateImage() {
+        var display = document.getElementById("generatedImageDisplay");
+        display.src = canvas.captureImage(100, 100)
     }
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>

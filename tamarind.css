@@ -1,0 +1,643 @@
+/* BASICS */
+
+.CodeMirror {
+  /* Set height, width, borders, and global font properties here */
+  font-family: monospace;
+  height: 300px;
+  color: black;
+}
+
+/* PADDING */
+
+.CodeMirror-lines {
+  padding: 4px 0; /* Vertical padding around content */
+}
+.CodeMirror pre {
+  padding: 0 4px; /* Horizontal padding of content */
+}
+
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  background-color: white; /* The little square between H and V scrollbars */
+}
+
+/* GUTTER */
+
+.CodeMirror-gutters {
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+.CodeMirror-linenumbers {}
+.CodeMirror-linenumber {
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  color: #999;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.CodeMirror-guttermarker { color: black; }
+.CodeMirror-guttermarker-subtle { color: #999; }
+
+/* CURSOR */
+
+.CodeMirror div.CodeMirror-cursor {
+  border-left: 1px solid black;
+}
+/* Shown when moving in bi-directional text */
+.CodeMirror div.CodeMirror-secondarycursor {
+  border-left: 1px solid silver;
+}
+.CodeMirror.cm-fat-cursor div.CodeMirror-cursor {
+  width: auto;
+  border: 0;
+  background: #7e7;
+}
+.CodeMirror.cm-fat-cursor div.CodeMirror-cursors {
+  z-index: 1;
+}
+
+.cm-animate-fat-cursor {
+  width: auto;
+  border: 0;
+  -webkit-animation: blink 1.06s steps(1) infinite;
+  -moz-animation: blink 1.06s steps(1) infinite;
+  animation: blink 1.06s steps(1) infinite;
+}
+@-moz-keyframes blink {
+  0% { background: #7e7; }
+  50% { background: none; }
+  100% { background: #7e7; }
+}
+@-webkit-keyframes blink {
+  0% { background: #7e7; }
+  50% { background: none; }
+  100% { background: #7e7; }
+}
+@keyframes blink {
+  0% { background: #7e7; }
+  50% { background: none; }
+  100% { background: #7e7; }
+}
+
+/* Can style cursor different in overwrite (non-insert) mode */
+div.CodeMirror-overwrite div.CodeMirror-cursor {}
+
+.cm-tab { display: inline-block; text-decoration: inherit; }
+
+.CodeMirror-ruler {
+  border-left: 1px solid #ccc;
+  position: absolute;
+}
+
+/* DEFAULT THEME */
+
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3 {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-header {color: blue;}
+.cm-s-default .cm-quote {color: #090;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-negative {color: #d44;}
+.cm-positive {color: #292;}
+.cm-header, .cm-strong {font-weight: bold;}
+.cm-em {font-style: italic;}
+.cm-link {text-decoration: underline;}
+.cm-strikethrough {text-decoration: line-through;}
+
+.cm-s-default .cm-error {color: #f00;}
+.cm-invalidchar {color: #f00;}
+
+/* Default styles for common addons */
+
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
+.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
+.CodeMirror-activeline-background {background: #e8f2ff;}
+
+/* STOP */
+
+/* The rest of this file contains styles related to the mechanics of
+   the editor. You probably shouldn't touch them. */
+
+.CodeMirror {
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.CodeMirror-scroll {
+  overflow: scroll !important; /* Things will break if this is overridden */
+  /* 30px is the magic margin used to hide the element's real scrollbars */
+  /* See overflow: hidden in .CodeMirror */
+  margin-bottom: -30px; margin-right: -30px;
+  padding-bottom: 30px;
+  height: 100%;
+  outline: none; /* Prevent dragging from highlighting the element */
+  position: relative;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+.CodeMirror-sizer {
+  position: relative;
+  border-right: 30px solid transparent;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+/* The fake, visible scrollbars. Used to force redraw during scrolling
+   before actuall scrolling happens, thus preventing shaking and
+   flickering artifacts. */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  position: absolute;
+  z-index: 6;
+  display: none;
+}
+.CodeMirror-vscrollbar {
+  right: 0; top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.CodeMirror-hscrollbar {
+  bottom: 0; left: 0;
+  overflow-y: hidden;
+  overflow-x: scroll;
+}
+.CodeMirror-scrollbar-filler {
+  right: 0; bottom: 0;
+}
+.CodeMirror-gutter-filler {
+  left: 0; bottom: 0;
+}
+
+.CodeMirror-gutters {
+  position: absolute; left: 0; top: 0;
+  z-index: 3;
+}
+.CodeMirror-gutter {
+  white-space: normal;
+  height: 100%;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  display: inline-block;
+  margin-bottom: -30px;
+  /* Hack to make IE7 behave */
+  *zoom:1;
+  *display:inline;
+}
+.CodeMirror-gutter-wrapper {
+  position: absolute;
+  z-index: 4;
+  height: 100%;
+}
+.CodeMirror-gutter-elt {
+  position: absolute;
+  cursor: default;
+  z-index: 4;
+}
+.CodeMirror-gutter-wrapper {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.CodeMirror-lines {
+  cursor: text;
+  min-height: 1px; /* prevents collapsing before first draw */
+}
+.CodeMirror pre {
+  /* Reset some styles that the rest of the page might have set */
+  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+  border-width: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  white-space: pre;
+  word-wrap: normal;
+  line-height: inherit;
+  color: inherit;
+  z-index: 2;
+  position: relative;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+}
+.CodeMirror-wrap pre {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+.CodeMirror-linebackground {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 0;
+}
+
+.CodeMirror-linewidget {
+  position: relative;
+  z-index: 2;
+  overflow: auto;
+}
+
+.CodeMirror-widget {}
+
+.CodeMirror-code {
+  outline: none;
+}
+
+.CodeMirror-measure {
+  position: absolute;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+.CodeMirror-measure pre { position: static; }
+
+.CodeMirror div.CodeMirror-cursor {
+  position: absolute;
+  border-right: none;
+  width: 0;
+}
+
+div.CodeMirror-cursors {
+  visibility: hidden;
+  position: relative;
+  z-index: 3;
+}
+.CodeMirror-focused div.CodeMirror-cursors {
+  visibility: visible;
+}
+
+.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+.CodeMirror-crosshair { cursor: crosshair; }
+.CodeMirror ::selection { background: #d7d4f0; }
+.CodeMirror ::-moz-selection { background: #d7d4f0; }
+
+.cm-searching {
+  background: #ffa;
+  background: rgba(255, 255, 0, .4);
+}
+
+/* IE7 hack to prevent it from returning funny offsetTops on the spans */
+.CodeMirror span { *vertical-align: text-bottom; }
+
+/* Used to force a border model for a node */
+.cm-force-border { padding-right: .1px; }
+
+@media print {
+  /* Hide the cursor when printing */
+  .CodeMirror div.CodeMirror-cursors {
+    visibility: hidden;
+  }
+}
+
+/* See issue #2901 */
+.cm-tab-wrap-hack:after { content: ''; }
+
+/* Help users use markselection to safely style text background */
+span.CodeMirror-selectedtext { background: none; }
+
+.CodeMirror-dialog {
+  position: absolute;
+  left: 0; right: 0;
+  background: white;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: #333;
+}
+
+.CodeMirror-dialog-top {
+  border-bottom: 1px solid #eee;
+  top: 0;
+}
+
+.CodeMirror-dialog-bottom {
+  border-top: 1px solid #eee;
+  bottom: 0;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}
+
+/* The lint marker gutter */
+.CodeMirror-lint-markers {
+  width: 16px;
+}
+
+.CodeMirror-lint-tooltip {
+  background-color: infobackground;
+  border: 1px solid black;
+  border-radius: 4px 4px 4px 4px;
+  color: infotext;
+  font-family: monospace;
+  font-size: 10pt;
+  overflow: hidden;
+  padding: 2px 5px;
+  position: fixed;
+  white-space: pre;
+  white-space: pre-wrap;
+  z-index: 100;
+  max-width: 600px;
+  opacity: 0;
+  transition: opacity .4s;
+  -moz-transition: opacity .4s;
+  -webkit-transition: opacity .4s;
+  -o-transition: opacity .4s;
+  -ms-transition: opacity .4s;
+}
+
+.CodeMirror-lint-mark-error, .CodeMirror-lint-mark-warning {
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
+
+.CodeMirror-lint-mark-error {
+  background-image:
+  url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sJDw4cOCW1/KIAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAHElEQVQI12NggIL/DAz/GdA5/xkY/qPKMDAwAADLZwf5rvm+LQAAAABJRU5ErkJggg==")
+  ;
+}
+
+.CodeMirror-lint-mark-warning {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAYAAAC09K7GAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sJFhQXEbhTg7YAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAMklEQVQI12NkgIIvJ3QXMjAwdDN+OaEbysDA4MPAwNDNwMCwiOHLCd1zX07o6kBVGQEAKBANtobskNMAAAAASUVORK5CYII=");
+}
+
+.CodeMirror-lint-marker-error, .CodeMirror-lint-marker-warning {
+  background-position: center center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+  position: relative;
+}
+
+.CodeMirror-lint-message-error, .CodeMirror-lint-message-warning {
+  padding-left: 18px;
+  background-position: top left;
+  background-repeat: no-repeat;
+}
+
+.CodeMirror-lint-marker-error, .CodeMirror-lint-message-error {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAHlBMVEW7AAC7AACxAAC7AAC7AAAAAAC4AAC5AAD///+7AAAUdclpAAAABnRSTlMXnORSiwCK0ZKSAAAATUlEQVR42mWPOQ7AQAgDuQLx/z8csYRmPRIFIwRGnosRrpamvkKi0FTIiMASR3hhKW+hAN6/tIWhu9PDWiTGNEkTtIOucA5Oyr9ckPgAWm0GPBog6v4AAAAASUVORK5CYII=");
+}
+
+.CodeMirror-lint-marker-warning, .CodeMirror-lint-message-warning {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAANlBMVEX/uwDvrwD/uwD/uwD/uwD/uwD/uwD/uwD/uwD6twD/uwAAAADurwD2tQD7uAD+ugAAAAD/uwDhmeTRAAAADHRSTlMJ8mN1EYcbmiixgACm7WbuAAAAVklEQVR42n3PUQqAIBBFUU1LLc3u/jdbOJoW1P08DA9Gba8+YWJ6gNJoNYIBzAA2chBth5kLmG9YUoG0NHAUwFXwO9LuBQL1giCQb8gC9Oro2vp5rncCIY8L8uEx5ZkAAAAASUVORK5CYII=");
+}
+
+.CodeMirror-lint-marker-multiple {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAMAAADzjKfhAAAACVBMVEUAAAAAAAC/v7914kyHAAAAAXRSTlMAQObYZgAAACNJREFUeNo1ioEJAAAIwmz/H90iFFSGJgFMe3gaLZ0od+9/AQZ0ADosbYraAAAAAElFTkSuQmCC");
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  width: 100%; height: 100%;
+}
+
+.tamarind {
+  position: relative;
+  width: 1000px;
+  height: 400px;
+  border-radius: 5px;
+  background-color: #555555;
+  color: #eeeeee;
+  font-family: sans-serif;
+}
+.tamarind-unsupported {
+  height: auto;
+  padding: 20px;
+}
+.tamarind-unsupported-icon {
+  margin-right: 20px;
+  font-size: 30px;
+}
+.tamarind-logo {
+  position: absolute;
+  bottom: 10px;
+  left: 50px;
+  transform: rotate(-90deg);
+  transform-origin: left bottom 0;
+  font-family: "tamarind-logo";
+  font-size: 30px;
+  line-height: 50px;
+  color: #505050;
+  text-shadow: -1px 1px 1px rgba(255, 255, 255, 0.075), 1px -1px 1px rgba(0, 0, 0, 0.25);
+}
+.tamarind-logo:before {
+  content: "Tamarind";
+}
+.tamarind-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50px;
+}
+.tamarind-menu-button {
+  color: #eeeeee;
+  text-decoration: none;
+  margin: 5px 0 0 5px;
+  display: block;
+  width: 55px;
+  height: 50px;
+  font-size: 25px;
+  text-align: center;
+  line-height: 55px;
+  border-radius: 5px;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+.tamarind-menu-button:hover {
+  color: #FFF;
+  text-shadow: 0 0 10px #FFF;
+}
+.tamarind-menu-button.is-selected {
+  background-color: #eeeeee;
+  color: #555555;
+  text-shadow: none;
+  cursor: default;
+}
+.tamarind-editor-panel {
+  position: absolute;
+  top: 5px;
+  left: 50px;
+  bottom: 5px;
+  width: 400px;
+  border-radius: 5px;
+  background-color: #eeeeee;
+  color: #555555;
+}
+.tamarind-editor-code {
+  height: 100%;
+  padding: 5px;
+  box-sizing: border-box;
+  position: relative;
+}
+.tamarind-editor-code .CodeMirror {
+  height: 100%;
+  background: #eeeeee;
+}
+.tamarind-editor-code .CodeMirror-gutters {
+  background: #eeeeee;
+}
+.tamarind-editor-config {
+  padding: 10px;
+}
+.tamarind-number-input {
+  width: 40px;
+}
+.tamarind-program-error {
+  border: solid 1px #EEA;
+  background: #FFE;
+  padding: 5px;
+  margin-left: 48px;
+}
+.tamarind-program-error .CodeMirror-lint-marker-error {
+  cursor: default;
+}
+.tamarind-render-panel {
+  position: absolute;
+  top: 5px;
+  left: 455px;
+  right: 5px;
+  bottom: 5px;
+  border-radius: 5px;
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABlBMVEXW1tb///9kNAxTAAAAFUlEQVQYlWNggAJGKGAYIIGBth8KAEUQAIEP5jj0AAAAAElFTkSuQmCC");
+  overflow: hidden;
+  -webkit-mask-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC");
+  /* this fixes the overflow:hidden in Chrome/Opera */
+}
+.tamarind-inset,
+.tamarind-menu-button.is-selected,
+.tamarind-editor-panel,
+.tamarind-render-canvas {
+  box-shadow: 0.5px 0.5px 1px 0 rgba(255, 255, 255, 0.25);
+}
+.tamarind-inset-text,
+.tamarind-menu-button {
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.25);
+}
+.tamarind-emboss,
+.tamarind {
+  box-shadow: inset 1px 1px 1px 0 rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(0, 0, 0, 0.25);
+}
+.tamarind-emboss-text,
+.tamarind-menu-button.is-selected {
+  text-shadow: -1px -1px 1px #ffffff, 1px 1px 1px rgba(0, 0, 0, 0.25);
+}
+.tamarind-render-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+
+@font-face {
+  font-family: 'tamarind-logo';
+  src: url('data:application/octet-stream;base64,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') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'fontello';
+  src: url("data:application/font-woff;base64,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") format('woff');
+}
+[class^="tamarind-icon-"]:before,
+[class*=" tamarind-icon-"]:before {
+  font-family: "fontello";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  /* opacity: .8; */
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+  /* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+  /* Animation center compensation - margins should be symmetric */
+  /* remove if not needed */
+  margin-left: .2em;
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+  /* Uncomment for 3D effect */
+  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+.tamarind-icon-controls:before {
+  content: '\e800';
+}
+/* '' */
+.tamarind-icon-fragment-shader:before {
+  content: '\e801';
+}
+/* '' */
+.tamarind-icon-config:before {
+  content: '\e802';
+}
+/* '' */
+.tamarind-icon-vertex-shader:before {
+  content: '\e803';
+}
+/* '' */
+.tamarind-icon-help:before {
+  content: '\e804';
+}
+/* '' */
+.tamarind-icon-unhappy:before {
+  content: '\e805';
+}
+/* '' */
+.tamarind-icon-resize-normal:before {
+  content: '\e806';
+}
+/* '' */
+.tamarind-icon-resize-big:before {
+  content: '\e807';
+}
+/* '' */
+.tamarind-icon-reference:before {
+  content: '\e808';
+}
+/* '' */
+.tamarind-icon-vertex-shader:before {
+  position: relative;
+  left: -3px;
+}
+
+
+/*# sourceMappingURL=tamarind.css.map*/
