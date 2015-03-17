@@ -3,93 +3,99 @@
   <head>
   <meta charset='UTF-8'>
   <title>Tamarind Documentation</title>
-  <script src='../javascript/application.js'></script>
-  <script src='../javascript/search.js'></script>
-  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+  <script src='../../../javascript/application.js'></script>
+  <script src='../../../javascript/search.js'></script>
+  <link rel='stylesheet' href='../../../stylesheets/application.css' type='text/css'>
 </head>
   <body>
-    <div id='base' data-path='../'></div>
+    <div id='base' data-path='../../../'></div>
 <div id='header'>
   <div id='menu'>
-    <a href='../extra/README.md.html' title='Tamarind'>
+    <a href='../../../extra/README.md.html' title='Tamarind'>
       Tamarind
     </a>
     &raquo;
-    <a href='../alphabetical_index.html' title='Index'>
+    <a href='../../../alphabetical_index.html' title='Index'>
       Index
     </a>
     &raquo;
-    <span class='title'>ConsoleTracer</span>
+    <span class='title'>app</span>
+    &raquo;
+    <span class='title'>classes</span>
+    &raquo;
+    <span class='title'>ShaderEditor.coffee</span>
   </div>
 </div>
     <div id='content'>
       <h1>
-        Class:
-        ConsoleTracer
+        File:
+        ShaderEditor.coffee
       </h1>
       <table class='box'>
         <tr>
           <td>Defined in:</td>
-          <td>app&#47;classes&#47;tracers.coffee</td>
+          <td>app&#47;classes</td>
+        </tr>
+        <tr>
+          <td>
+            Classes:
+          </td>
+          <td>
+            <a href='../../../class/ShaderEditor.html'>
+              ShaderEditor
+            </a>
+            <a href='../../../class/ToggleBar.html'>
+              ToggleBar
+            </a>
+          </td>
         </tr>
       </table>
-      <h2>Overview</h2>
-      <div class='docstring'>
-  <p>Outputs trace messages to the browser console</p>
-</div>
-<div class='tags'>
-</div>
-      <h2>Instance Method Summary</h2>
+      <h2>Method Summary</h2>
       <ul class='summary'>
   <li>
     <span class='signature'>
-      <a href='#log-dynamic'>
-        #
+      <a href='#replaceScriptTemplates-'>
+        ~
 (void)
-<b>log</b><span>(m)</span>
+<b>replaceScriptTemplates</b><span>()</span>
       </a>
     </span>
     <span class='desc'>
-      print a log statement 
     </span>
   </li>
   <li>
     <span class='signature'>
-      <a href='#error-dynamic'>
-        #
+      <a href='#mergeObjects-'>
+        ~
 (void)
-<b>error</b><span>(m)</span>
+<b>mergeObjects</b><span>(source, dest)</span>
       </a>
     </span>
     <span class='desc'>
-      print a error statement 
+      merge all properties of one object onto another, so for example <p><code>mergeObjects({x: 1, y: {z: 2}}, dest)</code></p><p>is the same as</p><p><code>dest.x = 1; dest.y.z = 2</code></p>
     </span>
   </li>
 </ul>
-      <h2>Instance Method Details</h2>
+      <h2>Method Details</h2>
       <div class='methods'>
   <div class='method_details'>
-    <p class='signature' id='log-dynamic'>
-      #
+    <p class='signature' id='replaceScriptTemplates-'>
+      ~
 (void)
-<b>log</b><span>(m)</span>
+<b>replaceScriptTemplates</b><span>()</span>
       <br>
     </p>
-    <div class='docstring'>
-  <p>print a log statement</p>
-</div>
-<div class='tags'>
-</div>
+    
   </div>
   <div class='method_details'>
-    <p class='signature' id='error-dynamic'>
-      #
+    <p class='signature' id='mergeObjects-'>
+      ~
 (void)
-<b>error</b><span>(m)</span>
+<b>mergeObjects</b><span>(source, dest)</span>
       <br>
     </p>
     <div class='docstring'>
-  <p>print a error statement</p>
+  <p>merge all properties of one object onto another, so for example</p><p><code>mergeObjects({x: 1, y: {z: 2}}, dest)</code></p><p>is the same as</p><p><code>dest.x = 1; dest.y.z = 2</code></p>
 </div>
 <div class='tags'>
 </div>

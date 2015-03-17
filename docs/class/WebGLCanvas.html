@@ -71,53 +71,74 @@ requires uniforms to be set again.</p>
           </span>
         </dt>
         <dd class='desc'>
-          <p>The number of vertices drawn. Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex
-shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
+          <p>Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
 <code>vertexCount - 1</code> that it can use to distinguish vertices
-vertexCount</p>
+The number of vertices drawn.</p>
         </dd>
-        <dt id='fragmentShaderSource-property'>
+        <dt id='drawingMode-property'>
           <span class='signature'>
-            (string)
+            (String)
             <b>
-              fragmentShaderSource
+              drawingMode
             </b>
           </span>
         </dt>
         <dd class='desc'>
-          attribute and uniform definitions which will be added automatically GLSL source code for the fragment shader, excluding
+          i.e. one of: POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN A string mode name as used by WebGL&#39;s drawArrays method
 
         </dd>
-        <dt id='vertexShaderSource-property'>
+        <dt id='debugMode-property'>
           <span class='signature'>
-            (string)
+            (boolean)
             <b>
-              vertexShaderSource
+              debugMode
             </b>
           </span>
         </dt>
         <dd class='desc'>
-          attribute and uniform definitions which will be added automatically GLSL source code for the vertex shader, excluding
-
+          <p>requires checking with WebGL for an error after each operation, which is very slow. Don&#39;t use this in production
+Whether to log more data, including all WebGL errors. This</p>
         </dd>
       </dl>
       <h2>Variables Summary</h2>
       <dl class='constants'>
-  <dt id='COMPILE_ERROR-variable'>
-    COMPILE_ERROR
+  <dt id='DEFAULT_VSHADER_SOURCE-variable'>
+    DEFAULT_VSHADER_SOURCE
     =
   </dt>
   <dd>
-    <pre><code class='coffeescript'>&quot;compileError&quot;</code></pre>
+    <pre><code class='coffeescript'>&#39;attribute float a_VertexIndex;\nvarying vec2 position;\n\nvoid main() {\n  &#47;&#47; this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.\n  if (a_VertexIndex == 0.0) {\n    position = vec2(-1, -1);\n  } else if (a_VertexIndex == 1.0) {\n    position = vec2(1, -1);\n  } else if (a_VertexIndex == 2.0) {\n    position = vec2(1, 1);\n  } else if (a_VertexIndex == 3.0) {\n    position = vec2(-1, 1);\n  } else {\n    position = vec2(0);\n  }\n  gl_Position.xy = position;\n}&#39;</code></pre>
+    
+  </dd>
+  <dt id='DEFAULT_FSHADER_SOURCE-variable'>
+    DEFAULT_FSHADER_SOURCE
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>&#39;precision mediump float;\nuniform vec2 u_CanvasSize;\nvarying vec2 position;\n\nvoid main() {\n  gl_FragColor = vec4(position, 1, 1);\n}&#39;</code></pre>
+    
+  </dd>
+  <dt id='COMPILE-variable'>
+    COMPILE
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>&#39;compile&#39;</code></pre>
     <div class='docstring'>
-  <p>Event name for compilation error events</p>
-  <div class='examples'>
-    <h3>Examples:</h3>
-    <h4>
-      
-    </h4>
-    <pre><code class='coffeescript'>  canvas.on WebGLCanvas.COMPILE_ERROR, (event) -&gt; console.log event</code></pre>
-  </div>
+  <p>Event name for compilation events. The event argument is a CompileStatus object</p>
+</div>
+<div class='tags'>
+</div>
+  </dd>
+  <dt id='LINK-variable'>
+    LINK
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>&#39;link&#39;</code></pre>
+    <div class='docstring'>
+  <p>Event name for compilation error events. The event argument is <code>false</code> if there was no error or
+an error message if there was an error.</p>
 </div>
 <div class='tags'>
 </div>
@@ -179,7 +200,7 @@ vertexCount</p>
       <a href='#_compileShader-dynamic'>
         #
 (void)
-<b>_compileShader</b><span>(shader, source)</span>
+<b>_compileShader</b><span>(shaderType)</span>
       </a>
     </span>
     <span class='note private title'>Private</span>
@@ -215,11 +236,23 @@ vertexCount</p>
       <a href='#_render-dynamic'>
         #
 (void)
-<b>_render</b><span>()</span>
+<b>_render</b><span>(explicitWidth, explicitHeight)</span>
       </a>
     </span>
     <span class='note private title'>Private</span>
     <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#captureImage-dynamic'>
+        #
+(void)
+<b>captureImage</b><span>(width, height)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Take a snapshot of the current scene and return it as a PNG encoded data url 
     </span>
   </li>
   <li>
@@ -242,6 +275,7 @@ vertexCount</p>
 <b>_handleContextLost</b><span>(e)</span>
       </a>
     </span>
+    <span class='bound note title'>Bound</span>
     <span class='note private title'>Private</span>
     <span class='desc'>
     </span>
@@ -251,11 +285,38 @@ vertexCount</p>
       <a href='#_handleContextRestored-dynamic'>
         #
 (void)
-<b>_handleContextRestored</b><span>(e)</span>
+<b>_handleContextRestored</b><span>()</span>
       </a>
     </span>
+    <span class='bound note title'>Bound</span>
     <span class='note private title'>Private</span>
     <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#getShaderSource-dynamic'>
+        #
+(void)
+<b>getShaderSource</b><span>(shaderType)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Get the source code for a shader @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#setShaderSource-dynamic'>
+        #
+(void)
+<b>setShaderSource</b><span>(shaderType, value)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      <p>Set the source code for a shader @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+@param value GLSL source code for the shader</p>
     </span>
   </li>
   <li>
@@ -399,14 +460,14 @@ vertexCount</p>
     <p class='signature' id='constructor-dynamic'>
       #
 (void)
-<b>constructor</b><span>(canvas, debugMode = false)</span>
+<b>constructor</b><span>(canvasElement, debugMode = false)</span>
       <br>
     </p>
     <div class='tags'>
   <h3>Parameters:</h3>
   <ul class='param'>
     <li>
-      <span class='name'>@canvas</span>
+      <span class='name'>@@canvasElement</span>
       <span class='type'>
         (
           <tt>HTMLCanvasElement</tt>
@@ -480,7 +541,7 @@ vertexCount</p>
     <p class='signature' id='_compileShader-dynamic'>
       #
 (void)
-<b>_compileShader</b><span>(shader, source)</span>
+<b>_compileShader</b><span>(shaderType)</span>
       <span class='note private'>Private</span>
       <br>
     </p>
@@ -513,11 +574,47 @@ vertexCount</p>
     <p class='signature' id='_render-dynamic'>
       #
 (void)
-<b>_render</b><span>()</span>
+<b>_render</b><span>(explicitWidth, explicitHeight)</span>
       <span class='note private'>Private</span>
       <br>
     </p>
     <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='captureImage-dynamic'>
+      #
+(void)
+<b>captureImage</b><span>(width, height)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Take a snapshot of the current scene and return it as a PNG encoded data url</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>width</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the width of the rendered image </span>
+    </li>
+    <li>
+      <span class='name'>height</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the height of the rendered image </span>
+    </li>
+  </ul>
 </div>
   </div>
   <div class='method_details'>
@@ -536,6 +633,7 @@ vertexCount</p>
       #
 (void)
 <b>_handleContextLost</b><span>(e)</span>
+      <span class='bound note'>Bound</span>
       <span class='note private'>Private</span>
       <br>
     </p>
@@ -546,11 +644,41 @@ vertexCount</p>
     <p class='signature' id='_handleContextRestored-dynamic'>
       #
 (void)
-<b>_handleContextRestored</b><span>(e)</span>
+<b>_handleContextRestored</b><span>()</span>
+      <span class='bound note'>Bound</span>
       <span class='note private'>Private</span>
       <br>
     </p>
     <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='getShaderSource-dynamic'>
+      #
+(void)
+<b>getShaderSource</b><span>(shaderType)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Get the source code for a shader
+@param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='setShaderSource-dynamic'>
+      #
+(void)
+<b>setShaderSource</b><span>(shaderType, value)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Set the source code for a shader
+@param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+@param value GLSL source code for the shader</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -666,7 +794,7 @@ vertexCount</p>
 </div>
     </div>
     <div id='footer'>
-  March 04, 15 17:05:08 by
+  March 17, 15 15:20:11 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
