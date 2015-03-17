@@ -25,6 +25,7 @@ exports.config =
   overrides:
     production:
       sourceMaps: true
+      minify: false
 
   plugins:
     coffeelint:

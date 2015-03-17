@@ -28,7 +28,7 @@
 ###
 class WebGLCanvas extends EventEmitter
 
-  DEFAULT_VSHADER_SOURCE = '''
+  @DEFAULT_VSHADER_SOURCE = '''
 attribute float a_VertexIndex;
 varying vec2 position;
 
@@ -50,7 +50,7 @@ void main() {
 '''
 
 
-  DEFAULT_FSHADER_SOURCE = '''
+  @DEFAULT_FSHADER_SOURCE = '''
 precision mediump float;
 uniform vec2 u_CanvasSize;
 varying vec2 position;
@@ -102,7 +102,7 @@ void main() {
   # @param [boolean] @debugMode the initial value of the `debugMode` property
   constructor: (@canvasElement, @debugMode = false) ->
 
-    unless browserSupportsRequiredFeatures()
+    unless Tamarind.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
 
     @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
@@ -114,8 +114,8 @@ void main() {
 
     @_shaders = {} # OpenGL shader object references
     @_shaderSources = {} # GLSL source code
-    @_shaderSources[Tamarind.FRAGMENT_SHADER] = DEFAULT_FSHADER_SOURCE
-    @_shaderSources[Tamarind.VERTEX_SHADER] = DEFAULT_VSHADER_SOURCE
+    @_shaderSources[Tamarind.FRAGMENT_SHADER] = WebGLCanvas.DEFAULT_FSHADER_SOURCE
+    @_shaderSources[Tamarind.VERTEX_SHADER] = WebGLCanvas.DEFAULT_VSHADER_SOURCE
     @_shaderDirty = {} # boolean flag indicating source has changed
 
     @_createContext()
@@ -473,11 +473,11 @@ void main() {
     return
 
 
-defineClassProperty(WebGLCanvas, 'debugMode')
-defineClassProperty(WebGLCanvas, 'drawingMode')
-defineClassProperty(WebGLCanvas, 'vertexCount')
-defineClassProperty(WebGLCanvas, 'vertexShaderSource')
-defineClassProperty(WebGLCanvas, 'fragmentShaderSource')
+Tamarind.defineClassProperty(WebGLCanvas, 'debugMode')
+Tamarind.defineClassProperty(WebGLCanvas, 'drawingMode')
+Tamarind.defineClassProperty(WebGLCanvas, 'vertexCount')
+Tamarind.defineClassProperty(WebGLCanvas, 'vertexShaderSource')
+Tamarind.defineClassProperty(WebGLCanvas, 'fragmentShaderSource')
 
 
 class CompileStatus

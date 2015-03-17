@@ -83,7 +83,7 @@ class ShaderEditor extends EventEmitter
     location.parentNode.insertBefore @_element, location
     location.parentNode.removeChild location
 
-    unless browserSupportsRequiredFeatures()
+    unless Tamarind.browserSupportsRequiredFeatures()
       @_element.innerHTML = NOT_SUPPORTED_HTML
       @_element.className += ' tamarind-unsupported'
       return
@@ -150,6 +150,11 @@ class ShaderEditor extends EventEmitter
 
     mergeObjects(config, @)
 
+
+  reset: (config) ->
+    mergeObjects(config, @)
+    for type, doc of @_shaderDocs
+      doc.setValue(@_canvas.getShaderSource(type))
 
 
   # @private
@@ -224,7 +229,7 @@ class ShaderEditor extends EventEmitter
   _getCanvas: -> @_canvas
 
 
-defineClassProperty(ShaderEditor, 'canvas')
+Tamarind.defineClassProperty(ShaderEditor, 'canvas')
 
 
 # A set of links where at any one time, one link is highlighted with the 'is-selected' class.

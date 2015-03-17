@@ -8,16 +8,16 @@ Tamarind =
 ###
   Return false if the browser can't handle the awesome.
 ###
-browserSupportsRequiredFeatures = ->
-  if browserSupportsRequiredFeatures.__cache is undefined
+Tamarind.browserSupportsRequiredFeatures = ->
+  if Tamarind.browserSupportsRequiredFeatures.__cache is undefined
 
     try
       canvas = document.createElement 'canvas'
       ctx = canvas.getContext('webgl') or canvas.getContext('experimental-webgl')
 
-    browserSupportsRequiredFeatures.__cache = !!(ctx and Object.defineProperty)
+    Tamarind.browserSupportsRequiredFeatures.__cache = !!(ctx and Object.defineProperty)
 
-  return browserSupportsRequiredFeatures.__cache
+  return Tamarind.browserSupportsRequiredFeatures.__cache
 
 
 ###
@@ -38,7 +38,7 @@ browserSupportsRequiredFeatures = ->
 
     defineClassProperty Foo, "prop"
 ###
-defineClassProperty = (cls, propertyName) ->
+Tamarind.defineClassProperty = (cls, propertyName) ->
   PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1)
   getter = cls.prototype['_get' + PropertyName]
   setter = cls.prototype['_set' + PropertyName]

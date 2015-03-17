@@ -2,6 +2,12 @@
   "name": "tamarind",
   "version": "0.0.0",
   "homepage": "https://github.com/BernieSumption/tamarind",
+  "main": [
+    "build/tamarind.vendor.js",
+    "build/tamarind.vendor.css",
+    "build/tamarind.js",
+    "build/tamarind.css"
+  ],
   "authors": [
     "Bernie Sumption <bernie@berniecode.com>"
   ],
