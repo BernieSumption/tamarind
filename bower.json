@@ -1,6 +1,6 @@
 {
   "name": "tamarind",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "homepage": "https://github.com/BernieSumption/tamarind",
   "main": [
     "build/tamarind.vendor.js",

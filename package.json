@@ -1,6 +1,6 @@
 {
   "name": "tamarind",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "An embeddable WebGL shader editor and utilities",
   "main": "dist/tamarind.js",
   "repository": {
