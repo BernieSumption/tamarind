@@ -153,7 +153,12 @@ class Tamarind.WebGLCanvas
     return
 
   _updateContextForDebugMode: =>
-    @gl = if @_state.debugMode then @debugContext else @nativeContext
+    if @_state.debugMode
+      @gl = @debugContext
+      @trace = new Tamarind.ConsoleTracer()
+    else
+      @gl = @nativeContext
+      @trace = new Tamarind.NullTracer()
     return
 
   # @private

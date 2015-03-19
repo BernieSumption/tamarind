@@ -70,29 +70,18 @@ describe 'State', ->
     expect(listener.shaderChange).toHaveBeenCalledWith(Tamarind.FRAGMENT_SHADER)
     expect(listener.shaderChange.calls.count()).toEqual(2)
 
+    return
 
-#    source =
-#      a: 'foo'
-#      b:
-#        c: 'lala'
-#
-#
-#    dest =
-#      a: '1'
-#      b:
-#        c: '2'
-#        f: '3'
-#      d: null
-#
-#    mergeObjects source, dest
-#
-#    expect(dest.a).toEqual 'foo'
-#    expect(dest.b.c).toEqual 'lala'
-#    expect(dest.b.f).toEqual '3'
-#    expect(dest.d).toEqual null
-#
-#    expect(-> mergeObjects(notThere: 4, dest)).toThrow(new Error("Can't merge property 'notThere': source is number destination is undefined"))
-#    expect(-> mergeObjects(b: 4, dest)).toThrow(new Error("Can't merge property 'b': source is number destination is object"))
+  it 'should not expose mutable state through the public API', ->
+
+    state = new Tamarind.State()
+
+    errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
+    expect(errors).toEqual []
+
+    errors.push(new Tamarind.ShaderError('Message', 0))
+    errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
+    expect(errors).toEqual []
 
     return
 

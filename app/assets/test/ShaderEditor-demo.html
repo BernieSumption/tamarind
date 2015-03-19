@@ -24,8 +24,22 @@
 
 <div id="editor-location"></div>
 
+<input type="button" value="save 1" onclick="window.state1 = state.save()">
+<input type="button" value="load 1" onclick="state.restore(window.state1)">
+<input type="button" value="save 2" onclick="state.save()">
+<input type="button" value="load 2" onclick="state.restore(window.state2)">
+
+
+<input type="button" value="lose context" onclick="loseContext.loseContext()">
+<input type="button" value="restore context" onclick="loseContext.restoreContext()">
+
+
 <script>
-  var editor = new Tamarind.ShaderEditor(document.getElementById('editor-location'));
+  var state = new Tamarind.State()
+  state.debugMode = true
+  var editor = new Tamarind.ShaderEditor(document.getElementById('editor-location'), state);
+
+  var loseContext = editor.canvas.gl.getExtension('WEBGL_lose_context');
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 

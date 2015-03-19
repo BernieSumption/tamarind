@@ -21,6 +21,7 @@ class Tamarind.ShaderEditor
       <div class="tamarind-editor tamarind-editor-code"></div>
       <div class="tamarind-editor tamarind-editor-config">
 
+        <p>
         Render
         <input type="number" name="vertexCount" min="1" class="tamarind-number-input">
 
@@ -35,6 +36,11 @@ class Tamarind.ShaderEditor
             <option>TRIANGLE_STRIP</option>
             <option>TRIANGLE_FAN</option>
         </select>
+
+        </p>
+
+        <p><label><input type="checkbox" name="debugMode"> debug mode (logs extra information to console)</label></p>
+
       </div>
     </div>
     <div class="tamarind-render-panel">
@@ -73,8 +79,6 @@ class Tamarind.ShaderEditor
     @_editorConfigElement = @_element.querySelector('.tamarind-editor-config')
     @_renderCanvasElement = @_element.querySelector('.tamarind-render-canvas')
     @_menuElement = @_element.querySelector('.tamarind-menu')
-    @_vertexCountInputElement = @_element.querySelector('[name="vertexCount"]')
-    @_drawingModeInputElement = @_element.querySelector('[name="drawingMode"]')
 
     @_state = state or new Tamarind.State()
 
@@ -93,8 +97,9 @@ class Tamarind.ShaderEditor
     createDoc Tamarind.FRAGMENT_SHADER
     createDoc Tamarind.VERTEX_SHADER
 
-    @_bindInputToCanvas(@_vertexCountInputElement, 'vertexCount', parseInt)
-    @_bindInputToCanvas(@_drawingModeInputElement, 'drawingMode')
+    @_bindInputToCanvas('vertexCount', parseInt)
+    @_bindInputToCanvas('drawingMode')
+    @_bindInputToCheckbox('debugMode')
 
 
     @_codemirror = CodeMirror(@_editorCodeElement,
@@ -122,8 +127,36 @@ class Tamarind.ShaderEditor
 
 
   # @private
-  _bindInputToCanvas: (input, propertyName, parseFunction = String) ->
+  _bindInputToCanvas: (propertyName, parseFunction = String) ->
+    input = @_element.querySelector("[name='#{propertyName}']")
+
     input.value = @_state[propertyName]
+
+    input.addEventListener 'input', =>
+      @_state[propertyName] = parseFunction(input.value)
+      return
+
+    return
+
+
+  # @private
+  _bindInputToCheckbox: (propertyName) ->
+    checkbox = @_element.querySelector("[name='#{propertyName}']")
+
+    checkbox.checked = @_state[propertyName]
+
+    checkbox.addEventListener 'change', =>
+      @_state[propertyName] = checkbox.checked
+      return
+
+    return
+
+
+  # @private
+  _bindCheckboxToCanvas: (propertyName, parseFunction = String) ->
+    input = @_element.querySelector("[name='#{propertyName}']")
+
+    input.checked = @_state[propertyName]
 
     input.addEventListener 'input', =>
       @_state[propertyName] = parseFunction(input.value)
