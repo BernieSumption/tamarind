@@ -87,6 +87,12 @@ class Tamarind.State extends Tamarind.EventEmitter
   save: ->
     return JSON.stringify @_state
 
+  # receive notifications when a specific property changes
+  onPropertyChange: (propertyName, callback) ->
+    if @_state[propertyName] is undefined
+      throw new Error("Invalid property name '#{propertyName}'")
+    @on propertyName + 'Change', callback
+    return
 
   # Restore this object from a previously saved
   restore: (saved) ->
@@ -105,6 +111,7 @@ class Tamarind.State extends Tamarind.EventEmitter
     if @_state[propertyName] isnt value
       @_state[propertyName] = value
       @emit @PROPERTY_CHANGE, propertyName
+      @emit propertyName + 'Change'
     return
 
   _validateShaderType: (shaderType) ->

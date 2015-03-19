@@ -97,10 +97,9 @@ class Tamarind.ShaderEditor
     createDoc Tamarind.FRAGMENT_SHADER
     createDoc Tamarind.VERTEX_SHADER
 
-    @_bindInputToCanvas('vertexCount', parseInt)
+    @_bindInputToCanvas('vertexCount')
     @_bindInputToCanvas('drawingMode')
-    @_bindInputToCheckbox('debugMode')
-
+    @_bindInputToCanvas('debugMode')
 
     @_codemirror = CodeMirror(@_editorCodeElement,
       value: @_shaderDocs[Tamarind.FRAGMENT_SHADER]
@@ -117,23 +116,35 @@ class Tamarind.ShaderEditor
     @_codemirror.refresh()
 
     @_state.on MENU_ITEM_SELECT, @_handleMenuItemSelect
+    @_state.on @_state.SHADER_CHANGE, @_handleShanderChange
 
 
-
-  reset: (config) ->
-    Tamarind.mergeObjects(config, @)
-    for type, doc of @_shaderDocs
-      doc.setValue(@_state.getShaderSource(type))
-
-
+  # TODO unit tests for each kind of input
   # @private
-  _bindInputToCanvas: (propertyName, parseFunction = String) ->
+  _bindInputToCanvas: (propertyName) ->
     input = @_element.querySelector("[name='#{propertyName}']")
 
-    input.value = @_state[propertyName]
+    # figure out how to bind to this kind of element
+    eventName = 'input'
+    inputPropertyName = 'value'
+    parseFunction = (v) -> v
+    if input.type is 'number'
+      parseFunction = parseInt
+    else if input.type is 'checkbox'
+      inputPropertyName = 'checked'
+      eventName = 'change'
 
-    input.addEventListener 'input', =>
-      @_state[propertyName] = parseFunction(input.value)
+    # take the initial value from the state
+    input[inputPropertyName] = @_state[propertyName]
+
+    # update state when element changes
+    input.addEventListener eventName, =>
+      @_state[propertyName] = parseFunction(input[inputPropertyName])
+      return
+
+    # update element when state changes
+    state.onPropertyChange propertyName, ->
+      input[inputPropertyName] = @_state[propertyName]
       return
 
     return
@@ -171,6 +182,15 @@ class Tamarind.ShaderEditor
     if @_codemirror
       @_state.setShaderSource(@_codemirror.getDoc().shaderType,  value)
     @_lintingCallback = callback
+    return
+
+  # @private
+  # Update the UI when the shader is changed form the model
+  _handleShanderChange: (shaderType) =>
+    newSource = @_state.getShaderSource(shaderType)
+    oldSource = @_shaderDocs[shaderType].getValue()
+    unless newSource is oldSource
+      @_shaderDocs[shaderType].setValue(newSource)
     return
 
 
