@@ -1,5 +1,5 @@
 
-replaceScriptTemplates = ->
+Tamarind.replaceScriptTemplates = ->
   for scriptTemplate in document.querySelectorAll("script[type='application/x-tamarind-editor']")
     configJSON = scriptTemplate.text.trim()
     if configJSON.length > 0
@@ -11,7 +11,7 @@ replaceScriptTemplates = ->
     else
       config = {}
 
-    editor = new ShaderEditor(scriptTemplate, config)
+    editor = new Tamarind.ShaderEditor(scriptTemplate, config)
 
 
   return
@@ -19,7 +19,7 @@ replaceScriptTemplates = ->
 
 
 
-class ShaderEditor extends EventEmitter
+class Tamarind.ShaderEditor extends Tamarind.EventEmitter
 
   CONFIG = 'config'
   MENU_ITEM_SELECT = 'menu-item-select'
@@ -101,12 +101,12 @@ class ShaderEditor extends EventEmitter
     @_drawingModeInputElement = @_element.querySelector('[name="drawingMode"]')
 
 
-    new ToggleBar(@_menuElement, @, MENU_ITEM_SELECT)
+    new Tamarind.ToggleBar(@_menuElement, @, MENU_ITEM_SELECT)
 
-    @_canvas = new WebGLCanvas(@_renderCanvasElement)
+    @_canvas = new Tamarind.WebGLCanvas(@_renderCanvasElement)
 
-    @_canvas.on WebGLCanvas.COMPILE, @_handleShaderCompile
-    @_canvas.on WebGLCanvas.LINK, @_setProgramError
+    @_canvas.on Tamarind.WebGLCanvas.COMPILE, @_handleShaderCompile
+    @_canvas.on Tamarind.WebGLCanvas.LINK, @_setProgramError
 
     @_shaderDocs = {}
     createDoc = (shaderType) =>
@@ -148,11 +148,11 @@ class ShaderEditor extends EventEmitter
     @on MENU_ITEM_SELECT, @_handleMenuItemSelect
 
 
-    mergeObjects(config, @)
+    Tamarind.mergeObjects(config, @)
 
 
   reset: (config) ->
-    mergeObjects(config, @)
+    Tamarind.mergeObjects(config, @)
     for type, doc of @_shaderDocs
       doc.setValue(@_canvas.getShaderSource(type))
 
@@ -229,11 +229,11 @@ class ShaderEditor extends EventEmitter
   _getCanvas: -> @_canvas
 
 
-Tamarind.defineClassProperty(ShaderEditor, 'canvas')
+Tamarind.defineClassProperty(Tamarind.ShaderEditor, 'canvas')
 
 
 # A set of links where at any one time, one link is highlighted with the 'is-selected' class.
-class ToggleBar
+class Tamarind.ToggleBar
 
   constructor: (@_parent, @_events, @_eventName) ->
     @_parent.addEventListener 'click', (event) => @selectChild(event.target)
@@ -264,7 +264,7 @@ class ToggleBar
 # is the same as
 #
 # `dest.x = 1; dest.y.z = 2`
-mergeObjects = (source, dest) ->
+Tamarind.mergeObjects = (source, dest) ->
   for prop of source
     destValue = dest[prop]
     destType = typeof destValue
@@ -277,7 +277,7 @@ mergeObjects = (source, dest) ->
     if typeof destValue is 'object'
       unless typeof sourceValue is 'object'
         throw new Error("Can't merge simple source onto complex destination for property '#{prop}'")
-      mergeObjects(sourceValue, destValue)
+      Tamarind.mergeObjects(sourceValue, destValue)
     else
       dest[prop] = sourceValue;
   return

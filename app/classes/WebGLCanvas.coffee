@@ -26,7 +26,7 @@
   are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
   requires uniforms to be set again.
 ###
-class WebGLCanvas extends EventEmitter
+class Tamarind.WebGLCanvas extends Tamarind.EventEmitter
 
   @DEFAULT_VSHADER_SOURCE = '''
 attribute float a_VertexIndex;
@@ -258,7 +258,7 @@ void main() {
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
     error = if compiled then null else gl.getShaderInfoLog(shader)
-    @emit WebGLCanvas.COMPILE, new CompileStatus(shaderType, error)
+    @emit WebGLCanvas.COMPILE, new Tamarind.CompileStatus(shaderType, error)
 
     return compiled
 
@@ -463,24 +463,24 @@ void main() {
     if @_debugMode isnt value or not @trace
       @_debugMode = value
       if @_debugMode
-        @trace = new ConsoleTracer
+        @trace = new Tamarind.ConsoleTracer()
         @trace.log 'Using WebGL API debugging proxy - turn off debug mode for production apps, it hurts performance'
         @gl = @debugContext
       else
-        @trace = new NullTracer
+        @trace = new Tamarind.NullTracer()
         @gl = @debugContext
 
     return
 
 
-Tamarind.defineClassProperty(WebGLCanvas, 'debugMode')
-Tamarind.defineClassProperty(WebGLCanvas, 'drawingMode')
-Tamarind.defineClassProperty(WebGLCanvas, 'vertexCount')
-Tamarind.defineClassProperty(WebGLCanvas, 'vertexShaderSource')
-Tamarind.defineClassProperty(WebGLCanvas, 'fragmentShaderSource')
+Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'debugMode')
+Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'drawingMode')
+Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'vertexCount')
+Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'vertexShaderSource')
+Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'fragmentShaderSource')
 
 
-class CompileStatus
+class Tamarind.CompileStatus
 
   # @property [array] an array of error objects like {message, severity ('warning' | 'error'), line}
   errors: []

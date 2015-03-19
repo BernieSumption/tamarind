@@ -2,7 +2,7 @@
 ###
   Outputs trace messages to the browser console
 ###
-class ConsoleTracer
+class Tamarind.ConsoleTracer
 
   # print a log statement
   log: (m) ->
@@ -17,10 +17,3 @@ class ConsoleTracer
       console.error m
 
     return
-
-# Swallows trace messages silently
-class NullTracer
-  # do nothing
-  log: ->
-  # do nothing
-  error: ->

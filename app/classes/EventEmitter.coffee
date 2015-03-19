@@ -2,7 +2,7 @@
 ###
   Superclass to handle event dispatch
 ###
-class EventEmitter
+class Tamarind.EventEmitter
 
   # Register an event callback
   #
