@@ -5,6 +5,39 @@ Tamarind =
   VERTEX_SHADER:   'VERTEX_SHADER'
 
 
+  DEFAULT_VSHADER_SOURCE: '''
+    attribute float a_VertexIndex;
+    varying vec2 position;
+
+    void main() {
+      // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
+      if (a_VertexIndex == 0.0) {
+        position = vec2(-1, -1);
+      } else if (a_VertexIndex == 1.0) {
+        position = vec2(1, -1);
+      } else if (a_VertexIndex == 2.0) {
+        position = vec2(1, 1);
+      } else if (a_VertexIndex == 3.0) {
+        position = vec2(-1, 1);
+      } else {
+        position = vec2(0);
+      }
+      gl_Position.xy = position;
+    }
+  '''
+
+
+  DEFAULT_FSHADER_SOURCE: '''
+    precision mediump float;
+    uniform vec2 u_CanvasSize;
+    varying vec2 position;
+
+    void main() {
+      gl_FragColor = vec4(position, 1, 1);
+    }
+  '''
+
+
 ###
   Return false if the browser can't handle the awesome.
 ###
@@ -58,3 +91,61 @@ Tamarind.defineClassProperty = (cls, propertyName) ->
   Object.defineProperty cls.prototype, propertyName, config
 
   return
+
+
+###
+  Superclass to handle event dispatch
+###
+class Tamarind.EventEmitter
+
+  # Register an event callback
+  #
+  # @param [string] eventName
+  # @param [function] callback
+  on: (eventName, callback) ->
+    @_validateEventArgs eventName, callback
+    list = @_getEventList(eventName)
+    if list.indexOf(callback) is -1
+      list.push callback
+    return
+
+
+  # Remove an event callback added with `on()`
+  #
+  # @param [string] eventName
+  # @param [function] callback
+  off: (eventName, callback) ->
+    @_validateEventArgs eventName, callback
+    list = @_getEventList eventName
+    index = list.indexOf callback
+    unless index is -1
+      list.splice index, 1
+    return
+
+
+  # Call all callback functions registered with an event
+  #
+  # @param [string] eventName
+  # @param event the argument to be passed to the callback function
+  emit: (eventName, event) ->
+    @_validateEventArgs eventName
+    for f in @_getEventList eventName
+      f.call this, event
+    return
+
+
+  # @private
+  _getEventList: (eventName) ->
+    unless @_events
+      @_events = {}
+    unless @_events[eventName]
+      @_events[eventName] = []
+    return @_events[eventName]
+
+
+  # @private
+  _validateEventArgs: (eventName, callback) ->
+    unless typeof eventName is 'string'
+      throw new Error('eventName must be a string')
+    if arguments.length > 1 and typeof callback isnt 'function'
+      throw new Error('callback must be a function')

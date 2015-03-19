@@ -22,16 +22,10 @@
 <script src="../tamarind.vendor.js"></script>
 <script src="../tamarind.js"></script>
 
-<script type="application/x-tamarind-editor">
-  {
-    "canvas": {
-      "vertexCount": 4
-    }
-  }
-</script>
+<div id="editor-location"></div>
 
 <script>
-  Tamarind.replaceScriptTemplates();
+  var editor = new Tamarind.ShaderEditor(document.getElementById('editor-location'));
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 

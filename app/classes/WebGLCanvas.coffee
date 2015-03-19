@@ -26,39 +26,7 @@
   are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
   requires uniforms to be set again.
 ###
-class Tamarind.WebGLCanvas extends Tamarind.EventEmitter
-
-  @DEFAULT_VSHADER_SOURCE = '''
-attribute float a_VertexIndex;
-varying vec2 position;
-
-void main() {
-  // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
-  if (a_VertexIndex == 0.0) {
-    position = vec2(-1, -1);
-  } else if (a_VertexIndex == 1.0) {
-    position = vec2(1, -1);
-  } else if (a_VertexIndex == 2.0) {
-    position = vec2(1, 1);
-  } else if (a_VertexIndex == 3.0) {
-    position = vec2(-1, 1);
-  } else {
-    position = vec2(0);
-  }
-  gl_Position.xy = position;
-}
-'''
-
-
-  @DEFAULT_FSHADER_SOURCE = '''
-precision mediump float;
-uniform vec2 u_CanvasSize;
-varying vec2 position;
-
-void main() {
-  gl_FragColor = vec4(position, 1, 1);
-}
-'''
+class Tamarind.WebGLCanvas
 
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
@@ -66,41 +34,14 @@ void main() {
 
   SET_UNIFORM_FUNCTION_NAMES = [null, 'uniform1f', 'uniform2f', 'uniform3f', 'uniform4f']
 
-  # Event name for compilation events. The event argument is a CompileStatus object
-  @COMPILE = 'compile'
-
-  # Event name for compilation error events. The event argument is `false` if there was no error or
-  # an error message if there was an error.
-  @LINK = 'link'
-
-  ##
-  ## PUBLIC MEMBER PROPERTIES
-  ##
-
-
-  # @property [int] The number of vertices drawn.
-  # Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex
-  # shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
-  # `vertexCount - 1` that it can use to distinguish vertices
-  vertexCount: 4
-
-
-  # @property [String] A string mode name as used by WebGL's drawArrays method
-  # i.e. one of: POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
-  drawingMode: 'TRIANGLE_FAN'
-
-  # @property [boolean] Whether to log more data, including all WebGL errors. This
-  # requires checking with WebGL for an error after each operation, which is very
-  # slow. Don't use this in production
-  debugMode: false
 
   ##
   ## PUBLIC API METHODS
   ##
 
-  # @param [HTMLCanvasElement] @@canvasElement the canvas element to render onto
-  # @param [boolean] @debugMode the initial value of the `debugMode` property
-  constructor: (@canvasElement, @debugMode = false) ->
+  # @param [HTMLCanvasElement] @canvasElement the canvas element to render onto
+  # @param [Tamarind.State] @state the state object for this canvas, or null to create one
+  constructor: (@canvasElement, state = null) ->
 
     unless Tamarind.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
@@ -112,20 +53,19 @@ void main() {
     @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
     @canvasElement.addEventListener 'webglcontextrestored', @_handleContextRestored
 
+    @_state = state or new Tamarind.State()
+
+    @_state.on @_state.SHADER_CHANGE, @_handleStateChange
+    @_state.on @_state.PROPERTY_CHANGE, @_handleStateChange
+
     @_shaders = {} # OpenGL shader object references
-    @_shaderSources = {} # GLSL source code
-    @_shaderSources[Tamarind.FRAGMENT_SHADER] = WebGLCanvas.DEFAULT_FSHADER_SOURCE
-    @_shaderSources[Tamarind.VERTEX_SHADER] = WebGLCanvas.DEFAULT_VSHADER_SOURCE
-    @_shaderDirty = {} # boolean flag indicating source has changed
 
     @_createContext()
 
     unless @gl
       throw new Error('Could not create WebGL context for canvas')
 
-    @drawingMode = 'TRIANGLE_FAN'
-
-    @_scheduleFrame()
+    @_handleStateChange()
 
     return
 
@@ -136,40 +76,47 @@ void main() {
 
 
   # @private
-  _scheduleFrame: ->
+  _handleStateChange: =>
+    @_updateContextForDebugMode()
     unless @_frameScheduled
       @_frameScheduled = true
       requestAnimationFrame @_doFrame
 
     return
 
+
+
   # @private
   _doFrame: =>
 
     @_frameScheduled = false
 
+
     if @_contextLost
       return false
 
-    isNewContext = @_contextRequiresSetup
 
     if @_contextRequiresSetup
       unless @_setupContext()
         return false
       @_contextRequiresSetup = false
+      isNewContext = true
+    else
+      isNewContext = false
 
 
-    if @_geometryIsDirty or isNewContext
-      unless @_updateGeometry()
+    if isNewContext or @_vertexCount isnt @_state.vertexCount
+      @_vertexCount = @_state.vertexCount
+      unless @_updateGeometry(@_vertexCount)
         return false
-      @_geometryIsDirty = false
+
 
     for shaderType in [Tamarind.VERTEX_SHADER, Tamarind.FRAGMENT_SHADER]
-      if @_shaderDirty[shaderType] or isNewContext
+      if isNewContext or @_shaders[shaderType] is undefined or @gl.getShaderSource(@_shaders[shaderType]) isnt @_state.getShaderSource(shaderType)
         unless @_compileShader(shaderType)
           return false
-        @_shaderDirty[shaderType]
         requiresLink = true
+
 
     if requiresLink
       unless @_linkProgram()
@@ -201,18 +148,13 @@ void main() {
 
     @_contextRequiresSetup = true
 
-    @gl = if @_debugMode then @debugContext else @nativeContext
-
-
-    @_drawingModeNames = {}
-    for mode in VALID_DRAWING_MODES
-      intMode = @gl[mode]
-      if intMode is undefined
-        throw new Error(mode + ' is not a valid drawing mode')
-      @_drawingModeNames[intMode] = mode
+    @_updateContextForDebugMode()
 
     return
 
+  _updateContextForDebugMode: =>
+    @gl = if @_state.debugMode then @debugContext else @nativeContext
+    return
 
   # @private
   _setupContext: ->
@@ -234,7 +176,7 @@ void main() {
 
     gl = @gl
 
-    source = @_shaderSources[shaderType]
+    source = @_state.getShaderSource(shaderType)
 
     oldShader = @_shaders[shaderType]
 
@@ -257,8 +199,8 @@ void main() {
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
-    error = if compiled then null else gl.getShaderInfoLog(shader)
-    @emit WebGLCanvas.COMPILE, new Tamarind.CompileStatus(shaderType, error)
+    unless compiled
+      @_state.setShaderErrors shaderType, Tamarind.ShaderError.fromErrorMessage(gl.getShaderInfoLog(shader))
 
     return compiled
 
@@ -273,10 +215,13 @@ void main() {
 
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
-      @emit WebGLCanvas.LINK, gl.getProgramInfoLog(@_program).trim()
+      error = new Tamarind.ShaderError(gl.getProgramInfoLog(@_program).trim(), -1)
+      @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, [error]
+      @_state.setShaderErrors Tamarind.VERTEX_SHADER, [error]
       return false
 
-    @emit WebGLCanvas.LINK, false
+    @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, []
+    @_state.setShaderErrors Tamarind.VERTEX_SHADER, []
 
     gl.useProgram @_program
 
@@ -293,12 +238,12 @@ void main() {
 
 
   # @private
-  _updateGeometry: ->
+  _updateGeometry: (vertexCount) ->
 
     gl = @gl
 
     # Create vertex buffer
-    vertices = new Float32Array(@vertexCount)
+    vertices = new Float32Array(vertexCount)
     for i of vertices
       vertices[i] = i
 
@@ -332,7 +277,7 @@ void main() {
 
     gl.clearColor 0, 0, 0, 0
     gl.clear gl.COLOR_BUFFER_BIT
-    gl.drawArrays @_drawingMode, 0, @vertexCount
+    gl.drawArrays gl[@_state.drawingMode], 0, @_state.vertexCount
 
     return true
 
@@ -385,109 +330,21 @@ void main() {
     @trace.log 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
-    @_scheduleFrame()
+    @_handleStateChange()
 
     return
 
 
-  ##
-  ## GETTERS AND SETTERS
-  ##
-
-  # Get the source code for a shader
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
-  getShaderSource: (shaderType) -> @_shaderSources[shaderType]
-
-  # Set the source code for a shader
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
-  # @param value GLSL source code for the shader
-  setShaderSource: (shaderType, value) ->
-    @_shaderSources[shaderType] = value
-    @_shaderDirty[shaderType] = true
-    @_scheduleFrame()
-
-    return
 
 
-  # @private
-  _getFragmentShaderSource: -> @getShaderSource(Tamarind.FRAGMENT_SHADER)
 
-  # @private
-  _setFragmentShaderSource: (value) ->
-    @setShaderSource(Tamarind.FRAGMENT_SHADER, value)
+class Tamarind.ShaderError
 
-    return
+  # return an array of Tamarind.ShaderError objects representing all the errors
+  # in the supplied error string
+  @fromErrorMessage = (error) ->
 
-
-  # @private
-  _getVertexShaderSource: -> @getShaderSource(Tamarind.VERTEX_SHADER)
-
-  # @private
-  _setVertexShaderSource: (value) ->
-    @setShaderSource(Tamarind.VERTEX_SHADER, value)
-
-    return
-
-  # @private
-  _getVertexCount: -> @_vertexCount
-
-  # @private
-  _setVertexCount: (value) ->
-    @_vertexCount = value
-    @_geometryIsDirty = true
-    @_scheduleFrame()
-
-    return
-
-
-  # @private
-  _getDrawingMode: -> @_drawingModeNames[@_drawingMode]
-
-  # @private
-  _setDrawingMode: (value) ->
-    intValue = @gl[value]
-    if intValue is undefined
-      throw new Error(value + ' is not a valid drawing mode.')
-    @_drawingMode = intValue
-    @_scheduleFrame()
-
-    return
-
-
-  # @private
-  _getDebugMode: -> @_debugMode
-
-  # @private
-  _setDebugMode: (value) ->
-    value = !!value
-    if @_debugMode isnt value or not @trace
-      @_debugMode = value
-      if @_debugMode
-        @trace = new Tamarind.ConsoleTracer()
-        @trace.log 'Using WebGL API debugging proxy - turn off debug mode for production apps, it hurts performance'
-        @gl = @debugContext
-      else
-        @trace = new Tamarind.NullTracer()
-        @gl = @debugContext
-
-    return
-
-
-Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'debugMode')
-Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'drawingMode')
-Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'vertexCount')
-Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'vertexShaderSource')
-Tamarind.defineClassProperty(Tamarind.WebGLCanvas, 'fragmentShaderSource')
-
-
-class Tamarind.CompileStatus
-
-  # @property [array] an array of error objects like {message, severity ('warning' | 'error'), line}
-  errors: []
-
-  constructor: (@shaderType, error) ->
-
-    @errors = []
+    errors = []
 
     if error
 
@@ -497,10 +354,8 @@ class Tamarind.CompileStatus
 
         if parts
           line = parseInt(parts[1]) or 0
-          @errors.push(
-            message: parts[2]
-            line: line - 1 # GLSL lines are 1 indexed, CodeMirror expects 0 indexed
-          )
+          errors.push( new Tamarind.ShaderError(parts[2], line - 1) )
 
-  toString: ->
-    return "CompileStatus('#{@shaderType}', [#{@errors.length} errors])"
+    return errors
+
+  constructor: (@message, @line) ->

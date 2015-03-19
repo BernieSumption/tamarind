@@ -1,25 +1,7 @@
 
-Tamarind.replaceScriptTemplates = ->
-  for scriptTemplate in document.querySelectorAll("script[type='application/x-tamarind-editor']")
-    configJSON = scriptTemplate.text.trim()
-    if configJSON.length > 0
-      try
-        config = JSON.parse(configJSON)
-      catch e
-        console.error 'Failed to parse Tamarind config: "' + e + '" in source:\n' + configJSON
-        continue
-    else
-      config = {}
-
-    editor = new Tamarind.ShaderEditor(scriptTemplate, config)
 
 
-  return
-
-
-
-
-class Tamarind.ShaderEditor extends Tamarind.EventEmitter
+class Tamarind.ShaderEditor
 
   CONFIG = 'config'
   MENU_ITEM_SELECT = 'menu-item-select'
@@ -36,12 +18,7 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
       <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
     </div>
     <div class="tamarind-editor-panel">
-      <div class="tamarind-editor tamarind-editor-code">
-        <div class="tamarind-program-error">
-          <span class="CodeMirror-lint-marker-error"></span>
-          <span class="tamarind-program-error-message"></span>
-        </div>
-      </div>
+      <div class="tamarind-editor tamarind-editor-code"></div>
       <div class="tamarind-editor tamarind-editor-config">
 
         Render
@@ -72,10 +49,9 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
 
   # Create a new Tamarind editor
   # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
-  # @param [object] config, an map of values to be copied onto this object. Values are recursively merged into this
-  #                         object, so e.g. {canvas: {vertexCount: 4}} will set `myShaderEditor.canvas.vertexCount = 4`
+  # @param [Tamarind.State] state A state object, or null to create one
   #
-  constructor: (location, config = {}) ->
+  constructor: (location, state = null) ->
 
     @_element = document.createElement('div')
     @_element.className = 'tamarind'
@@ -100,17 +76,17 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
     @_vertexCountInputElement = @_element.querySelector('[name="vertexCount"]')
     @_drawingModeInputElement = @_element.querySelector('[name="drawingMode"]')
 
+    @_state = state or new Tamarind.State()
 
-    new Tamarind.ToggleBar(@_menuElement, @, MENU_ITEM_SELECT)
+    new Tamarind.ToggleBar(@_menuElement, @_state, MENU_ITEM_SELECT)
 
-    @_canvas = new Tamarind.WebGLCanvas(@_renderCanvasElement)
+    @_canvas = new Tamarind.WebGLCanvas(@_renderCanvasElement, @_state)
 
-    @_canvas.on Tamarind.WebGLCanvas.COMPILE, @_handleShaderCompile
-    @_canvas.on Tamarind.WebGLCanvas.LINK, @_setProgramError
+    @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
 
     @_shaderDocs = {}
     createDoc = (shaderType) =>
-      doc = CodeMirror.Doc(@_canvas.getShaderSource(shaderType), 'clike')
+      doc = CodeMirror.Doc(@_state.getShaderSource(shaderType), 'clike')
       doc.shaderType = shaderType
       @_shaderDocs[shaderType] = doc
       return
@@ -135,34 +111,22 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
     @_codemirror.on 'renderLine', @_addLineWrapIndent
     @_codemirror.refresh()
 
+    @_state.on MENU_ITEM_SELECT, @_handleMenuItemSelect
 
-    @_programErrorElement = @_element.querySelector('.tamarind-program-error')
-    @_setProgramError false
-
-    # A bit hacky. This inserts out element into the start of the CodeMirror instance, which seems to be
-    # the easiest way of getting the CodeMirror editing area to take up all the available height
-    # minus the height used by the error notice. It's bad manners to tamper with a component's DOM, but
-    # CodeMirror doesn't seem to mind.
-    @_codemirror.display.wrapper.insertBefore @_programErrorElement, @_codemirror.display.wrapper.firstChild
-
-    @on MENU_ITEM_SELECT, @_handleMenuItemSelect
-
-
-    Tamarind.mergeObjects(config, @)
 
 
   reset: (config) ->
     Tamarind.mergeObjects(config, @)
     for type, doc of @_shaderDocs
-      doc.setValue(@_canvas.getShaderSource(type))
+      doc.setValue(@_state.getShaderSource(type))
 
 
   # @private
   _bindInputToCanvas: (input, propertyName, parseFunction = String) ->
-    input.value = @_canvas[propertyName]
+    input.value = @_state[propertyName]
 
     input.addEventListener 'input', =>
-      @_canvas[propertyName] = parseFunction(input.value)
+      @_state[propertyName] = parseFunction(input.value)
       return
 
     return
@@ -172,30 +136,19 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
   # has finished typing in an editor window, and we use them to update the shader source
   _handleCodeMirrorLint: (value, callback, options, cm) =>
     if @_codemirror
-      @_canvas.setShaderSource(@_codemirror.getDoc().shaderType,  value)
+      @_state.setShaderSource(@_codemirror.getDoc().shaderType,  value)
     @_lintingCallback = callback
     return
 
-  _handleShaderCompile: (compileEvent) =>
-    if compileEvent.shaderType is @_activeCodeEditor
-      errors = for err in compileEvent.errors
+
+  _handleShaderErrorsChange: (shaderType) =>
+    if shaderType is @_activeCodeEditor
+      errors = for err in @_state.getShaderErrors(shaderType)
         message: err.message
-        from: {line: err.line}
-        to: {line: err.line}
+        from: {line: Math.max(err.line, 0)}
+        to: {line: Math.max(err.line, 0)}
 
       @_lintingCallback @_codemirror, errors
-    return
-
-
-  _setProgramError: (error) =>
-    if error
-      @_programErrorElement.style.display = ''
-      msgElement = @_programErrorElement.querySelector('.tamarind-program-error-message')
-      msgElement.innerHTML = ''
-      msgElement.appendChild(document.createTextNode('Program error: ' + error))
-    else
-      @_programErrorElement.style.display = 'none'
-
     return
 
   # @private
@@ -213,7 +166,7 @@ class Tamarind.ShaderEditor extends Tamarind.EventEmitter
     return
 
   # @private
-  _handleMenuItemSelect: (item) ->
+  _handleMenuItemSelect: (item) =>
     if item is CONFIG
       @_editorCodeElement.style.display = 'none'
       @_editorConfigElement.style.display = ''

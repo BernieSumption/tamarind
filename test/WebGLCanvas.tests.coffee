@@ -70,11 +70,17 @@ describe 'WebGLCanvas', ->
     expect(-> console.error('this error is expected')).toThrow(new Error('this error is expected'))
     return
 
+  createCanvasAndState = (debugMode = true) ->
+    state = new Tamarind.State()
+    state.debugMode = debugMode
+    canvas = new Tamarind.WebGLCanvas(document.createElement('canvas'), state)
+    return [canvas, state]
+
   it 'should render a test image', (done) ->
 
-    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+    [canvas, state] = createCanvasAndState()
 
-    canvas.vertexShaderSource = VSHADER_HEADER + '''
+    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
       void main() {
         // 4 points, one in each corner, clockwise from top left
         if (a_VertexIndex == 0.0) {
@@ -89,7 +95,7 @@ describe 'WebGLCanvas', ->
       }
     '''
 
-    canvas.fragmentShaderSource = FSHADER_HEADER + '''
+    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
       void main() {
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
@@ -101,15 +107,15 @@ describe 'WebGLCanvas', ->
 
   it 'test image rendering should work even if the scene is invalid', ->
 
-    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+    [canvas, state] = createCanvasAndState()
 
-    canvas.vertexShaderSource = VSHADER_HEADER + '''
+    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
       void main() {
         blarty foo
       }
     '''
 
-    canvas.fragmentShaderSource = FSHADER_HEADER + '''
+    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
       void main() {
         gl_FragColor = nark;
       }
@@ -123,13 +129,13 @@ describe 'WebGLCanvas', ->
 
   expectErrorCountFromSource = (done, expectedErrorLines, fragmentShaderSource) ->
 
-    canvas = new WebGLCanvas(document.createElement('canvas'))
+    [canvas, state] = createCanvasAndState(false)
 
-    canvas.fragmentShaderSource = fragmentShaderSource
+    state.setShaderSource Tamarind.FRAGMENT_SHADER, fragmentShaderSource
 
-    canvas.on WebGLCanvas.COMPILE, (event) ->
-      if event.shaderType is Tamarind.FRAGMENT_SHADER
-        actualErrorLines = (err.line for err in event.errors)
+    state.on state.SHADER_ERRORS_CHANGE, (shaderType) ->
+      if shaderType is Tamarind.FRAGMENT_SHADER
+        actualErrorLines = (err.line for err in state.getShaderErrors(Tamarind.FRAGMENT_SHADER))
         expect(actualErrorLines).toEqual(expectedErrorLines)
         done()
 
@@ -169,48 +175,36 @@ describe 'WebGLCanvas', ->
 
     return
 
-  it 'should dispatch a link event on sucessful linking', (done) ->
+  it 'should interpret a failed linking as a line -1 error on both shaders', (done) ->
 
-    canvas = new WebGLCanvas(document.createElement('canvas'), true)
+    [canvas, state] = createCanvasAndState()
 
-    canvas.fragmentShaderSource = FSHADER_HEADER + '''
-      void main() {
-        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
-      }
-    '''
-    canvas.vertexShaderSource = VSHADER_HEADER + '''
-      void main() {
-        gl_Position = vec4(0);
-      }
-    '''
-
-    canvas.on WebGLCanvas.LINK, (error) ->
-      expect(error).toBeFalsy()
-      done()
-
-      return
-
-    return
-
-  it 'should dispatch a link error message event on failed linking', (done) ->
-
-    canvas = new WebGLCanvas(document.createElement('canvas'), true)
-
-    canvas.fragmentShaderSource = FSHADER_HEADER + '''
+    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
       varying vec4 doesntExist; // not present in vertex shader, that's a link error
       void main() {
         gl_FragColor = doesntExist;
       }
     '''
-    canvas.vertexShaderSource = VSHADER_HEADER + '''
+    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
       void main() {
         gl_Position = vec4(0);
       }
     '''
 
-    canvas.on WebGLCanvas.LINK, (error) ->
-      expect(error).toContain('doesntExist')
-      done()
+    events = 0
+    state.on state.SHADER_ERRORS_CHANGE, (error) ->
+      ++events
+      if events is 2
+        fragErrors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
+        expect(fragErrors.length).toEqual 1
+        expect(fragErrors[0].line).toEqual -1
+
+
+        vertErrors = state.getShaderErrors(Tamarind.VERTEX_SHADER)
+        expect(vertErrors.length).toEqual 1
+        expect(vertErrors[0].line).toEqual -1
+
+        done()
 
       return
 

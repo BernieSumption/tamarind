@@ -35,7 +35,6 @@
 <body>
 
 <div id="controls">
-    <input type="range" class="tamarind-range-input" min="0" max="10" step="0.01">
     <input type="number" id="vertexCount" min="1">
     <select id="drawingMode">
         <option>POINTS</option>
@@ -47,9 +46,9 @@
         <option>TRIANGLE_FAN</option>
     </select>
     <p>Vertex shader</p>
-    <textarea id="vertexShaderSource"></textarea>
+    <textarea id="VERTEX_SHADER"></textarea>
     <p>Fragment shader</p>
-    <textarea id="fragmentShaderSource"></textarea>
+    <textarea id="FRAGMENT_SHADER"></textarea>
     <p>Compile events</p>
     <textarea id="compileEvents"></textarea>
     <p>Image generation</p>
@@ -64,30 +63,47 @@
 <script src="../tamarind.js"></script>
 <script>
 
-    canvas = new Tamarind.WebGLCanvas(document.getElementById("displayArea"), true);
+    var state = new Tamarind.State();
+    state.debugMode = true;
+    var canvas = new Tamarind.WebGLCanvas(document.getElementById("displayArea"), state);
 
 
-    bindInputToProperty("vertexCount");
+    bindInputToProperty("vertexCount", parseInt);
     bindInputToProperty("drawingMode");
-    bindInputToProperty("fragmentShaderSource");
-    bindInputToProperty("vertexShaderSource");
+    bindInputToShader("FRAGMENT_SHADER");
+    bindInputToShader("VERTEX_SHADER");
 
 
-    canvas.on(Tamarind.WebGLCanvas.COMPILE, function(event) {
+    state.on(state.SHADER_ERRORS_CHANGE, function(errors) {
         var compileEvents = document.getElementById("compileEvents");
-        var prefix = compileEvents.value.length ? "\n" : ""
-        console.log ("'"+event+'"')
-        compileEvents.value = compileEvents.value + prefix + event
+        var prefix = compileEvents.value.length ? "\n" : "";
+        console.log(errors);
+        compileEvents.value = compileEvents.value + prefix + errors;
     })
 
 
     function bindInputToProperty(propertyName, type) {
-        var input = document.getElementById(propertyName);
-        input.value = canvas[propertyName];
-        var update = function() {
-            canvas[propertyName] = type ? type(input.value) : input.value;
-        }
-        input.addEventListener("input", update);
+      var input = document.getElementById(propertyName);
+      input.value = state[propertyName];
+      var update = function() {
+        state[propertyName] = type ? type(input.value) : input.value;
+      }
+      input.addEventListener("input", update);
+    }
+
+    function bindInputToShader(shaderType) {
+      var input = document.getElementById(shaderType);
+      input.value = state.getShaderSource(shaderType);
+      var update = function() {
+        state.setShaderSource(shaderType, input.value);
+      }
+      input.addEventListener("input", update);
+    }
+
+    function bindInput(input, initialValue, oninput) {
+
+      input.value = initialValue;
+      input.addEventListener("input", oninput);
     }
 
     function generateImage() {
