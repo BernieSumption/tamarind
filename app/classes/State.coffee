@@ -35,18 +35,15 @@ class Tamarind.State extends Tamarind.EventEmitter
 
   constructor: ->
     @_state = {
-      shaderSources:
-        FRAGMENT_SHADER: Tamarind.DEFAULT_FSHADER_SOURCE
-        VERTEX_SHADER: Tamarind.DEFAULT_VSHADER_SOURCE
+      FRAGMENT_SHADER: Tamarind.DEFAULT_FSHADER_SOURCE
+      VERTEX_SHADER: Tamarind.DEFAULT_VSHADER_SOURCE
       vertexCount: 4
       drawingMode: 'TRIANGLE_FAN'
       debugMode: false
     }
-    @_transientState = {
-      shaderErrors: {
-        FRAGMENT_SHADER: []
-        VERTEX_SHADER: []
-      }
+    @_shaderErrors = {
+      FRAGMENT_SHADER: []
+      VERTEX_SHADER: []
     }
 
 
@@ -54,7 +51,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderSource: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_state.shaderSources[shaderType]
+    return @_state[shaderType]
 
 
   # Set the source code for a shader
@@ -63,8 +60,9 @@ class Tamarind.State extends Tamarind.EventEmitter
   setShaderSource: (shaderType, value) ->
     @_validateShaderType(shaderType)
     @_validateType(value, 'string', 'shaderType')
-    @_state.shaderSources[shaderType] = value
-    @emit @SHADER_CHANGE, shaderType
+    if @_state[shaderType] isnt value
+      @_state[shaderType] = value
+      @emit @SHADER_CHANGE, shaderType
     return
 
 
@@ -72,7 +70,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_transientState.shaderErrors[shaderType].slice()
+    return @_shaderErrors[shaderType].slice()
 
 
   # Set the list of errors for a shader
@@ -80,11 +78,23 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @param value [array] list of Tamarind.ShaderError objects
   setShaderErrors: (shaderType, value) ->
     @_validateShaderType(shaderType)
-    @_transientState.shaderErrors[shaderType] = value.slice()
+    @_shaderErrors[shaderType] = value.slice()
     @emit @SHADER_ERRORS_CHANGE, shaderType
     return
 
 
+  # Serialise this object as a JSON string
+  save: ->
+    return JSON.stringify @_state
+
+
+  # Restore this object from a previously saved
+  restore: (saved) ->
+    for key, value of JSON.parse(saved)
+      if key is Tamarind.FRAGMENT_SHADER or key is Tamarind.VERTEX_SHADER
+        @setShaderSource key, value
+      else
+        @_setProperty key, value
 
   # @private
   _getProperty: (propertyName) -> @_state[propertyName]
@@ -92,12 +102,13 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @private
   _setProperty: (propertyName, value) ->
     @_validateType(value, typeof @_state[propertyName], propertyName)
-    @_state[propertyName] = value
-    @emit @PROPERTY_CHANGE, propertyName
+    if @_state[propertyName] isnt value
+      @_state[propertyName] = value
+      @emit @PROPERTY_CHANGE, propertyName
     return
 
   _validateShaderType: (shaderType) ->
-    if @_state.shaderSources[shaderType] is undefined
+    if @_state[shaderType] is undefined
       throw new Error("Invalid shader type: #{shaderType}")
 
   _validateType: (actualValue, expectedType, propertyName) ->
