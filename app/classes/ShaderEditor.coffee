@@ -115,6 +115,7 @@ class Tamarind.ShaderEditor
     @_codemirror.refresh()
 
     @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
+    @_handleMenuItemSelect()
     @_state.on @_state.SHADER_CHANGE, @_handleShanderChange
 
 
@@ -218,7 +219,9 @@ class Tamarind.ShaderEditor
     return
 
   # @private
-  _handleMenuItemSelect: (item) =>
+  _handleMenuItemSelect: =>
+    item = @_state.selectedTab
+
     if item is CONFIG
       @_editorCodeElement.style.display = 'none'
       @_editorConfigElement.style.display = ''
