@@ -55,8 +55,9 @@ class Tamarind.WebGLCanvas
 
     @_state = state or new Tamarind.State()
 
-    @_state.on @_state.SHADER_CHANGE, @_handleStateChange
-    @_state.on @_state.PROPERTY_CHANGE, @_handleStateChange
+    @_state.on @_state.CHANGE, @_doFrame
+
+    @_state.onPropertyChange 'debugMode', @_updateContextForDebugMode
 
     @_shaders = {} # OpenGL shader object references
 
@@ -64,8 +65,6 @@ class Tamarind.WebGLCanvas
 
     unless @gl
       throw new Error('Could not create WebGL context for canvas')
-
-    @_handleStateChange()
 
     return
 
@@ -76,21 +75,7 @@ class Tamarind.WebGLCanvas
 
 
   # @private
-  _handleStateChange: =>
-    @_updateContextForDebugMode()
-    unless @_frameScheduled
-      @_frameScheduled = true
-      requestAnimationFrame @_doFrame
-
-    return
-
-
-
-  # @private
   _doFrame: =>
-
-    @_frameScheduled = false
-
 
     if @_contextLost
       return false

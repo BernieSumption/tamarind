@@ -4,7 +4,6 @@
 class Tamarind.ShaderEditor
 
   CONFIG = 'config'
-  MENU_ITEM_SELECT = 'menu-item-select'
 
   NOT_SUPPORTED_HTML = '''
     <span class="tamarind-icon-unhappy tamarind-unsupported-icon" title="And lo there shall be no editor, and in that place there shall be wailing and gnashing of teeth."></span>
@@ -82,7 +81,7 @@ class Tamarind.ShaderEditor
 
     @_state = state or new Tamarind.State()
 
-    new Tamarind.ToggleBar(@_menuElement, @_state, MENU_ITEM_SELECT)
+    new Tamarind.ToggleBar(@_menuElement, @_state)
 
     @_canvas = new Tamarind.WebGLCanvas(@_renderCanvasElement, @_state)
 
@@ -115,7 +114,7 @@ class Tamarind.ShaderEditor
     @_codemirror.on 'renderLine', @_addLineWrapIndent
     @_codemirror.refresh()
 
-    @_state.on MENU_ITEM_SELECT, @_handleMenuItemSelect
+    @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
     @_state.on @_state.SHADER_CHANGE, @_handleShanderChange
 
 
@@ -242,23 +241,21 @@ Tamarind.defineClassProperty(Tamarind.ShaderEditor, 'canvas')
 # A set of links where at any one time, one link is highlighted with the 'is-selected' class.
 class Tamarind.ToggleBar
 
-  constructor: (@_parent, @_events, @_eventName) ->
-    @_parent.addEventListener 'click', (event) => @selectChild(event.target)
-    @_children = @_parent.querySelectorAll 'a'
-    @_selectedChild = null
-    @selectChild(@_children[0])
+  constructor: (@_parent, @_state) ->
+    @_links = @_parent.querySelectorAll 'a'
+    @_parent.addEventListener 'click', @_handleChildClick
+    @_state.onPropertyChange 'selectedTab', @_handleStateChange
+    @_handleStateChange()
 
-  selectChild: (childToSelect) =>
-    if childToSelect not in @_children
+  _handleChildClick: (event) =>
+    if event.target not in @_links
       return
-    if @_selectedChild is childToSelect
-      return
-    @_selectedChild = childToSelect
-    for child in @_children
-      if child is childToSelect
-        child.classList.add('is-selected')
-      else
-        child.classList.remove('is-selected')
-
-    setTimeout (=> @_events.emit @_eventName, @_selectedChild.name), 1
+    @_state.selectedTab = event.target.name
     return
+
+  _handleStateChange: =>
+    for link in @_links
+      if link.name is @_state.selectedTab
+        link.classList.add('is-selected')
+      else
+        link.classList.remove('is-selected')

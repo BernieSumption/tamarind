@@ -1,40 +1,63 @@
 
 
-
 describe 'State', ->
 
   stateListener = (state) ->
 
-    listener =
-      propChange: ->
-      shaderChange: ->
+    listener = {}
 
-    spyOn(listener, 'propChange')
-    spyOn(listener, 'shaderChange')
+    for prop in ['PROPERTY_CHANGE', 'SHADER_CHANGE', 'CHANGE']
+      listener[prop] = ->
+      spyOn(listener, prop)
+      state.on state[prop], listener[prop]
 
-    state.on state.PROPERTY_CHANGE, listener.propChange
-    state.on state.SHADER_CHANGE, listener.shaderChange
+    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab']
+      listener[prop] = ->
+      spyOn(listener, prop)
+      state.onPropertyChange prop, listener[prop]
+
 
     return listener
 
-  it 'should dispatch an event when a shader or property changes', ->
-    state = new Tamarind.State()
+  it 'should dispatch events when properties change', (done) ->
 
+    state = new Tamarind.State()
+    listener = stateListener(state)
+
+    debugger
+    state.vertexCount = 111
+    state.vertexCount = 222
+    state.vertexCount = 222 # no change
+    state.debugMode = true
+
+    # expect one general PROPERTY_CHANGE event per change with property name as argument
+    expectCallHistory listener.PROPERTY_CHANGE, ['vertexCount', 'vertexCount', 'debugMode']
+
+    # expect one specific change event per change, with new value as argument
+    expectCallHistory listener.vertexCount, [111, 222]
+    expectCallHistory listener.debugMode, [true]
+
+    # expect a single CHANGE, dispatched asynchronously
+    pollUntil (-> listener.CHANGE.calls.any()), ->
+      expectCallHistory listener.CHANGE, [undefined]
+      done()
+      return
+
+    return
+
+
+
+  it 'should dispatch an event when a shader changes', ->
+
+    state = new Tamarind.State()
     listener = stateListener(state)
 
     state.setShaderSource Tamarind.VERTEX_SHADER, Tamarind.DEFAULT_VSHADER_SOURCE # no event
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag' # yes event
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag' # no event
 
-    expect(listener.shaderChange).toHaveBeenCalledWith Tamarind.FRAGMENT_SHADER
-    expect(listener.shaderChange.calls.count()).toEqual 1
-
-    state.debugMode = false # no event
-    state.debugMode = true # yes event
-    state.debugMode = true # no event
-    state.debugMode = false # yes event
-    expect(listener.propChange).toHaveBeenCalledWith 'debugMode'
-    expect(listener.propChange.calls.count()).toEqual 2
+    expect(listener.SHADER_CHANGE).toHaveBeenCalledWith Tamarind.FRAGMENT_SHADER
+    expect(listener.SHADER_CHANGE.calls.count()).toEqual 1
 
     return
 
@@ -63,12 +86,26 @@ describe 'State', ->
     expect(state.getShaderSource Tamarind.VERTEX_SHADER).toEqual('vert')
 
 
-    expect(listener.propChange).toHaveBeenCalledWith('vertexCount')
-    expect(listener.propChange).not.toHaveBeenCalledWith('debugMode')
-    expect(listener.propChange.calls.count()).toEqual(1)
-    expect(listener.shaderChange).toHaveBeenCalledWith(Tamarind.VERTEX_SHADER)
-    expect(listener.shaderChange).toHaveBeenCalledWith(Tamarind.FRAGMENT_SHADER)
-    expect(listener.shaderChange.calls.count()).toEqual(2)
+    expect(listener.PROPERTY_CHANGE).toHaveBeenCalledWith('vertexCount')
+    expect(listener.PROPERTY_CHANGE).not.toHaveBeenCalledWith('debugMode')
+    expect(listener.PROPERTY_CHANGE.calls.count()).toEqual(1)
+    expect(listener.SHADER_CHANGE).toHaveBeenCalledWith(Tamarind.VERTEX_SHADER)
+    expect(listener.SHADER_CHANGE).toHaveBeenCalledWith(Tamarind.FRAGMENT_SHADER)
+    expect(listener.SHADER_CHANGE.calls.count()).toEqual(2)
+
+    return
+
+  it 'should delete transient state on restore', ->
+
+    state = new Tamarind.State()
+    saved = state.save()
+    state.setShaderErrors Tamarind.VERTEX_SHADER, '', [new Tamarind.ShaderError('', 1)]
+    state.selectedTab = 'CONFIG'
+
+    state.restore(saved)
+
+    expect(state.selectedTab).not.toEqual('config')
+    expect(state.getShaderErrors Tamarind.VERTEX_SHADER).toEqual([])
 
     return
 

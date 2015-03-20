@@ -23,13 +23,19 @@ class Tamarind.State extends Tamarind.EventEmitter
   # slow. Don't use this in production
   debugMode: false
 
-  # @property [string] Name of event emitted when shaders change. The shader type will be the event argument.
+  # @property [String] the name of the currently selected UI tab. Not saved and restored.
+  selectedTab: Tamarind.FRAGMENT_SHADER
+
+  # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, is passed as the event argument.
   SHADER_CHANGE: 'shaderChange'
 
-  # @property [string] Name of event emitted when a top level property like vertexCount changes. The property name will be the event argument.
+  # @property [string] Name of event emitted when a top level property like vertexCount changes. The property name, e.g. 'vertexCount', will be the event argument.
   PROPERTY_CHANGE: 'propertyChange'
 
-  # @property [string] Name of event emitted when shaders change. The shader type will be the event argument.
+  # @property [string] Name of event emitted when any non-transient state changes.
+  CHANGE: 'change'
+
+  # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, will be the event argument.
   SHADER_ERRORS_CHANGE: 'shaderErrorsChange'
 
 
@@ -39,20 +45,8 @@ class Tamarind.State extends Tamarind.EventEmitter
       VERTEX_SHADER: Tamarind.DEFAULT_VSHADER_SOURCE
       vertexCount: 4
       drawingMode: 'TRIANGLE_FAN'
-      debugMode: false
     }
-    @_transientState = {
-      shaders:
-        FRAGMENT_SHADER:
-          errors: []
-          errorText: []
-        VERTEX_SHADER:
-          errors: []
-          errorText: []
-    }
-
-    # TODO reset transient state on restore
-
+    @_transientState = @_makeDefaultTransientState()
 
   # Get the source code for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
@@ -70,6 +64,7 @@ class Tamarind.State extends Tamarind.EventEmitter
     if @_state[shaderType] isnt value
       @_state[shaderType] = value
       @emit @SHADER_CHANGE, shaderType
+      @_scheduleChangeEvent()
     return
 
 
@@ -102,9 +97,10 @@ class Tamarind.State extends Tamarind.EventEmitter
 
   # receive notifications when a specific property changes
   onPropertyChange: (propertyName, callback) ->
-    if @_state[propertyName] is undefined
+    if @[propertyName] is undefined
       throw new Error("Invalid property name '#{propertyName}'")
     @on propertyName + 'Change', callback
+    #TODO cache names
     return
 
   # Restore this object from a previously saved
@@ -113,19 +109,20 @@ class Tamarind.State extends Tamarind.EventEmitter
       if key is Tamarind.FRAGMENT_SHADER or key is Tamarind.VERTEX_SHADER
         @setShaderSource key, value
       else
-        @_setProperty key, value
-
-  # @private
-  _getProperty: (propertyName) -> @_state[propertyName]
-
-  # @private
-  _setProperty: (propertyName, value) ->
-    @_validateType(value, typeof @_state[propertyName], propertyName)
-    if @_state[propertyName] isnt value
-      @_state[propertyName] = value
-      @emit @PROPERTY_CHANGE, propertyName
-      @emit propertyName + 'Change'
+        @[key] = value
+    @_transientState = @_makeDefaultTransientState()
     return
+
+
+
+  _scheduleChangeEvent: ->
+    unless @_changeEventScheduled
+      @_changeEventScheduled = true
+      requestAnimationFrame =>
+        @emit @CHANGE
+        return
+    return
+  
 
   _validateShaderType: (shaderType) ->
     if @_state[shaderType] is undefined
@@ -136,22 +133,42 @@ class Tamarind.State extends Tamarind.EventEmitter
       throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")
 
 
+  _makeDefaultTransientState: ->
+    return {
+      shaders:
+        FRAGMENT_SHADER:
+          errors: []
+          errorText: []
+        VERTEX_SHADER:
+          errors: []
+          errorText: [],
+      selectedTab: Tamarind.FRAGMENT_SHADER,
+      debugMode: false
+    }
+
+
 
   # define a read/write property that maps to getProperty and setProperty
-  defineProperty = (name) =>
+  _defineProperty = (propertyName, storage) =>
 
     config =
       enumerable: true
-      get: -> @_getProperty(name)
+      get: -> @[storage][propertyName]
       set: (value) ->
-        @_setProperty(name, value)
+        @_validateType(value, typeof @[storage][propertyName], propertyName)
+        if @[storage][propertyName] isnt value
+          @[storage][propertyName] = value
+          @emit @PROPERTY_CHANGE, propertyName
+          @emit propertyName + 'Change', value
+          @_scheduleChangeEvent()
         return
 
-    Object.defineProperty @.prototype, name, config
+    Object.defineProperty @.prototype, propertyName, config
 
     return
 
-  defineProperty 'vertexCount'
-  defineProperty 'drawingMode'
-  defineProperty 'debugMode'
+  _defineProperty 'vertexCount', '_state'
+  _defineProperty 'drawingMode', '_state'
+  _defineProperty 'debugMode', '_transientState'
+  _defineProperty 'selectedTab', '_transientState'
 

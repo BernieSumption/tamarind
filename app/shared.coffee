@@ -12,17 +12,17 @@ Tamarind =
     void main() {
       // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
       if (a_VertexIndex == 0.0) {
-        position = vec2(-1, -1);
+        v_position = vec2(-1, -1);
       } else if (a_VertexIndex == 1.0) {
-        position = vec2(1, -1);
+        v_position = vec2(1, -1);
       } else if (a_VertexIndex == 2.0) {
-        position = vec2(1, 1);
+        v_position = vec2(1, 1);
       } else if (a_VertexIndex == 3.0) {
-        position = vec2(-1, 1);
+        v_position = vec2(-1, 1);
       } else {
-        position = vec2(0);
+        v_position = vec2(0);
       }
-      gl_Position.xy = position;
+      gl_Position.xy = v_position;
     }
   '''
 

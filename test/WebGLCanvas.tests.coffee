@@ -127,7 +127,7 @@ describe 'WebGLCanvas', ->
 
     return
 
-  expectErrorCountFromSource = (done, expectedErrorLines, fragmentShaderSource) ->
+  expectErrorsFromSource = (done, expectedErrorLines, fragmentShaderSource) ->
 
     [canvas, state] = createCanvasAndState(false)
 
@@ -145,7 +145,7 @@ describe 'WebGLCanvas', ->
 
   it 'should dispatch CompileStatus events on sucessful compilation', (done) ->
 
-    expectErrorCountFromSource done, [], FSHADER_HEADER + '''
+    expectErrorsFromSource done, [], FSHADER_HEADER + '''
       void main() {
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
       }
@@ -155,7 +155,7 @@ describe 'WebGLCanvas', ->
 
   it 'should have one error if there is a syntax problem', (done) ->
 
-    expectErrorCountFromSource done, [2],  FSHADER_HEADER + '''
+    expectErrorsFromSource done, [2],  FSHADER_HEADER + '''
       void main() {
         gl_FragColor vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1); // error: missing equals
       }
@@ -165,7 +165,7 @@ describe 'WebGLCanvas', ->
 
   it 'should have multiple errors if there are multiple validation problems', (done) ->
 
-    expectErrorCountFromSource done, [2, 4],  FSHADER_HEADER + '''
+    expectErrorsFromSource done, [2, 4],  FSHADER_HEADER + '''
       void main() {
         foo = 1.0; // first error
         gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
