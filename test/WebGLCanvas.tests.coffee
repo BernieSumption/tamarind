@@ -3,9 +3,30 @@ VSHADER_HEADER = '''
 attribute float a_VertexIndex;
 '''
 
+VSHADER_REFERENCE = VSHADER_HEADER + '''
+  void main() {
+    // 4 points, one in each corner, clockwise from top left
+    if (a_VertexIndex == 0.0) {
+      gl_Position.xy = vec2(-1, -1);
+    } else if (a_VertexIndex == 1.0) {
+      gl_Position.xy = vec2(1, -1);
+    } else if (a_VertexIndex == 2.0) {
+      gl_Position.xy = vec2(1, 1);
+    } else if (a_VertexIndex == 3.0) {
+      gl_Position.xy = vec2(-1, 1);
+    }
+  }
+'''
+
 FSHADER_HEADER = '''
 precision mediump float;
 uniform vec2 u_CanvasSize;
+'''
+
+FSHADER_REFERENCE = FSHADER_HEADER + '''
+  void main() {
+    gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+  }
 '''
 
 compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
@@ -62,28 +83,45 @@ describe 'WebGLCanvas', ->
 
     [canvas, state] = createCanvasAndState()
 
-    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
-      void main() {
-        // 4 points, one in each corner, clockwise from top left
-        if (a_VertexIndex == 0.0) {
-          gl_Position.xy = vec2(-1, -1);
-        } else if (a_VertexIndex == 1.0) {
-          gl_Position.xy = vec2(1, -1);
-        } else if (a_VertexIndex == 2.0) {
-          gl_Position.xy = vec2(1, 1);
-        } else if (a_VertexIndex == 3.0) {
-          gl_Position.xy = vec2(-1, 1);
-        }
-      }
-    '''
-
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
-      void main() {
-        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
-      }
-    '''
+    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_REFERENCE
+    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_REFERENCE
 
     compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
+
+    return
+
+  it 'should handle the loss and restoration of the webgl context gracefully', (done) ->
+
+    [canvas, state] = createCanvasAndState()
+
+    # browsers don't like losing and restoring the context on the same frame, so we do this as a series of 4 frames
+
+    frames = [
+      ->
+        canvas.debugLoseContext()
+        return
+      ->
+        # set some state while the context is lost
+        state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_REFERENCE
+        state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_REFERENCE
+        return
+      ->
+        canvas.debugRestoreContext()
+        return
+      ->
+        compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
+        return
+    ]
+
+    frame = 0
+    doNextFrame = ->
+      frames[frame]()
+      frame++
+      if frames[frame]
+        requestAnimationFrame doNextFrame
+      return
+
+    requestAnimationFrame doNextFrame
 
     return
 

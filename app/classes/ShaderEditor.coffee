@@ -11,39 +11,42 @@ class Tamarind.ShaderEditor
   '''
 
   TEMPLATE = """
-    <div class="tamarind-menu">
-      <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
-      <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
-      <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
-    </div>
-    <div class="tamarind-editor-panel">
-      <div class="tamarind-editor tamarind-editor-code"></div>
-      <div class="tamarind-editor tamarind-editor-config">
-
-        <p>
-        Render
-        <input type="number" name="vertexCount" min="1" class="tamarind-number-input">
-
-        vertices as
-
-        <select name="drawingMode">
-            <option>POINTS</option>
-            <option>LINES</option>
-            <option>LINE_LOOP</option>
-            <option>LINE_STRIP</option>
-            <option>TRIANGLES</option>
-            <option>TRIANGLE_STRIP</option>
-            <option>TRIANGLE_FAN</option>
-        </select>
-
-        </p>
-
-        <p><label><input type="checkbox" name="debugMode"> debug mode (logs extra information to console)</label></p>
-
+    <div class="tamarind">
+      <div class="tamarind-menu">
+        <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
+        <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+        <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
-    </div>
-    <div class="tamarind-render-panel">
-      <canvas class="tamarind-render-canvas"></canvas>
+      <div class="tamarind-editor-panel">
+        <div class="tamarind-editor tamarind-editor-code"></div>
+        <div class="tamarind-editor tamarind-editor-config">
+
+          <p>
+          Render
+          <input type="number" name="vertexCount" min="1" class="tamarind-number-input">
+
+          vertices as
+
+          <select name="drawingMode">
+              <option>POINTS</option>
+              <option>LINES</option>
+              <option>LINE_LOOP</option>
+              <option>LINE_STRIP</option>
+              <option>TRIANGLES</option>
+              <option>TRIANGLE_STRIP</option>
+              <option>TRIANGLE_FAN</option>
+          </select>
+
+          </p>
+
+          <p><label><input type="checkbox" name="debugMode"> debug mode (logs extra information to console)</label></p>
+
+        </div>
+      </div>
+      <div class="tamarind-render-panel">
+        <canvas class="tamarind-render-canvas"></canvas>
+        <div class="tamarind-control-drawer"></div>
+      </div>
     </div>
   """
 
@@ -58,11 +61,7 @@ class Tamarind.ShaderEditor
   #
   constructor: (location, state = null) ->
 
-    @_element = document.createElement('div')
-    @_element.className = 'tamarind'
-    @_element.editor = @
-    location.parentNode.insertBefore @_element, location
-    location.parentNode.removeChild location
+    @_element = Tamarind.replaceElement(location, TEMPLATE)
 
     unless Tamarind.browserSupportsRequiredFeatures()
       @_element.innerHTML = NOT_SUPPORTED_HTML
@@ -71,19 +70,16 @@ class Tamarind.ShaderEditor
     else
       @_element.className = 'tamarind'
 
-
-    @_element.innerHTML = TEMPLATE
-
     @_editorCodeElement = @_element.querySelector('.tamarind-editor-code')
     @_editorConfigElement = @_element.querySelector('.tamarind-editor-config')
-    @_renderCanvasElement = @_element.querySelector('.tamarind-render-canvas')
     @_menuElement = @_element.querySelector('.tamarind-menu')
 
     @_state = state or new Tamarind.State()
 
     new Tamarind.ToggleBar(@_menuElement, @_state)
 
-    @_canvas = new Tamarind.WebGLCanvas(@_renderCanvasElement, @_state)
+    new Tamarind.WebGLCanvas(@_element.querySelector('.tamarind-render-canvas'), @_state)
+    new Tamarind.ControlDrawer(@_element.querySelector('.tamarind-control-drawer'), @_state)
 
     @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
 
@@ -234,11 +230,6 @@ class Tamarind.ShaderEditor
 
     return
 
-
-  _getCanvas: -> @_canvas
-
-
-Tamarind.defineClassProperty(Tamarind.ShaderEditor, 'canvas')
 
 
 # A set of links where at any one time, one link is highlighted with the 'is-selected' class.

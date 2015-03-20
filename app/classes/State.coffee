@@ -144,15 +144,15 @@ class Tamarind.State extends Tamarind.EventEmitter
     unless @_transient.inputsJSON is newInputsJSON
       @_transient.inputsJSON = newInputsJSON
       @_persistent.inputs = []
-      @_persistent.inputsByName = {}
+      @_transient.inputsByName = {}
       for input in JSON.parse(newInputsJSON)
         input = Inputs.validate(input, @)
         if input
           @_persistent.inputs.push(input)
-          @_persistent.inputsByName[input.name] = input
+          @_transient.inputsByName[input.name] = input
 
       for input in @_persistent.inputs
-        @_persistent.inputsByName[input.name] = input
+        @_transient.inputsByName[input.name] = input
         @emit @INPUT_VALUE_CHANGE, input.name
 
       @emit @INPUTS_CHANGE
@@ -175,11 +175,10 @@ class Tamarind.State extends Tamarind.EventEmitter
     return
 
   _getInputByName: (inputName) ->
-    input = @_persistent.inputsByName[inputName]
+    input = @_transient.inputsByName[inputName]
     unless input
       throw new Error("no input '#{inputName}'")
     return input
-
 
 
 

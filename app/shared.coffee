@@ -37,22 +37,6 @@ Tamarind =
     }
   '''
 
-
-###
-  Return false if the browser can't handle the awesome.
-###
-Tamarind.browserSupportsRequiredFeatures = ->
-  if Tamarind.browserSupportsRequiredFeatures.__cache is undefined
-
-    try
-      canvas = document.createElement 'canvas'
-      ctx = canvas.getContext('webgl') or canvas.getContext('experimental-webgl')
-
-    Tamarind.browserSupportsRequiredFeatures.__cache = !!(ctx and Object.defineProperty)
-
-  return Tamarind.browserSupportsRequiredFeatures.__cache
-
-
 ###
   Define a property on a class.
 

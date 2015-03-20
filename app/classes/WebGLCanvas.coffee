@@ -68,6 +68,18 @@ class Tamarind.WebGLCanvas
 
     return
 
+  # Simulate GL context loss for debugging
+  debugLoseContext: ->
+    @_loseContext = @_loseContext or @gl.getExtension('WEBGL_lose_context')
+    @_loseContext.loseContext()
+    return
+
+  # Simulate GL context restoration for debugging
+  debugRestoreContext: ->
+    @_loseContext = @_loseContext or @gl.getExtension('WEBGL_lose_context')
+    @_loseContext.restoreContext()
+    return
+
 
   ##
   ## PRIVATE METHODS
@@ -329,7 +341,7 @@ class Tamarind.WebGLCanvas
     @_state.logInfo 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
-    @_handleStateChange()
+    @_doFrame()
 
     return
 
