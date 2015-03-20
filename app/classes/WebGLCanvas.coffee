@@ -111,12 +111,14 @@ class Tamarind.WebGLCanvas
         return false
 
 
+    shadersCompiled = true
     for shaderType in [Tamarind.VERTEX_SHADER, Tamarind.FRAGMENT_SHADER]
       if isNewContext or @_shaders[shaderType] is undefined or @gl.getShaderSource(@_shaders[shaderType]) isnt @_state.getShaderSource(shaderType)
         unless @_compileShader(shaderType)
-          return false
+          shadersCompiled = false
         requiresLink = true
-
+    unless shadersCompiled
+      return false
 
     if requiresLink
       unless @_linkProgram()
@@ -204,10 +206,18 @@ class Tamarind.WebGLCanvas
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
-    unless compiled
-      @_state.setShaderErrors shaderType, Tamarind.ShaderError.fromErrorMessage(gl.getShaderInfoLog(shader))
+    if compiled
+      @_state.setShaderErrors shaderType, null, []
+    else
+      errorText = gl.getShaderInfoLog(shader)
+      errors = Tamarind.ShaderError.fromErrorMessage(errorText)
+      @_state.setShaderErrors shaderType, errorText, errors
+      gl.detachShader(@_program, shader)
+      gl.deleteShader(shader)
+      delete @_shaders[shaderType]
+      return false
 
-    return compiled
+    return true
 
 
   # @private
@@ -220,13 +230,14 @@ class Tamarind.WebGLCanvas
 
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
-      error = new Tamarind.ShaderError(gl.getProgramInfoLog(@_program).trim(), -1)
-      @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, [error]
-      @_state.setShaderErrors Tamarind.VERTEX_SHADER, [error]
+      errorText = gl.getProgramInfoLog(@_program).trim()
+      error = new Tamarind.ShaderError(errorText, -1)
+      @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, errorText, [error]
+      @_state.setShaderErrors Tamarind.VERTEX_SHADER, errorText, [error]
       return false
 
-    @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, []
-    @_state.setShaderErrors Tamarind.VERTEX_SHADER, []
+    @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, null, []
+    @_state.setShaderErrors Tamarind.VERTEX_SHADER, null, []
 
     gl.useProgram @_program
 

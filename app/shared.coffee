@@ -7,7 +7,7 @@ Tamarind =
 
   DEFAULT_VSHADER_SOURCE: '''
     attribute float a_VertexIndex;
-    varying vec2 position;
+    varying vec2 v_position;
 
     void main() {
       // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
@@ -30,10 +30,10 @@ Tamarind =
   DEFAULT_FSHADER_SOURCE: '''
     precision mediump float;
     uniform vec2 u_CanvasSize;
-    varying vec2 position;
+    varying vec2 v_position;
 
     void main() {
-      gl_FragColor = vec4(position, 1, 1);
+      gl_FragColor = vec4(v_position, 1, 1);
     }
   '''
 

@@ -191,10 +191,12 @@ describe 'WebGLCanvas', ->
       }
     '''
 
-    events = 0
+    eventCount = 0
     state.on state.SHADER_ERRORS_CHANGE, (error) ->
-      ++events
-      if events is 2
+
+      ++eventCount
+
+      if eventCount is 4 # two successful compiles, two failures during link
         fragErrors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
         expect(fragErrors.length).toEqual 1
         expect(fragErrors[0].line).toEqual -1

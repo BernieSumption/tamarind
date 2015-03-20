@@ -228,6 +228,7 @@ class Tamarind.ShaderEditor
       @_editorConfigElement.style.display = 'none'
       @_activeCodeEditor = item
       @_codemirror.swapDoc(@_shaderDocs[item])
+      @_handleShaderErrorsChange(item)
 
     return
 
@@ -261,30 +262,3 @@ class Tamarind.ToggleBar
 
     setTimeout (=> @_events.emit @_eventName, @_selectedChild.name), 1
     return
-
-
-# merge all properties of one object onto another, so for example
-#
-# `mergeObjects({x: 1, y: {z: 2}}, dest)`
-#
-# is the same as
-#
-# `dest.x = 1; dest.y.z = 2`
-Tamarind.mergeObjects = (source, dest) ->
-  for prop of source
-    destValue = dest[prop]
-    destType = typeof destValue
-    sourceValue = source[prop]
-    sourceType = typeof sourceValue
-    unless sourceType is destType
-      throw new Error("Can't merge property '#{prop}': source is #{sourceType} destination is #{destType}")
-
-
-    if typeof destValue is 'object'
-      unless typeof sourceValue is 'object'
-        throw new Error("Can't merge simple source onto complex destination for property '#{prop}'")
-      Tamarind.mergeObjects(sourceValue, destValue)
-    else
-      dest[prop] = sourceValue;
-  return
-

@@ -41,10 +41,17 @@ class Tamarind.State extends Tamarind.EventEmitter
       drawingMode: 'TRIANGLE_FAN'
       debugMode: false
     }
-    @_shaderErrors = {
-      FRAGMENT_SHADER: []
-      VERTEX_SHADER: []
+    @_transientState = {
+      shaders:
+        FRAGMENT_SHADER:
+          errors: []
+          errorText: []
+        VERTEX_SHADER:
+          errors: []
+          errorText: []
     }
+
+    # TODO reset transient state on restore
 
 
   # Get the source code for a shader
@@ -70,17 +77,23 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_shaderErrors[shaderType].slice()
+    return @_transientState.shaders[shaderType].errors.slice()
 
 
   # Set the list of errors for a shader
   # @param shaderType [string] either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
-  # @param value [array] list of Tamarind.ShaderError objects
-  setShaderErrors: (shaderType, value) ->
+  # @param errorText [String] the error text returned by the browser, used for the purposes of checking if the errors have changed
+  # @param errors [number] an array of ShaderError objects
+  setShaderErrors: (shaderType, errorText, errors) ->
     @_validateShaderType(shaderType)
-    @_shaderErrors[shaderType] = value.slice()
-    @emit @SHADER_ERRORS_CHANGE, shaderType
+    if @_transientState.shaders[shaderType].errorText isnt errorText
+      @_transientState.shaders[shaderType].errorText = errorText
+      @_transientState.shaders[shaderType].errors = errors
+      @emit @SHADER_ERRORS_CHANGE, shaderType
+
     return
+
+
 
 
   # Serialise this object as a JSON string
