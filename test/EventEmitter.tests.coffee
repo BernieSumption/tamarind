@@ -19,9 +19,9 @@ describe 'EventEmitter', ->
     ee.on 'foo', call2.back
     ee.on 'bar', call3.back
     ee.emit 'foo', 100
-    expect(call1.back).toHaveBeenCalledWith 100
-    expect(call2.back).toHaveBeenCalledWith 100
-    expect(call3.back).not.toHaveBeenCalledWith 100
+    expectCallHistory call1.back, [100]
+    expectCallHistory call2.back, [100]
+    expectCallHistory call3.back, []
 
     return
 
@@ -34,8 +34,8 @@ describe 'EventEmitter', ->
     ee.off 'foo', call2.back
     ee.emit 'foo'
 
-    expect(call1.back).toHaveBeenCalled()
-    expect(call2.back).not.toHaveBeenCalled()
+    expectCallHistory call1.back, [undefined]
+    expectCallHistory call2.back, []
 
     return
 

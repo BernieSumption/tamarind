@@ -38,21 +38,54 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, will be the event argument.
   SHADER_ERRORS_CHANGE: 'shaderErrorsChange'
 
+  # @property [string] Name of event dispatched when the inputs change.
+  INPUTS_CHANGE: 'inputsChange'
+
+  # @property [string] Name of event dispatched when the value of a specific input changes. The input name is passed as an event argument.
+  INPUT_VALUE_CHANGE: 'inputValueChange'
+
 
   constructor: ->
-    @_state = {
+    @_resetState()
+
+    # state that lasts the lifetime of this State object
+    @_lifetime = {
+      debugMode: PROPERTY_DEFAULTS.debugMode
+    }
+
+
+  # @private
+  _resetState: ->
+    # state that is save()'d and restore()'d
+    @_persistent = {
       FRAGMENT_SHADER: Tamarind.DEFAULT_FSHADER_SOURCE
       VERTEX_SHADER: Tamarind.DEFAULT_VSHADER_SOURCE
-      vertexCount: 4
-      drawingMode: 'TRIANGLE_FAN'
+      inputs: []
+      vertexCount: PROPERTY_DEFAULTS.vertexCount
+      drawingMode: PROPERTY_DEFAULTS.drawingMode
     }
-    @_transientState = @_makeDefaultTransientState()
+
+    # state that is reset each time we restore()
+    @_transient = {
+      shaders:
+        FRAGMENT_SHADER:
+          errors: []
+          errorText: []
+        VERTEX_SHADER:
+          errors: []
+          errorText: [],
+      selectedTab: PROPERTY_DEFAULTS.selectedTab
+    }
+
+    return
+
+
 
   # Get the source code for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderSource: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_state[shaderType]
+    return @_persistent[shaderType]
 
 
   # Set the source code for a shader
@@ -61,18 +94,20 @@ class Tamarind.State extends Tamarind.EventEmitter
   setShaderSource: (shaderType, value) ->
     @_validateShaderType(shaderType)
     @_validateType(value, 'string', 'shaderType')
-    if @_state[shaderType] isnt value
-      @_state[shaderType] = value
+    if @_persistent[shaderType] isnt value
+      @_persistent[shaderType] = value
       @emit @SHADER_CHANGE, shaderType
       @_scheduleChangeEvent()
     return
+
+
 
 
   # Get the list of Tamarind.ShaderError error objects for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_transientState.shaders[shaderType].errors.slice()
+    return @_transient.shaders[shaderType].errors.slice()
 
 
   # Set the list of errors for a shader
@@ -81,38 +116,106 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @param errors [number] an array of ShaderError objects
   setShaderErrors: (shaderType, errorText, errors) ->
     @_validateShaderType(shaderType)
-    if @_transientState.shaders[shaderType].errorText isnt errorText
-      @_transientState.shaders[shaderType].errorText = errorText
-      @_transientState.shaders[shaderType].errors = errors
+    if @_transient.shaders[shaderType].errorText isnt errorText
+      @_transient.shaders[shaderType].errorText = errorText
+      @_transient.shaders[shaderType].errors = errors
       @emit @SHADER_ERRORS_CHANGE, shaderType
 
     return
 
 
 
-
-  # Serialise this object as a JSON string
-  save: ->
-    return JSON.stringify @_state
-
   # receive notifications when a specific property changes
   onPropertyChange: (propertyName, callback) ->
     if @[propertyName] is undefined
       throw new Error("Invalid property name '#{propertyName}'")
-    @on propertyName + 'Change', callback
-    #TODO cache names
+    @on PROPERTY_CHANGE_EVENTS[propertyName], callback
     return
+
+
+
+  # Return a list of input objects.
+  getInputs: ->
+    return JSON.parse(JSON.stringify @_persistent.inputs)
+
+  # Set the list of input objects.
+  setInputs: (value) ->
+    newInputsJSON = JSON.stringify value
+    unless @_transient.inputsJSON is newInputsJSON
+      @_transient.inputsJSON = newInputsJSON
+      @_persistent.inputs = []
+      @_persistent.inputsByName = {}
+      for input in JSON.parse(newInputsJSON)
+        input = Inputs.validate(input, @)
+        if input
+          @_persistent.inputs.push(input)
+          @_persistent.inputsByName[input.name] = input
+
+      for input in @_persistent.inputs
+        @_persistent.inputsByName[input.name] = input
+        @emit @INPUT_VALUE_CHANGE, input.name
+
+      @emit @INPUTS_CHANGE
+    return
+
+
+  # get the value of a specific input
+  getInputValue: (inputName) ->
+    return @_getInputByName(inputName).value
+
+  # set the value of a specific input
+  setInputValue: (inputName, value) ->
+    unless typeof value is 'number' and not isNaN(value)
+      @logError "invalid value for #{inputName}: " + JSON.stringify(value)
+      return
+    input = @_getInputByName(inputName)
+    unless input.value is value
+      input.value = value
+      @emit @INPUT_VALUE_CHANGE, inputName
+    return
+
+  _getInputByName: (inputName) ->
+    input = @_persistent.inputsByName[inputName]
+    unless input
+      throw new Error("no input '#{inputName}'")
+    return input
+
+
+
+
+  # Serialise this object as a JSON string
+  save: ->
+    return JSON.stringify @_persistent
 
   # Restore this object from a previously saved
   restore: (saved) ->
+    @_resetState()
     for key, value of JSON.parse(saved)
       if key is Tamarind.FRAGMENT_SHADER or key is Tamarind.VERTEX_SHADER
         @setShaderSource key, value
-      else
+      else if key is 'inputs'
+        @setInputs value
+      else if PROPERTY_DEFAULTS[key] isnt undefined
         @[key] = value
-    @_transientState = @_makeDefaultTransientState()
+      else
+        @logError 'restore() ignoring unrecognised key ' + key
     return
 
+
+  # Record an error. This will results in a thrown exception in debugMode or a console error in normal mode
+  logError: (message) ->
+    if @debugMode
+      throw new Error('debugMode: ' + message)
+    else
+      console.error message
+    return
+
+
+  # Record an event. This will results in a console log in debugMode or nothing in normal mode
+  logInfo: (message) ->
+    if @debugMode
+      console.log message
+    return
 
 
   _scheduleChangeEvent: ->
@@ -125,7 +228,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   
 
   _validateShaderType: (shaderType) ->
-    if @_state[shaderType] is undefined
+    if @_persistent[shaderType] is undefined
       throw new Error("Invalid shader type: #{shaderType}")
 
   _validateType: (actualValue, expectedType, propertyName) ->
@@ -133,23 +236,15 @@ class Tamarind.State extends Tamarind.EventEmitter
       throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")
 
 
-  _makeDefaultTransientState: ->
-    return {
-      shaders:
-        FRAGMENT_SHADER:
-          errors: []
-          errorText: []
-        VERTEX_SHADER:
-          errors: []
-          errorText: [],
-      selectedTab: Tamarind.FRAGMENT_SHADER,
-      debugMode: false
-    }
 
-
+  PROPERTY_DEFAULTS = {}
+  PROPERTY_CHANGE_EVENTS = {}
 
   # define a read/write property that maps to getProperty and setProperty
   _defineProperty = (propertyName, storage) =>
+
+    PROPERTY_DEFAULTS[propertyName] = State.prototype[propertyName]
+    PROPERTY_CHANGE_EVENTS[propertyName] = propertyName + 'Changed'
 
     config =
       enumerable: true
@@ -159,7 +254,7 @@ class Tamarind.State extends Tamarind.EventEmitter
         if @[storage][propertyName] isnt value
           @[storage][propertyName] = value
           @emit @PROPERTY_CHANGE, propertyName
-          @emit propertyName + 'Change', value
+          @emit PROPERTY_CHANGE_EVENTS[propertyName], value
           @_scheduleChangeEvent()
         return
 
@@ -167,8 +262,9 @@ class Tamarind.State extends Tamarind.EventEmitter
 
     return
 
-  _defineProperty 'vertexCount', '_state'
-  _defineProperty 'drawingMode', '_state'
-  _defineProperty 'debugMode', '_transientState'
-  _defineProperty 'selectedTab', '_transientState'
+
+  _defineProperty 'vertexCount', '_persistent'
+  _defineProperty 'drawingMode', '_persistent'
+  _defineProperty 'debugMode', '_lifetime'
+  _defineProperty 'selectedTab', '_transient'
 

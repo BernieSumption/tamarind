@@ -52,24 +52,6 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
 describe 'WebGLCanvas', ->
 
-  oldError = console.error
-
-  beforeEach ->
-    console.error = (message) ->
-      unless message is 'this error is expected'
-        oldError.call(console, message)
-      throw new Error(message)
-
-    return
-
-  afterEach ->
-    console.error = oldError
-    return
-
-  it 'should throw an exception on console errors', ->
-    expect(-> console.error('this error is expected')).toThrow(new Error('this error is expected'))
-    return
-
   createCanvasAndState = (debugMode = true) ->
     state = new Tamarind.State()
     state.debugMode = debugMode

@@ -77,7 +77,6 @@
     state.on(state.SHADER_ERRORS_CHANGE, function(errors) {
         var compileEvents = document.getElementById("compileEvents");
         var prefix = compileEvents.value.length ? "\n" : "";
-        console.log(errors);
         compileEvents.value = compileEvents.value + prefix + errors;
     })
 

@@ -146,6 +146,6 @@ class Tamarind.EventEmitter
   # @private
   _validateEventArgs: (eventName, callback) ->
     unless typeof eventName is 'string'
-      throw new Error('eventName must be a string')
+      throw new Error('eventName must be a string, not ' + JSON.stringify(eventName))
     if arguments.length > 1 and typeof callback isnt 'function'
-      throw new Error('callback must be a function')
+      throw new Error('callback must be a function, not ' + JSON.stringify(callback))

@@ -3,11 +3,10 @@
 pollUntil = (predicate, callback, timeoutMs = 3000, pollFrequencyMs = 10) ->
   start = Date.now()
   handler = ->
-    console.log Date.now() - start, predicate()
     expired = Date.now() - start > timeoutMs
     if expired or predicate()
       if expired
-        console.log 'Condition never met: ' + predicate
+        console.error 'Condition never met: ' + predicate
       clearInterval interval
       callback()
     return
@@ -19,10 +18,25 @@ pollUntil = (predicate, callback, timeoutMs = 3000, pollFrequencyMs = 10) ->
 # @param spyMethod [function] a function instrumented with spyOn()
 # @param calls [Array] an array of call signatures, where each signature can be an array of arguments, or a single argument
 expectCallHistory = (spyMethod, calls) ->
-  callTimes = spyMethod.calls.count()
-  expect(callTimes).toEqual calls.length
-  if callTimes is calls.length
-    for arg, i in calls
-      unless Array.isArray(arg)
-        arg = [arg]
-      expect(spyMethod.calls.argsFor(i)).toEqual(arg)
+  realCalls = for call in calls
+    if Array.isArray(call)
+      call
+    else
+      [ call ]
+  expect(spyMethod.calls.allArgs()).toEqual(realCalls)
+  return
+
+
+
+mockInput = (overrides = {}) ->
+  input = {
+    type: 'slider'
+    name: 'my_slider'
+    min: 0
+    max: 10
+    step: 0.1
+    value: 5
+  }
+  for k, v of overrides
+    input[k] = v
+  return input

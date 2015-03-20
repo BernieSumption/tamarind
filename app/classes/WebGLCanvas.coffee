@@ -47,7 +47,7 @@ class Tamarind.WebGLCanvas
       throw new Error 'This browser does not support WebGL'
 
     @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
-      @trace.error event.statusMessage
+      @_state.logInfo event.statusMessage
       return
 
     @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
@@ -142,10 +142,8 @@ class Tamarind.WebGLCanvas
   _updateContextForDebugMode: =>
     if @_state.debugMode
       @gl = @debugContext
-      @trace = new Tamarind.ConsoleTracer()
     else
       @gl = @nativeContext
-      @trace = new Tamarind.NullTracer()
     return
 
   # @private
@@ -319,7 +317,7 @@ class Tamarind.WebGLCanvas
 
   # @private
   _handleContextLost: (e) =>
-    @trace.log 'WebGL context lost, suspending all GL calls'
+    @_state.logInfo 'WebGL context lost, suspending all GL calls'
     @_contextLost = true
     (e or window.event).preventDefault()
 
@@ -328,7 +326,7 @@ class Tamarind.WebGLCanvas
 
   # @private
   _handleContextRestored: =>
-    @trace.log 'WebGL context restored, resuming rendering'
+    @_state.logInfo 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
     @_handleStateChange()
