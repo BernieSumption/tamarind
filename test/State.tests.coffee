@@ -39,9 +39,16 @@ describe 'State', ->
     expectCallHistory listener.debugMode, [true]
 
     # expect a single CHANGE, dispatched asynchronously
-    pollUntil (-> listener.CHANGE.calls.any()), ->
+    pollUntil (-> listener.CHANGE.calls.count() > 0), ->
       expectCallHistory listener.CHANGE, [undefined]
-      done()
+
+      # trigger another change event
+      state.vertexCount = 333
+      pollUntil (-> listener.CHANGE.calls.count() > 1), ->
+        expectCallHistory listener.CHANGE, [undefined, undefined ]
+        done()
+        return
+
       return
 
     return
@@ -190,13 +197,13 @@ describe 'State', ->
     state = new Tamarind.State()
 
     inputs = state.getInputs()
-    inputs.push mockInput(name: '1')
+    inputs.push mockInput(name: 'a')
     expect(state.getInputs()).toEqual([])
 
-    inputs = [mockInput(name: '2')]
+    inputs = [mockInput(name: 'b')]
     state.setInputs inputs
-    inputs.push mockInput(name: '3')
-    expect(state.getInputs()).toEqual [ mockInput(name: '2') ]
+    inputs.push mockInput(name: 'c')
+    expect(state.getInputs()).toEqual [ mockInput(name: 'b') ]
 
     return
 

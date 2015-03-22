@@ -48,4 +48,29 @@ describe 'Inputs', ->
 
 
 
+  it 'should transparently convert names to valid GLSL identifiers', ->
+
+    spyOn console, 'error'
+
+    input = Inputs.validate mockInput(name: 'valid'), normalState
+    expect(input.name).toEqual 'valid'
+
+    input = Inputs.validate mockInput(name: '1starts_with_number'), normalState
+    expect(input.name).toEqual '_1starts_with_number'
+
+    input = Inputs.validate mockInput(name: ' 1 starts with number '), normalState
+    expect(input.name).toEqual '_1_starts_with_number'
+
+    input = Inputs.validate mockInput(name: '  contains  spaces  '), normalState
+    expect(input.name).toEqual 'contains_spaces'
+
+    input = Inputs.validate mockInput(name: 'has-hyphens!'), normalState
+    expect(input.name).toEqual 'has_hyphens'
+
+    input = Inputs.validate mockInput(name: ' ~! '), normalState
+    expect(input.name).toEqual 'unnamed'
+
+    return
+
+
   return
