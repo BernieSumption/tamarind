@@ -217,19 +217,22 @@ class Tamarind.State extends Tamarind.EventEmitter
     return
 
 
+  # @private
   _scheduleChangeEvent: ->
     unless @_changeEventScheduled
       @_changeEventScheduled = true
       requestAnimationFrame =>
+        @_changeEventScheduled = false
         @emit @CHANGE
         return
     return
-  
 
+  # @private
   _validateShaderType: (shaderType) ->
     if @_persistent[shaderType] is undefined
       throw new Error("Invalid shader type: #{shaderType}")
 
+  # @private
   _validateType: (actualValue, expectedType, propertyName) ->
     unless typeof actualValue is expectedType
       throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")

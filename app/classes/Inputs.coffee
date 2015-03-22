@@ -1,5 +1,11 @@
 
+###
+  Manager for inputs.
 
+  An input is represented as a plain-old JavaScript object. Every input has a type e.g. 'slider', a name that must
+  be a valid GLSL identifier, a value, and other properties according to the type, e.g. 'slider' inputs have a 'min'
+  property.
+###
 class Inputs
 
   SCHEMA =
@@ -9,8 +15,12 @@ class Inputs
       step: 0.1
       value: 0
 
-  # given an object representing an input, return
+  # given an input object, return a valid version of it (e.g. filling in missing properties with defaults)
+  # or throw an exception if it's broken beyond repair
   @validate = (input, state) ->
+
+    unless state
+      throw new Error 'Missing state argument'
 
     scheme = SCHEMA[input.type]
 
@@ -23,8 +33,16 @@ class Inputs
         state.logError "ignoring unrecognised property '#{key}': #{JSON.stringify(value)}"
 
 
+    validName = String(input.name)
+      .replace(/^\W+/, '')
+      .replace(/\W+$/, '')
+      .replace(/\W+/g, '_')
+      .replace(/^(?=\d)/, '_') # if starts with number, prefix with _
+      .replace(/^$/, 'unnamed')
+
+
     sanitised = {
-      name: input.name
+      name: validName
       type: input.type
     }
 

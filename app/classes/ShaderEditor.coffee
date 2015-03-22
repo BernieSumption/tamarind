@@ -45,7 +45,7 @@ class Tamarind.ShaderEditor
       </div>
       <div class="tamarind-render-panel">
         <canvas class="tamarind-render-canvas"></canvas>
-        <div class="tamarind-control-drawer"></div>
+        <div class="tamarind-controls-marker"></div>
       </div>
     </div>
   """
@@ -79,7 +79,7 @@ class Tamarind.ShaderEditor
     new Tamarind.ToggleBar(@_menuElement, @_state)
 
     new Tamarind.WebGLCanvas(@_element.querySelector('.tamarind-render-canvas'), @_state)
-    new Tamarind.ControlDrawer(@_element.querySelector('.tamarind-control-drawer'), @_state)
+    new Tamarind.ControlDrawer(@_element.querySelector('.tamarind-controls-marker'), @_state)
 
     @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
 
@@ -92,9 +92,9 @@ class Tamarind.ShaderEditor
     createDoc Tamarind.FRAGMENT_SHADER
     createDoc Tamarind.VERTEX_SHADER
 
-    @_bindInputToCanvas('vertexCount')
-    @_bindInputToCanvas('drawingMode')
-    @_bindInputToCanvas('debugMode')
+    @_bindInputToState('vertexCount')
+    @_bindInputToState('drawingMode')
+    @_bindInputToState('debugMode')
 
     @_codemirror = CodeMirror(@_editorCodeElement,
       value: @_shaderDocs[Tamarind.FRAGMENT_SHADER]
@@ -117,7 +117,7 @@ class Tamarind.ShaderEditor
 
   # TODO unit tests for each kind of input
   # @private
-  _bindInputToCanvas: (propertyName) ->
+  _bindInputToState: (propertyName) ->
     input = @_element.querySelector("[name='#{propertyName}']")
 
     # figure out how to bind to this kind of element

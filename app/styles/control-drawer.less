@@ -1,0 +1,61 @@
+@import "shared";
+
+@shrunken-size: 40px;
+
+.tamarind-controls {
+  position: absolute;
+  top: @padding;
+  right: @padding;
+  bottom: @padding;
+}
+
+.tamarind-controls-background {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border: solid 1px #000;
+  border-radius: @padding;
+
+  height: @shrunken-size;
+  width: @shrunken-size;
+  overflow: hidden;
+  transition: height 0.1s ease-out, width 0.1s ease-out;
+}
+
+.is-selected .tamarind-controls-background {
+  width: 200px;
+  height: 100%;
+  transition: height 0.1s ease-in, width 0.1s ease-in;
+}
+
+.tamarind-controls-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+  color: @light-color;
+  text-decoration: none;
+  margin: 0;
+  display: block;
+  width: @shrunken-size;
+  height: @shrunken-size;
+  font-size: @shrunken-size * 0.5;
+  text-align: center;
+  line-height: @shrunken-size;
+  border-radius: @padding;
+  box-sizing: border-box;
+
+
+  &:extend(.tamarind-inset-text);
+
+  &:hover {
+    color: #FFF;
+    text-shadow: 0 0 10px #FFF;
+    text-decoration: none;
+  }
+}
+
+.tamarind-controls-ui {
+  margin: @shrunken-size @padding @padding @padding;
+}
