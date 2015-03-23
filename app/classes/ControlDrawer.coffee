@@ -23,10 +23,19 @@ class Tamarind.ControlDrawer
 
     @_element.querySelector('.tamarind-controls-button').addEventListener 'click', @_toggleOpen
 
+    @_state.onPropertyChange 'controlsExpanded', @_handleControlsExpandedChange
+
+
   _toggleOpen: =>
-    if @_element.classList.contains('is-selected')
-      @_element.classList.remove('is-selected')
+    @_state.controlsExpanded = not @_state.controlsExpanded
+    return
+
+
+  # @private
+  _handleControlsExpandedChange: (expanded) =>
+    if expanded
+      @_element.classList.add 'is-selected'
     else
-      @_element.classList.add('is-selected')
+      @_element.classList.remove 'is-selected'
     return
 

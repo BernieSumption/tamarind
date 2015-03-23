@@ -24,10 +24,10 @@
 
 <div id="editor-location"></div>
 
-<input type="button" value="save 1" onclick="window.state1 = state.save()">
-<input type="button" value="load 1" onclick="state.restore(window.state1)">
-<input type="button" value="save 2" onclick="state.save()">
-<input type="button" value="load 2" onclick="state.restore(window.state2)">
+<input type="button" value="save 1" onclick="state1 = state.save()">
+<input type="button" value="load 1" onclick="state.restore(state1)">
+<input type="button" value="save 2" onclick="state2 = state.save()">
+<input type="button" value="load 2" onclick="state.restore(state2)">
 
 
 <input type="button" value="lose context" onclick="loseContext.loseContext()">

@@ -7,6 +7,7 @@
 class Tamarind.State extends Tamarind.EventEmitter
 
 
+
   # @property [int] The number of vertices drawn.
   # Vertices are created at the origin (coordinate 0,0,0) and are positioned by the vertex
   # shader. The vertex shader gets an attribute a_VertexIndex, being a number between 0 and
@@ -22,6 +23,11 @@ class Tamarind.State extends Tamarind.EventEmitter
   # requires checking with WebGL for an error after each operation, which is very
   # slow. Don't use this in production
   debugMode: false
+
+  # @property [boolean] Whether to log more data, including all WebGL errors. This
+  # requires checking with WebGL for an error after each operation, which is very
+  # slow. Don't use this in production
+  controlsExpanded: false
 
   # @property [String] the name of the currently selected UI tab. Not saved and restored.
   selectedTab: Tamarind.FRAGMENT_SHADER
@@ -63,6 +69,7 @@ class Tamarind.State extends Tamarind.EventEmitter
       inputs: []
       vertexCount: PROPERTY_DEFAULTS.vertexCount
       drawingMode: PROPERTY_DEFAULTS.drawingMode
+      controlsExpanded: PROPERTY_DEFAULTS.controlsExpanded
     }
 
     # state that is reset each time we restore()
@@ -196,6 +203,7 @@ class Tamarind.State extends Tamarind.EventEmitter
         @setInputs value
       else if PROPERTY_DEFAULTS[key] isnt undefined
         @[key] = value
+        @emit PROPERTY_CHANGE_EVENTS[key], value
       else
         @logError 'restore() ignoring unrecognised key ' + key
     return
@@ -267,6 +275,7 @@ class Tamarind.State extends Tamarind.EventEmitter
 
   _defineProperty 'vertexCount', '_persistent'
   _defineProperty 'drawingMode', '_persistent'
+  _defineProperty 'controlsExpanded', '_persistent'
   _defineProperty 'debugMode', '_lifetime'
   _defineProperty 'selectedTab', '_transient'
 

@@ -139,37 +139,12 @@ class Tamarind.ShaderEditor
       return
 
     # update element when state changes
-    state.onPropertyChange propertyName, ->
+    state.onPropertyChange propertyName, =>
       input[inputPropertyName] = @_state[propertyName]
       return
 
     return
 
-
-  # @private
-  _bindInputToCheckbox: (propertyName) ->
-    checkbox = @_element.querySelector("[name='#{propertyName}']")
-
-    checkbox.checked = @_state[propertyName]
-
-    checkbox.addEventListener 'change', =>
-      @_state[propertyName] = checkbox.checked
-      return
-
-    return
-
-
-  # @private
-  _bindCheckboxToCanvas: (propertyName, parseFunction = String) ->
-    input = @_element.querySelector("[name='#{propertyName}']")
-
-    input.checked = @_state[propertyName]
-
-    input.addEventListener 'input', =>
-      @_state[propertyName] = parseFunction(input.value)
-      return
-
-    return
 
   # @private
   # Handle CodeMirror lint events. These are fired a few hundred milliseconds after the user

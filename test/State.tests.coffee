@@ -11,7 +11,7 @@ describe 'State', ->
       spyOn(listener, prop)
       state.on state[prop], listener[prop]
 
-    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab']
+    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab', 'controlsExpanded']
       listener[prop] = ->
       spyOn(listener, prop)
       state.onPropertyChange prop, listener[prop]
@@ -99,6 +99,7 @@ describe 'State', ->
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, ['my_input']
     expectCallHistory listener.INPUTS_CHANGE, [undefined]
+    expectCallHistory listener.controlsExpanded, [false]
 
     return
 
