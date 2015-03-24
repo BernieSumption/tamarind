@@ -19,10 +19,7 @@ pollUntil = (predicate, callback, timeoutMs = 3000, pollFrequencyMs = 10) ->
 # @param calls [Array] an array of call signatures, where each signature can be an array of arguments, or a single argument
 expectCallHistory = (spyMethod, calls) ->
   realCalls = for call in calls
-    if Array.isArray(call)
-      call
-    else
-      [ call ]
+    [ call ]
   expect(spyMethod.calls.allArgs()).toEqual(realCalls)
   return
 

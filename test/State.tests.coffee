@@ -6,12 +6,12 @@ describe 'State', ->
 
     listener = {}
 
-    for prop in ['PROPERTY_CHANGE', 'SHADER_CHANGE', 'CHANGE', 'INPUTS_CHANGE', 'INPUT_VALUE_CHANGE']
+    for prop in ['PROPERTY_CHANGE', 'SHADER_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
       listener[prop] = ->
       spyOn(listener, prop)
       state.on state[prop], listener[prop]
 
-    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab', 'controlsExpanded']
+    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
       listener[prop] = ->
       spyOn(listener, prop)
       state.onPropertyChange prop, listener[prop]
@@ -75,7 +75,7 @@ describe 'State', ->
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag'
     state.setShaderSource Tamarind.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
-    state.setInputs [ mockInput(name: 'my_input') ]
+    state.inputs = [ mockInput(name: 'my_input') ]
 
     serialized = state.save()
 
@@ -92,13 +92,13 @@ describe 'State', ->
     expect(state.vertexCount).toEqual(12345)
     expect(state.getShaderSource Tamarind.FRAGMENT_SHADER).toEqual('frag')
     expect(state.getShaderSource Tamarind.VERTEX_SHADER).toEqual('vert')
-    expect(state.getInputs()).toEqual [ mockInput(name: 'my_input') ]
+    expect(state.inputs).toEqual [ mockInput(name: 'my_input') ]
 
 
-    expectCallHistory listener.PROPERTY_CHANGE, ['vertexCount']
+    expectCallHistory listener.PROPERTY_CHANGE, ['inputs', 'vertexCount']
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, ['my_input']
-    expectCallHistory listener.INPUTS_CHANGE, [undefined]
+    expectCallHistory listener.inputs, [ [ mockInput(name: 'my_input') ] ]
     expectCallHistory listener.controlsExpanded, [false]
 
     return
@@ -171,7 +171,7 @@ describe 'State', ->
     state = new Tamarind.State()
     listener = stateListener(state)
 
-    expect(state.getInputs()).toEqual []
+    expect(state.inputs).toEqual []
 
     evts = [
       {
@@ -184,12 +184,12 @@ describe 'State', ->
       }
     ]
 
-    state.setInputs [] # no change
-    state.setInputs evts
-    state.setInputs evts.slice() # no change
+    state.inputs = [] # no change
+    state.inputs = evts
+#    state.inputs = evts.slice() # no change
 
-    expect(state.getInputs()).toEqual(evts)
-    expectCallHistory listener.INPUTS_CHANGE, [undefined, undefined]
+    expect(state.inputs).toEqual(evts)
+    expectCallHistory listener.inputs, [[], evts]
 
     return
 
@@ -197,14 +197,14 @@ describe 'State', ->
 
     state = new Tamarind.State()
 
-    inputs = state.getInputs()
+    inputs = state.inputs
     inputs.push mockInput(name: 'a')
-    expect(state.getInputs()).toEqual([])
+    expect(state.inputs).toEqual([])
 
     inputs = [mockInput(name: 'b')]
-    state.setInputs inputs
+    state.inputs = inputs
     inputs.push mockInput(name: 'c')
-    expect(state.getInputs()).toEqual [ mockInput(name: 'b') ]
+    expect(state.inputs).toEqual [ mockInput(name: 'b') ]
 
     return
 
@@ -216,7 +216,7 @@ describe 'State', ->
 
     spyOn(console, 'error')
 
-    state.setInputs [ mockInput(name: 'my_slider') ]
+    state.inputs = [ mockInput(name: 'my_slider') ]
 
     expect(state.getInputValue 'my_slider').toEqual 5
 

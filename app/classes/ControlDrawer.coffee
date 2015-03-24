@@ -24,6 +24,10 @@ class Tamarind.ControlDrawer
     @_element.querySelector('.tamarind-controls-button').addEventListener 'click', @_toggleOpen
 
     @_state.onPropertyChange 'controlsExpanded', @_handleControlsExpandedChange
+    @_handleControlsExpandedChange()
+
+    @_state.onPropertyChange 'inputs', @_handleInputsChange
+    @_handleInputsChange()
 
 
   _toggleOpen: =>
@@ -32,10 +36,20 @@ class Tamarind.ControlDrawer
 
 
   # @private
-  _handleControlsExpandedChange: (expanded) =>
-    if expanded
+  _handleControlsExpandedChange: =>
+    if @_state.controlsExpanded
       @_element.classList.add 'is-selected'
     else
       @_element.classList.remove 'is-selected'
+    return
+
+
+  # @private
+  _handleInputsChange: =>
+    inputs = @_state.inputs
+    if inputs.length > 0
+      @_element.classList.add 'is-visible'
+    else
+      @_element.classList.remove 'is-visible'
     return
 
