@@ -12,6 +12,10 @@
   transition: opacity 0.1s ease-in-out;
 }
 
+.tamarind-controls input {
+  width: 100%;
+}
+
 .tamarind-controls.is-visible {
   opacity: 1;
 }
@@ -27,13 +31,12 @@
   height: @shrunken-size;
   width: @shrunken-size;
   overflow: hidden;
-  transition: height 0.1s ease-out, width 0.1s ease-out;
+  transition: height 0.1s ease-in-out, width 0.1s ease-in-out;
 }
 
 .is-selected .tamarind-controls-background {
   width: 200px;
   height: 100%;
-  transition: height 0.1s ease-in, width 0.1s ease-in;
 }
 
 .tamarind-controls-button {

@@ -11,8 +11,8 @@ class Inputs
   SCHEMA =
     slider:
       min: 0
-      max: 10
-      step: 0.1
+      max: 1
+      step: 0.01
       value: 0
 
   # given an input object, return a valid version of it (e.g. filling in missing properties with defaults)
@@ -56,4 +56,7 @@ class Inputs
       sanitised[key] = value
 
     return sanitised
+
+  class Slider
+    foo = 3
 

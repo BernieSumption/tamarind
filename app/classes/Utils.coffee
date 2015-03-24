@@ -23,14 +23,19 @@ Tamarind.browserSupportsRequiredFeatures = ->
 ###
 Tamarind.replaceElement = (target, replacement) ->
   if typeof replacement is 'string'
-    tmp = document.createElement 'div'
-    tmp.innerHTML = replacement.trim()
-    if tmp.childNodes.length > 1
-      throw new Error 'replacement must be a single element'
-    replacement = tmp.childNodes[0]
-    tmp.removeChild replacement
-
-
+    replacement = Tamarind.parseHTML replacement
   target.parentNode.insertBefore replacement, target
   target.parentNode.removeChild target
   return replacement
+
+###
+  Convert an HTML string representing a single element into a DOM node.
+###
+Tamarind.parseHTML = (html) ->
+  tmp = document.createElement 'div'
+  tmp.innerHTML = html.trim()
+  if tmp.childNodes.length > 1
+    throw new Error 'html must represent single element'
+  el = tmp.childNodes[0]
+  tmp.removeChild el
+  return el

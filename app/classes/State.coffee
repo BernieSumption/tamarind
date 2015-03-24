@@ -140,31 +140,6 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
 
-#  # Return a list of input objects.
-#  _getInputs: ->
-#    return JSON.parse(JSON.stringify @_persistent.inputs)
-#
-#  # Set the list of input objects.
-#  _setInputs: (value) ->
-#    newInputsJSON = JSON.stringify value
-#    unless @_transient.inputsJSON is newInputsJSON
-#      @_transient.inputsJSON = newInputsJSON
-#      @_persistent.inputs = []
-#      @_transient.inputsByName = {}
-#      for input in JSON.parse(newInputsJSON)
-#        input = Inputs.validate(input, @)
-#        if input
-#          @_persistent.inputs.push(input)
-#          @_transient.inputsByName[input.name] = input
-#
-#      for input in @_persistent.inputs
-#        @_transient.inputsByName[input.name] = input
-#        @emit @INPUT_VALUE_CHANGE, input.name
-#
-#      @emit @INPUTS_CHANGE
-#    return
-
-
   # get the value of a specific input
   getInputValue: (inputName) ->
     return @_getInputByName(inputName).value
@@ -178,10 +153,15 @@ class Tamarind.State extends Tamarind.EventEmitter
     unless input.value is value
       input.value = value
       @emit @INPUT_VALUE_CHANGE, inputName
+      @_scheduleChangeEvent()
     return
 
   _getInputByName: (inputName) ->
-    input = @_transient.inputsByName[inputName]
+    input = null
+    for candidate in @_persistent.inputs by 1
+      if candidate.name is inputName
+        input = candidate
+        break
     unless input
       throw new Error("no input '#{inputName}'")
     return input
@@ -245,16 +225,11 @@ class Tamarind.State extends Tamarind.EventEmitter
       throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")
 
   _validateInputs: (inputs) ->
-    @_transient.inputsByName = {}
     sanitised = []
     for input in inputs
       input = Inputs.validate(input, @)
       sanitised.push(input)
-      @_transient.inputsByName[input.name] = input
-      @emit @INPUT_VALUE_CHANGE, input.name
-    return inputs
-
-
+    return sanitised
 
 
   PROPERTY_DEFAULTS = {}

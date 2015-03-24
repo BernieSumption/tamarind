@@ -10,8 +10,15 @@ class Tamarind.ControlDrawer
       <div class="tamarind-controls-background">
         <a href="javascript:void(0)" class="tamarind-controls-button tamarind-icon-controls"></a>
         <div class="tamarind-controls-ui">
-          <input type="range" class="tamarind-range-input">
         </div>
+      </div>
+    </div>
+  '''
+
+  CONTROL_TEMPLATE = '''
+    <div class="tamarind-controls-control">
+      <div class="tamarind-controls-control-title"></div>
+      <div class="tamarind-controls-control-ui">
       </div>
     </div>
   '''
@@ -27,7 +34,11 @@ class Tamarind.ControlDrawer
     @_handleControlsExpandedChange()
 
     @_state.onPropertyChange 'inputs', @_handleInputsChange
-    @_handleInputsChange()
+    @_handleInputsChange @_state.inputs
+
+    @_state.on @_state.INPUT_VALUE_CHANGE, @_handleInputValueChange
+
+    @_inputElementsByName = {}
 
 
   _toggleOpen: =>
@@ -45,11 +56,46 @@ class Tamarind.ControlDrawer
 
 
   # @private
-  _handleInputsChange: =>
-    inputs = @_state.inputs
+  _handleInputsChange: (inputs) =>
+
     if inputs.length > 0
       @_element.classList.add 'is-visible'
     else
       @_element.classList.remove 'is-visible'
+
+    @_inputElementsByName = {}
+    wrapper = @_element.querySelector '.tamarind-controls-ui'
+    wrapper.innerHTML = ''
+
+    for input in inputs
+      el = Tamarind.parseHTML CONTROL_TEMPLATE
+      title = el.querySelector('.tamarind-controls-control-title')
+      title.innerHTML = ''
+      title.appendChild document.createTextNode(input.name)
+      el.querySelector('.tamarind-controls-control-ui').appendChild @_makeSliderInput input
+      wrapper.appendChild el
+
     return
+
+
+
+  _handleInputValueChange: (inputName) =>
+    @_inputElementsByName[inputName].value = @_state.getInputValue(inputName)
+    return
+
+
+  _makeSliderInput: (input) ->
+    el = document.createElement 'input'
+    el.type = 'range'
+    el.min = input.min
+    el.max = input.max
+    el.step = input.step
+    el.value = input.value
+    el.name = input.name
+    @_inputElementsByName[input.name] = el
+    el.addEventListener 'input', =>
+      @_state.setInputValue input.name, parseFloat(el.value)
+      return
+    return el
+
 

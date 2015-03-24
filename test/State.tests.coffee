@@ -97,7 +97,7 @@ describe 'State', ->
 
     expectCallHistory listener.PROPERTY_CHANGE, ['inputs', 'vertexCount']
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
-    expectCallHistory listener.INPUT_VALUE_CHANGE, ['my_input']
+    expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
     expectCallHistory listener.inputs, [ [ mockInput(name: 'my_input') ] ]
     expectCallHistory listener.controlsExpanded, [false]
 
@@ -232,7 +232,7 @@ describe 'State', ->
 
 
 
-    expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'my_slider', 'my_slider' ]
+    expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'my_slider' ]
 
     return
 

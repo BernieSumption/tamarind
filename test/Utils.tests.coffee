@@ -8,10 +8,10 @@ describe 'replaceElement', ->
     parent.appendChild target
 
     multipleNodes = '<div></div><div></div>'
-    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('replacement must be a single element')
+    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('html must represent single element')
 
     multipleNodes = '<div></div> lala'
-    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('replacement must be a single element')
+    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('html must represent single element')
 
     singleNode = '  <div class="foo"><div>  '
     retval = Tamarind.replaceElement target, singleNode

@@ -58,6 +58,8 @@ class Tamarind.WebGLCanvas
     @_state.on @_state.CHANGE, @_doFrame
 
     @_state.onPropertyChange 'debugMode', @_updateContextForDebugMode
+    @_state.onPropertyChange 'inputs', @_setAllUniformsFromState
+    @_state.on @_state.INPUT_VALUE_CHANGE, @_setUniformFromState
 
     @_shaders = {} # OpenGL shader object references
 
@@ -68,17 +70,35 @@ class Tamarind.WebGLCanvas
 
     return
 
+
   # Simulate GL context loss for debugging
   debugLoseContext: ->
     @_loseContext = @_loseContext or @gl.getExtension('WEBGL_lose_context')
     @_loseContext.loseContext()
     return
 
+
   # Simulate GL context restoration for debugging
   debugRestoreContext: ->
     @_loseContext = @_loseContext or @gl.getExtension('WEBGL_lose_context')
     @_loseContext.restoreContext()
     return
+
+
+
+  # Take a snapshot of the current scene and return it as a PNG encoded data url
+  #
+  # @param [int] width the width of the rendered image
+  # @param [int] height the height of the rendered image
+  captureImage: (width, height) ->
+    valid = @_doFrame()
+    if valid
+      @_render(width, height)
+    image = @canvasElement.toDataURL 'image/png'
+    if valid
+      @_render() # restore previous size
+
+    return image
 
 
   ##
@@ -242,8 +262,10 @@ class Tamarind.WebGLCanvas
     for i in [0..numUniforms - 1] by 1
       uniform = gl.getActiveUniform(@_program, i)
       @_uniformInfoByName[uniform.name] =
-        location: gl.getUniformLocation(@_program, i)
+        location: gl.getUniformLocation(@_program, uniform.name)
         type: uniform.type
+
+    @_setAllUniformsFromState()
 
     return true
 
@@ -293,30 +315,27 @@ class Tamarind.WebGLCanvas
     return true
 
 
-  # Take a snapshot of the current scene and return it as a PNG encoded data url
-  #
-  # @param [int] width the width of the rendered image
-  # @param [int] height the height of the rendered image
-  captureImage: (width, height) ->
-    valid = @_doFrame()
-    if valid
-      @_render(width, height)
-    image = @canvasElement.toDataURL 'image/png'
-    if valid
-      @_render() # restore previous size
+  # @private
+  _setAllUniformsFromState: =>
+    for input in @_state.inputs
+      @_setUniform(input.name, input.value)
 
-    return image
+  # @private
+  _setUniformFromState: (propertyName) =>
+    @_setUniform(propertyName, @_state.getInputValue(propertyName))
+    return
 
 
   # @private
   _setUniform: (name, args...) ->
     gl = @gl
+
     uniformInfo = @_uniformInfoByName[name]
 
     unless uniformInfo
-      return false
+      return
 
-    uniformInfo.location = gl.getUniformLocation(@_program, 'u_CanvasSize')
+#    uniformInfo.location = gl.getUniformLocation(@_program, 'u_CanvasSize')
 
     f = SET_UNIFORM_FUNCTION_NAMES[args.length]
     unless f
