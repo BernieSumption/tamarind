@@ -10,7 +10,11 @@ exports.config =
         'tamarind.tests.js': (path) -> /^test/.test(path)
         'tamarind.vendor.js': (path) -> /^bower_components/.test(path)
       order:
-        before: 'app/shared.coffee'
+        before: [
+          'app/classes/Tamarind.coffee'
+          'app/classes/EventEmitter.coffee'
+          'app/classes/UIComponent.coffee'
+        ]
 
     stylesheets:
       joinTo: 'tamarind.css'

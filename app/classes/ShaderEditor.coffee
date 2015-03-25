@@ -1,7 +1,7 @@
 
 
 
-class Tamarind.ShaderEditor
+class Tamarind.ShaderEditor extends Tamarind.UIComponent
 
   CONFIG = 'config'
 
@@ -18,30 +18,6 @@ class Tamarind.ShaderEditor
         <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
       <div class="tamarind-editor-panel">
-        <div class="tamarind-editor tamarind-editor-code"></div>
-        <div class="tamarind-editor tamarind-editor-config">
-
-          <p>
-          Render
-          <input type="number" name="vertexCount" min="1" class="tamarind-number-input">
-
-          vertices as
-
-          <select name="drawingMode">
-              <option>POINTS</option>
-              <option>LINES</option>
-              <option>LINE_LOOP</option>
-              <option>LINE_STRIP</option>
-              <option>TRIANGLES</option>
-              <option>TRIANGLE_STRIP</option>
-              <option>TRIANGLE_FAN</option>
-          </select>
-
-          </p>
-
-          <p><label><input type="checkbox" name="debugMode"> debug mode (logs extra information to console)</label></p>
-
-        </div>
       </div>
       <div class="tamarind-render-panel">
         <canvas class="tamarind-render-canvas"></canvas>
@@ -59,9 +35,8 @@ class Tamarind.ShaderEditor
   # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
   # @param [Tamarind.State] state A state object, or null to create one
   #
-  constructor: (location, state = null) ->
-
-    @_element = Tamarind.replaceElement(location, TEMPLATE)
+  constructor: (state = null) ->
+    super(state or new Tamarind.State(), TEMPLATE)
 
     unless Tamarind.browserSupportsRequiredFeatures()
       @_element.innerHTML = NOT_SUPPORTED_HTML
@@ -70,138 +45,41 @@ class Tamarind.ShaderEditor
     else
       @_element.className = 'tamarind'
 
-    @_editorCodeElement = @_element.querySelector('.tamarind-editor-code')
-    @_editorConfigElement = @_element.querySelector('.tamarind-editor-config')
-    @_menuElement = @_element.querySelector('.tamarind-menu')
+    @_menuElement = @css('.tamarind-menu')
 
-    @_state = state or new Tamarind.State()
+    editorPanel = @css '.tamarind-editor-panel'
+
 
     new Tamarind.ToggleBar(@_menuElement, @_state)
 
-    new Tamarind.WebGLCanvas(@_element.querySelector('.tamarind-render-canvas'), @_state)
-    new Tamarind.ControlDrawer(@_element.querySelector('.tamarind-controls-marker'), @_state)
+    new Tamarind.WebGLCanvas(@css('.tamarind-render-canvas'), @_state)
 
-    @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
+    controlDrawer = new Tamarind.ControlDrawer(@_state)
+    controlDrawer.overwrite(@css('.tamarind-controls-marker'))
 
-    @_shaderDocs = {}
-    createDoc = (shaderType) =>
-      doc = CodeMirror.Doc(@_state.getShaderSource(shaderType), 'clike')
-      doc.shaderType = shaderType
-      @_shaderDocs[shaderType] = doc
-      return
-    createDoc Tamarind.FRAGMENT_SHADER
-    createDoc Tamarind.VERTEX_SHADER
+    @_configEditor = new Tamarind.ConfigEditor(@_state)
+    @_configEditor.appendTo editorPanel
 
-    @_bindInputToState('vertexCount')
-    @_bindInputToState('drawingMode')
-    @_bindInputToState('debugMode')
+    @_codeEditor = new Tamarind.CodeEditor(@_state)
+    @_codeEditor.appendTo editorPanel
 
-    @_codemirror = CodeMirror(@_editorCodeElement,
-      value: @_shaderDocs[Tamarind.FRAGMENT_SHADER]
-      lineNumbers: true
-      lineWrapping: true
-      gutters: ['CodeMirror-lint-markers']
-      lint:
-        getAnnotations: @_handleCodeMirrorLint
-        async: true
-        delay: 200
-    )
-
-    @_codemirror.on 'renderLine', @_addLineWrapIndent
-    @_codemirror.refresh()
 
     @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
     @_handleMenuItemSelect()
-    @_state.on @_state.SHADER_CHANGE, @_handleShanderChange
 
 
-  # TODO unit tests for each kind of input
-  # @private
-  _bindInputToState: (propertyName) ->
-    input = @_element.querySelector("[name='#{propertyName}']")
-
-    # figure out how to bind to this kind of element
-    eventName = 'input'
-    inputPropertyName = 'value'
-    parseFunction = (v) -> v
-    if input.type is 'number'
-      parseFunction = parseInt
-    else if input.type is 'checkbox'
-      inputPropertyName = 'checked'
-      eventName = 'change'
-
-    # take the initial value from the state
-    input[inputPropertyName] = @_state[propertyName]
-
-    # update state when element changes
-    input.addEventListener eventName, =>
-      @_state[propertyName] = parseFunction(input[inputPropertyName])
-      return
-
-    # update element when state changes
-    state.onPropertyChange propertyName, =>
-      input[inputPropertyName] = @_state[propertyName]
-      return
-
-    return
-
-
-  # @private
-  # Handle CodeMirror lint events. These are fired a few hundred milliseconds after the user
-  # has finished typing in an editor window, and we use them to update the shader source
-  _handleCodeMirrorLint: (value, callback, options, cm) =>
-    if @_codemirror
-      @_state.setShaderSource(@_codemirror.getDoc().shaderType,  value)
-    @_lintingCallback = callback
-    return
-
-  # @private
-  # Update the UI when the shader is changed form the model
-  _handleShanderChange: (shaderType) =>
-    newSource = @_state.getShaderSource(shaderType)
-    oldSource = @_shaderDocs[shaderType].getValue()
-    unless newSource is oldSource
-      @_shaderDocs[shaderType].setValue(newSource)
-    return
-
-
-  _handleShaderErrorsChange: (shaderType) =>
-    if shaderType is @_activeCodeEditor
-      errors = for err in @_state.getShaderErrors(shaderType)
-        message: err.message
-        from: {line: Math.max(err.line, 0)}
-        to: {line: Math.max(err.line, 0)}
-
-      @_lintingCallback @_codemirror, errors
-    return
-
-  # @private
-  # indent wrapped lines. Based on http://codemirror.net/demo/indentwrap.html but this
-  # version indents the wrapped line by a further 2 characters
-  _addLineWrapIndent: (cm, line, elt) =>
-    unless @_codeCharWidth
-      @_codeCharWidth = @_codemirror.defaultCharWidth()
-
-    basePadding = 4
-    indentChars = 2
-    offset = CodeMirror.countColumn(line.text, null, cm.getOption('tabSize')) * @_codeCharWidth
-    elt.style.textIndent = '-' + (offset + @_codeCharWidth * indentChars) + 'px'
-    elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + 'px'
-    return
 
   # @private
   _handleMenuItemSelect: =>
     item = @_state.selectedTab
 
     if item is CONFIG
-      @_editorCodeElement.style.display = 'none'
-      @_editorConfigElement.style.display = ''
+      @_codeEditor.setVisible false
+      @_configEditor.setVisible true
     else
-      @_editorCodeElement.style.display = ''
-      @_editorConfigElement.style.display = 'none'
-      @_activeCodeEditor = item
-      @_codemirror.swapDoc(@_shaderDocs[item])
-      @_handleShaderErrorsChange(item)
+      @_codeEditor.setVisible true
+      @_configEditor.setVisible false
+      @_codeEditor.swapShaderType item
 
     return
 

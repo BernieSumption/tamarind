@@ -1,20 +1,17 @@
 
 
-describe 'replaceElement', ->
+describe 'parseHTML', ->
 
   it 'should', ->
-    parent = document.createElement 'div'
-    target = document.createElement 'div'
-    parent.appendChild target
 
     multipleNodes = '<div></div><div></div>'
-    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('html must represent single element')
+    expect(-> Tamarind.parseHTML multipleNodes).toThrow new Error('html must represent single element')
 
     multipleNodes = '<div></div> lala'
-    expect(-> Tamarind.replaceElement target, multipleNodes).toThrow new Error('html must represent single element')
+    expect(-> Tamarind.parseHTML multipleNodes).toThrow new Error('html must represent single element')
 
     singleNode = '  <div class="foo"><div>  '
-    retval = Tamarind.replaceElement target, singleNode
+    retval = Tamarind.parseHTML singleNode
 
     expect(retval.className).toEqual('foo')
 

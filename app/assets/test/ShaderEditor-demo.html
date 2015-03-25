@@ -37,7 +37,8 @@
 <script>
   var state = new Tamarind.State()
   state.debugMode = true
-  var editor = new Tamarind.ShaderEditor(document.getElementById('editor-location'), state);
+  var editor = new Tamarind.ShaderEditor(state);
+  editor.overwrite(document.getElementById('editor-location'));
 
   var loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
 </script>

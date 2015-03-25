@@ -24,7 +24,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.66);
   border: solid 1px #000;
   border-radius: @padding;
 
@@ -32,9 +32,17 @@
   width: @shrunken-size;
   overflow: hidden;
   transition: height 0.1s ease-in-out, width 0.1s ease-in-out;
+
+  &:before {
+    content: "Controls";
+    position: absolute;
+    top: 13px;
+    right: 0;
+    width: 190px;
+  }
 }
 
-.is-selected .tamarind-controls-background {
+.is-expanded .tamarind-controls-background {
   width: 200px;
   height: 100%;
 }
@@ -68,4 +76,14 @@
 
 .tamarind-controls-ui {
   margin: @shrunken-size @padding @padding @padding;
+}
+
+.tamarind-controls-control-name:after {
+  content: ":"
+}
+
+.tamarind-controls-control {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: solid 1px rgba(255, 255, 255, 0.5);
 }

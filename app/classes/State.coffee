@@ -39,7 +39,8 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @property [string] Name of event emitted when a top level property like vertexCount changes. The property name, e.g. 'vertexCount', will be the event argument.
   PROPERTY_CHANGE: 'propertyChange'
 
-  # @property [string] Name of event emitted when any non-transient state changes.
+  # @property [string] This event is dispatched asynchronously when any non-transient state changes, with
+  #                    one event dispatched per animation frame if there were 1 or more changes in the previous frame
   CHANGE: 'change'
 
   # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, will be the event argument.
