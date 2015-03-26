@@ -19,6 +19,11 @@
   &:extend(.tamarind-emboss);
 }
 
+.tamarind, .tamarind input, .tamarind select {
+  font-size: 1em;
+  font-family: sans-serif;
+}
+
 .tamarind-unsupported {
   height: auto;
   padding: 20px;
@@ -29,26 +34,6 @@
   font-size: 30px;
 }
 
-.tamarind-logo {
-  position: absolute;
-  bottom: @padding * 2;
-  left: @menu-width;
-
-  transform: rotate(-90deg);
-  transform-origin: left bottom 0;
-
-
-  font-family: "tamarind-logo";
-  font-size: @menu-width - @padding * 4;
-  line-height: @menu-width;
-  color: darken(@dark-color, 2%);
-
-  text-shadow: -1px 1px 1px rgba(255,255,255,0.075), 1px -1px 1px rgba(0,0,0,0.25);
-
-  &:before {
-    content: "Tamarind";
-  }
-}
 
 //
 // MENU PANEL
@@ -113,39 +98,7 @@
   &:extend(.tamarind-inset);
 }
 
-.tamarind-editor-code {
-  height: 100%;
-  padding: @padding;
-  box-sizing: border-box;
-  position: relative;
-}
 
-.tamarind-editor-code .CodeMirror {
-  height: 100%;
-  background: @light-color;
-}
-.tamarind-editor-code .CodeMirror-gutters {
-  background: @light-color;
-}
-
-.tamarind-editor-config {
-  padding: 10px;
-}
-
-.tamarind-number-input {
-  width: 40px;
-}
-
-.tamarind-program-error {
-  border: solid 1px #EEA;
-  background: #FFE;
-  padding: @padding;
-  margin-left: 48px;
-}
-
-.tamarind-program-error .CodeMirror-lint-marker-error {
-  cursor: default;
-}
 
 
 //
@@ -165,6 +118,7 @@
   overflow: hidden;
 
   // Hack to force the rounded corners to clip the child canvas in safari.
+  // image is 1 pixel transparent PNG
   -webkit-mask-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC"); /* this fixes the overflow:hidden in Chrome/Opera */
 }
 

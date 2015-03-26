@@ -225,7 +225,7 @@ class Tamarind.WebGLCanvas
       @_state.setShaderErrors shaderType, null, []
     else
       errorText = gl.getShaderInfoLog(shader)
-      errors = Tamarind.ShaderError.fromErrorMessage(errorText)
+      errors = Tamarind.ShaderCompileError.fromErrorMessage(errorText)
       @_state.setShaderErrors shaderType, errorText, errors
       gl.detachShader(@_program, shader)
       gl.deleteShader(shader)
@@ -246,7 +246,7 @@ class Tamarind.WebGLCanvas
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
       errorText = gl.getProgramInfoLog(@_program).trim()
-      error = new Tamarind.ShaderError(errorText, -1)
+      error = new Tamarind.ShaderCompileError(errorText, -1)
       @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, errorText, [error]
       @_state.setShaderErrors Tamarind.VERTEX_SHADER, errorText, [error]
       return false
@@ -368,9 +368,9 @@ class Tamarind.WebGLCanvas
 
 
 
-class Tamarind.ShaderError
+class Tamarind.ShaderCompileError
 
-  # return an array of Tamarind.ShaderError objects representing all the errors
+  # return an array of Tamarind.ShaderCompileError objects representing all the errors
   # in the supplied error string
   @fromErrorMessage = (error) ->
 
@@ -384,8 +384,10 @@ class Tamarind.ShaderError
 
         if parts
           line = parseInt(parts[1]) or 0
-          errors.push( new Tamarind.ShaderError(parts[2], line - 1) )
+          errors.push( new Tamarind.ShaderCompileError(parts[2], line - 1) )
 
     return errors
 
+  # @param message [String] the error message
+  # @param the line number on which the error happened
   constructor: (@message, @line) ->

@@ -110,7 +110,7 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
 
-  # Get the list of Tamarind.ShaderError error objects for a shader
+  # Get the list of Tamarind.ShaderCompileError error objects for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
@@ -120,7 +120,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   # Set the list of errors for a shader
   # @param shaderType [string] either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   # @param errorText [String] the error text returned by the browser, used for the purposes of checking if the errors have changed
-  # @param errors [number] an array of ShaderError objects
+  # @param errors [number] an array of Tamarind.ShaderCompileError objects
   setShaderErrors: (shaderType, errorText, errors) ->
     @_validateShaderType(shaderType)
     if @_transient.shaders[shaderType].errorText isnt errorText
@@ -140,6 +140,13 @@ class Tamarind.State extends Tamarind.EventEmitter
     return
 
 
+
+  # get the value of a specific input
+  hasInput: (inputName) ->
+    for candidate in @_persistent.inputs by 1
+      if candidate.name is inputName
+        return true
+    return false
 
   # get the value of a specific input
   getInputValue: (inputName) ->

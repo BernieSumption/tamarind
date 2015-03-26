@@ -73,4 +73,33 @@ describe 'EventEmitter', ->
 
     return
 
+
+  it 'should not get confused if an event handler removes itself while being called', ->
+    ee = new Tamarind.EventEmitter()
+    a = ->
+      ee.off 'foo', a
+      return
+
+    b = ->
+      return
+
+    c = ->
+      ee.off 'foo', c
+      return
+
+    d = ->
+      ee.off 'foo', d
+      return
+
+    ee.on 'foo', a
+    ee.on 'foo', b
+    ee.on 'foo', c
+    ee.on 'foo', d
+
+    expect(ee._getEventList('foo').length).toEqual 4
+    ee.emit('foo')
+    expect(ee._getEventList('foo').length).toEqual 1
+
+    return
+
   return

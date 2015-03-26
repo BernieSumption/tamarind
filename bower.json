@@ -40,6 +40,8 @@
         "addon/dialog/dialog.js",
         "addon/dialog/dialog.css",
 
+        "addon/display/placeholder.js",
+
         "addon/lint/lint.js",
         "addon/lint/lint.css",
 

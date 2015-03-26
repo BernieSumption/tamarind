@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>ShaderEditor demo</title>
+  <title>Main demo</title>
   <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
   <style>
     textarea {
@@ -38,7 +38,7 @@
   var state = new Tamarind.State()
   state.debugMode = true
   state.selectedTab = Tamarind.CONFIG
-  var editor = new Tamarind.ShaderEditor(state);
+  var editor = new Tamarind.Main(state);
   editor.overwrite(document.getElementById('editor-location'));
 
   var loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');

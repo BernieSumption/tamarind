@@ -75,7 +75,12 @@
 }
 
 .tamarind-controls-ui {
-  margin: @shrunken-size @padding @padding @padding;
+  position: absolute;
+  top: @shrunken-size;
+  right: @padding;
+  bottom: @padding;
+  left: @padding;
+  overflow: scroll;
 }
 
 .tamarind-controls-control-name:after {
@@ -83,7 +88,8 @@
 }
 
 .tamarind-controls-control {
-  margin-top: 10px;
+  position: relative;
+  margin: 10px 5px;
   padding-top: 10px;
   border-top: solid 1px rgba(255, 255, 255, 0.5);
 }

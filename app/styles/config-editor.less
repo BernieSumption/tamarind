@@ -1,0 +1,87 @@
+@import "shared";
+
+
+.tamarind-editor-config .CodeMirror {
+  height: auto;
+  min-height: 40px;
+  max-height: 200px;
+}
+
+.tamarind-editor-config .CodeMirror pre.CodeMirror-placeholder {
+  color: #999;
+}
+
+.tamarind-editor-config-buttons {
+  margin: 10px;
+  text-align: right;
+  display: none;
+}
+.is-dirty .tamarind-editor-config-buttons {
+  display: block;
+}
+
+.tamarind-editor-config-buttons .tamarind-button {
+  margin-left: 40px;
+}
+
+.button-color(@background) {
+  background: @background;
+  color: #FFF;
+  border: solid 1px mix(@background, #000, 75%);
+
+  &:hover {
+    background: darken(@background, 10%);
+    color: #FFF;
+    border: solid 1px mix(@background, #000, 50%);
+  }
+}
+
+.tamarind-button {
+  .button-color(#999);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.tamarind-button[type='submit'] {
+  .button-color(#99C);
+}
+
+
+.tamarind-editor-config {
+  padding: 10px;
+}
+
+.tamarind-number-input {
+  width: 40px;
+}
+
+.tamarind-fieldset {
+  border: solid 1px @dark-color;
+  margin-bottom: 30px;
+  margin-top: 5px;
+  padding: 10px;
+
+  &:last-child {
+    margin-bottom: 10px;
+  }
+}
+
+.tamarind-fieldset-label {
+  position: absolute;
+  font-size: 0.9em;
+  line-height: 0.9em;
+  margin-top: -1.1em;
+  padding: 0 5px;
+  background: @light-color;
+}
+
+.tamarind-fieldset-group {
+  margin-top: 10px;
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 10px;
+  }
+}

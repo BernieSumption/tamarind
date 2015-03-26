@@ -1,7 +1,7 @@
 
 
 
-class Tamarind.ShaderEditor extends Tamarind.UIComponent
+class Tamarind.Main extends Tamarind.UIComponent
 
   NOT_SUPPORTED_HTML = '''
     <span class="tamarind-icon-unhappy tamarind-unsupported-icon" title="And lo there shall be no editor, and in that place there shall be wailing and gnashing of teeth."></span>

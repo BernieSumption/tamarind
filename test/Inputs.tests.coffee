@@ -51,7 +51,6 @@ describe 'Inputs.parseLine', ->
     return
 
   it 'should return an error if the input has no name', ->
-    debugger
     expectError 'slider', 'slider has no name', 0, 6
     return
 
@@ -107,6 +106,14 @@ describe 'Inputs.parseLines', ->
 
     return
 
+
+
+  it 'should strip out errors and empty lines if passed the validLinesOnly argument', ->
+    expect(Inputs.parseLines '\n\nslider slider1: min -5, max 5\n\n\nderp! error!\n', true).toEqual [
+      mockInput(name: 'slider1', min: -5, max: 5)
+    ]
+    return
+
   return
 
 
@@ -115,7 +122,6 @@ describe 'Inputs.unparseLines', ->
 
   it 'should create a text block from input objects', ->
     lines = Inputs.unparseLines([interestingInput(name: 'a'), interestingInput(name: 'b')])
-    console.log lines
     expect(lines).toEqual 'slider a: min -10, max 10, step 1\nslider b: min -10, max 10, step 1'
 
     return

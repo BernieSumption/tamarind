@@ -115,7 +115,7 @@ describe 'State', ->
 
     state = new Tamarind.State()
     saved = state.save()
-    state.setShaderErrors Tamarind.VERTEX_SHADER, '', [new Tamarind.ShaderError('', 1)]
+    state.setShaderErrors Tamarind.VERTEX_SHADER, '', [new Tamarind.ShaderCompileError('', 1)]
     state.selectedTab = 'CONFIG'
 
     state.restore(saved)
@@ -132,16 +132,16 @@ describe 'State', ->
     # mutating refs returned from getShaderErrors shouldn't alter internal state
     errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
     expect(errors).toEqual []
-    errors.push(new Tamarind.ShaderError('Message', 0))
+    errors.push(new Tamarind.ShaderCompileError('Message', 0))
     errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
     expect(errors).toEqual []
 
     # mutating input passed to setShaderErrors shouldn't alter internal state
-    error = new Tamarind.ShaderError('', 0)
+    error = new Tamarind.ShaderCompileError('', 0)
     errorsRef = [error]
     state.setShaderErrors Tamarind.FRAGMENT_SHADER, '', [error]
     expect(state.getShaderErrors Tamarind.FRAGMENT_SHADER).toEqual [error]
-    errorsRef.push(new Tamarind.ShaderError('', 1))
+    errorsRef.push(new Tamarind.ShaderCompileError('', 1))
     expect(state.getShaderErrors Tamarind.FRAGMENT_SHADER).toEqual [error]
 
     return

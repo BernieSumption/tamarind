@@ -36,8 +36,11 @@ class Tamarind.EventEmitter
   # @param event the argument to be passed to the callback function
   emit: (eventName, event) ->
     @_validateEventArgs eventName
-    for f in @_getEventList eventName
+    callbacks = @_getEventList eventName
+    @_isEmitting = eventName
+    for f in callbacks
       f.call this, event
+    @_isEmitting = false
     return
 
 
@@ -47,6 +50,13 @@ class Tamarind.EventEmitter
       @_events = {}
     unless @_events[eventName]
       @_events[eventName] = []
+    # if, somewhere further down the stack, we're currently emitting an
+    # event of this type (e.g. an event handler is trying to remove itself)
+    # then lazily clone the callback list to prevent from modifying the array
+    # that emit() is looping over
+    if @_isEmitting is eventName
+      @_events[eventName] = @_events[eventName].slice()
+      @_isEmitting = false
     return @_events[eventName]
 
 

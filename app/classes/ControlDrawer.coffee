@@ -83,7 +83,8 @@ class Tamarind.Control extends Tamarind.UIComponent
     super(state, TEMPLATE)
     @inputElement = @_makeSliderInput()
     @css('.tamarind-controls-control-ui').appendChild @inputElement
-    @setInnerText '.tamarind-controls-control-name', @input.name
+    niceName = @input.name.replace(/^u_/, '').replace('_', ' ')
+    @setInnerText '.tamarind-controls-control-name', niceName
     @setValue(@input.value)
 
 
