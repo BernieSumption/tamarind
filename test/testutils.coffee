@@ -24,16 +24,27 @@ expectCallHistory = (spyMethod, calls) ->
   return
 
 
-
+# return a slider input with default values, unless overridden
 mockInput = (overrides = {}) ->
   input = {
     type: 'slider'
     name: 'my_slider'
-    min: 0
-    max: 10
-    step: 0.1
-    value: 5
   }
+  for k, v of Inputs.SCHEMA.slider.defaults
+    input[k] = v
+  for k, v of overrides
+    input[k] = v
+  return input
+
+
+# return a slider input with non-default values
+interestingInput = (overrides = {}) ->
+  input = mockInput(
+    min: -10
+    max: 10
+    step: 1
+    value: 5
+  )
   for k, v of overrides
     input[k] = v
   return input

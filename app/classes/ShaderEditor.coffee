@@ -3,8 +3,6 @@
 
 class Tamarind.ShaderEditor extends Tamarind.UIComponent
 
-  CONFIG = 'config'
-
   NOT_SUPPORTED_HTML = '''
     <span class="tamarind-icon-unhappy tamarind-unsupported-icon" title="And lo there shall be no editor, and in that place there shall be wailing and gnashing of teeth."></span>
     Your browser doesn't support this feature. Try Internet Explorer 11+ or recent versions of Chrome, Firefox or Safari.
@@ -15,7 +13,7 @@ class Tamarind.ShaderEditor extends Tamarind.UIComponent
       <div class="tamarind-menu">
         <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
         <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
-        <a href="javascript:void(0)" name="#{CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
+        <a href="javascript:void(0)" name="#{Tamarind.CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
       <div class="tamarind-editor-panel">
       </div>
@@ -45,12 +43,7 @@ class Tamarind.ShaderEditor extends Tamarind.UIComponent
     else
       @_element.className = 'tamarind'
 
-    @_menuElement = @css('.tamarind-menu')
-
     editorPanel = @css '.tamarind-editor-panel'
-
-
-    new Tamarind.ToggleBar(@_menuElement, @_state)
 
     new Tamarind.WebGLCanvas(@css('.tamarind-render-canvas'), @_state)
 
@@ -64,6 +57,10 @@ class Tamarind.ShaderEditor extends Tamarind.UIComponent
     @_codeEditor.appendTo editorPanel
 
 
+    @_links = @csss '.tamarind-menu a', 3
+    @_element.addEventListener 'click', @_handleMenuLinkClick
+
+
     @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
     @_handleMenuItemSelect()
 
@@ -73,7 +70,7 @@ class Tamarind.ShaderEditor extends Tamarind.UIComponent
   _handleMenuItemSelect: =>
     item = @_state.selectedTab
 
-    if item is CONFIG
+    if item is Tamarind.CONFIG
       @_codeEditor.setVisible false
       @_configEditor.setVisible true
     else
@@ -81,28 +78,17 @@ class Tamarind.ShaderEditor extends Tamarind.UIComponent
       @_configEditor.setVisible false
       @_codeEditor.swapShaderType item
 
+    for link in @_links
+      if link.name is item
+        link.classList.add('is-selected')
+      else
+        link.classList.remove('is-selected')
+
     return
 
 
-
-# A set of links where at any one time, one link is highlighted with the 'is-selected' class.
-class Tamarind.ToggleBar
-
-  constructor: (@_parent, @_state) ->
-    @_links = @_parent.querySelectorAll 'a'
-    @_parent.addEventListener 'click', @_handleChildClick
-    @_state.onPropertyChange 'selectedTab', @_handleStateChange
-    @_handleStateChange()
-
-  _handleChildClick: (event) =>
+  _handleMenuLinkClick: (event) =>
     if event.target not in @_links
       return
     @_state.selectedTab = event.target.name
     return
-
-  _handleStateChange: =>
-    for link in @_links
-      if link.name is @_state.selectedTab
-        link.classList.add('is-selected')
-      else
-        link.classList.remove('is-selected')

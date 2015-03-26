@@ -75,7 +75,7 @@ describe 'State', ->
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag'
     state.setShaderSource Tamarind.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
-    state.inputs = [ mockInput(name: 'my_input') ]
+    state.inputs = [ interestingInput(name: 'my_input') ]
 
     serialized = state.save()
 
@@ -92,13 +92,13 @@ describe 'State', ->
     expect(state.vertexCount).toEqual(12345)
     expect(state.getShaderSource Tamarind.FRAGMENT_SHADER).toEqual('frag')
     expect(state.getShaderSource Tamarind.VERTEX_SHADER).toEqual('vert')
-    expect(state.inputs).toEqual [ mockInput(name: 'my_input') ]
+    expect(state.inputs).toEqual [ interestingInput(name: 'my_input') ]
 
 
     expectCallHistory listener.PROPERTY_CHANGE, ['inputs', 'vertexCount']
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
-    expectCallHistory listener.inputs, [ [ mockInput(name: 'my_input') ] ]
+    expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input') ] ]
     expectCallHistory listener.controlsExpanded, [false]
 
     return
@@ -180,7 +180,7 @@ describe 'State', ->
         min: 0
         max: 10
         step: 0.1
-        value: 5
+        value: 0
       }
     ]
 
@@ -198,13 +198,13 @@ describe 'State', ->
     state = new Tamarind.State()
 
     inputs = state.inputs
-    inputs.push mockInput(name: 'a')
+    inputs.push interestingInput(name: 'a')
     expect(state.inputs).toEqual([])
 
-    inputs = [mockInput(name: 'b')]
+    inputs = [interestingInput(name: 'b')]
     state.inputs = inputs
-    inputs.push mockInput(name: 'c')
-    expect(state.inputs).toEqual [ mockInput(name: 'b') ]
+    inputs.push interestingInput(name: 'c')
+    expect(state.inputs).toEqual [ interestingInput(name: 'b') ]
 
     return
 
@@ -216,7 +216,7 @@ describe 'State', ->
 
     spyOn(console, 'error')
 
-    state.inputs = [ mockInput(name: 'my_slider') ]
+    state.inputs = [ interestingInput(name: 'my_slider', value: 5) ]
 
     expect(state.getInputValue 'my_slider').toEqual 5
 

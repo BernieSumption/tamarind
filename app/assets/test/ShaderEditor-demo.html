@@ -37,6 +37,7 @@
 <script>
   var state = new Tamarind.State()
   state.debugMode = true
+  state.selectedTab = Tamarind.CONFIG
   var editor = new Tamarind.ShaderEditor(state);
   editor.overwrite(document.getElementById('editor-location'));
 

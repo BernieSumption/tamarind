@@ -92,7 +92,7 @@ describe 'WebGLCanvas', ->
 
   it 'should handle the loss and restoration of the webgl context gracefully', (done) ->
 
-    [canvas, state] = createCanvasAndState()
+    [canvas, state] = createCanvasAndState(false)
 
     # browsers don't like losing and restoring the context on the same frame, so we do this as a series of 4 frames
 

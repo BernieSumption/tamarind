@@ -229,7 +229,8 @@ class Tamarind.State extends Tamarind.EventEmitter
     sanitised = []
     for input in inputs
       input = Inputs.validate(input, @)
-      sanitised.push(input)
+      if input
+        sanitised.push(input)
     return sanitised
 
 

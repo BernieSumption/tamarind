@@ -39,10 +39,16 @@ class Tamarind.UIComponent
   css: (selector) ->
     if selector instanceof Element
       return selector
+    return @csss(selector, 1, 1)[0]
+
+
+  # Return all elements matching the selector. Optionally, throw an exception of the number
+  # of matching elements is not between min and max values
+  csss: (selector, min = 0, max = Infinity) ->
     els = @_element.querySelectorAll selector
-    unless els.length is 1
-      throw new Error("#{els.length} elements with selector '#{selector}'")
-    return els[0]
+    if els.length < min or els.length > max
+      throw new Error("#{els.length} elements with selector '#{selector}' (required between #{min} and #{max})")
+    return Array.prototype.slice.call(els)
 
   # Bind a named input to the state property of the same name, e.g. if the input is <input type=text name=foo>
   # then changing state.foo will update the inputs and vice versa.

@@ -3,6 +3,7 @@
 Tamarind =
   FRAGMENT_SHADER: 'FRAGMENT_SHADER'
   VERTEX_SHADER:   'VERTEX_SHADER'
+  CONFIG: 'CONFIG'
 
 
   DEFAULT_VSHADER_SOURCE: '''
@@ -105,3 +106,4 @@ Tamarind.parseHTML = (html) ->
   el = tmp.childNodes[0]
   tmp.removeChild el
   return el
+
