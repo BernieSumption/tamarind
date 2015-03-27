@@ -83,9 +83,14 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     @_codemirror.refresh()
     return
 
+  setVisible: (value) ->
+    super(value)
+    if value
+      @_codemirror.refresh()
+
   _getLintAnnotations: (value) ->
     result = []
-    for lineResult, i in Inputs.parseLines(value)
+    for lineResult, i in Tamarind.Inputs.parseLines(value)
       if lineResult instanceof Tamarind.InputDefinitionError
         result.push({
           message: lineResult.message
@@ -102,7 +107,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     @setClassIf 'is-dirty', value
 
   _setValueFromState: =>
-    value = Inputs.unparseLines(@_state.inputs)
+    value = Tamarind.Inputs.unparseLines(@_state.inputs)
     @_valueBeforeEdit = value
     @_codemirror.setValue value
     @_setDirty false
@@ -110,7 +115,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
   _commitCurrentEdit: =>
     @_codemirror.getInputField().blur()
     requestAnimationFrame =>
-      @_state.inputs = Inputs.parseLines(@_codemirror.getValue(), true)
+      @_state.inputs = Tamarind.Inputs.parseLines(@_codemirror.getValue(), true)
       @_setDirty false
 
   _cancelCurrentEdit: =>
@@ -121,7 +126,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
 
   _setupAddInputDropdown: ->
     dropdown = @css('select[name="addANew"]')
-    for inputType of Inputs.SCHEMA
+    for inputType of Tamarind.Inputs.getTypes()
       dropdown.appendChild(Tamarind.parseHTML("<option>#{inputType}</option>"))
     dropdown.addEventListener 'change', =>
       inputs = @_state.inputs

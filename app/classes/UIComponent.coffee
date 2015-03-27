@@ -2,7 +2,7 @@
 ###
   Superclass for visual components
 ###
-class Tamarind.UIComponent
+class Tamarind.UIComponent extends Tamarind.EventEmitter
 
   ATTACH = 'uiComponentAttach'
 
@@ -82,7 +82,7 @@ class Tamarind.UIComponent
       return
 
     # update element when state changes
-    state.onPropertyChange propertyName, =>
+    @_state.onPropertyChange propertyName, =>
       input[inputPropertyName] = @_state[propertyName]
       return
 

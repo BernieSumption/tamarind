@@ -37,7 +37,13 @@
 <script>
   var state = new Tamarind.State()
   state.debugMode = true
-  state.selectedTab = Tamarind.CONFIG
+  state.controlsExpanded = true
+  state.inputs = [
+    {
+      type: 'slider',
+      name: 'u_slider'
+    }
+  ]
   var editor = new Tamarind.Main(state);
   editor.overwrite(document.getElementById('editor-location'));
 

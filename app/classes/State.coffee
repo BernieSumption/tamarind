@@ -27,7 +27,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
-  # @property [Array] An array of objects representing inputs, see the Inputs class for object structure.
+  # @property [Array] An array of objects representing inputs, see the Tamarind.Inputs class for object structure.
   inputs: []
 
   # @property [String] the name of the currently selected UI tab. Not saved and restored.
@@ -241,7 +241,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   _validateInputs: (inputs) ->
     sanitised = []
     for input in inputs
-      input = Inputs.validate(input, @)
+      input = Tamarind.Inputs.validate(input, @)
       if input
         sanitised.push(input)
     return sanitised

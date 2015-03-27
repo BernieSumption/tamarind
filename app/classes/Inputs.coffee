@@ -1,4 +1,110 @@
 
+
+###
+  Base class for input editors. Instances of these classes encapsulate the controls used
+  to edit the values of inputs, and the classes themselves contain metadata e.g. default values
+###
+class Tamarind.InputEditorBase extends Tamarind.UIComponent
+
+  TEMPLATE = '''
+    <div class="tamarind-controls-control">
+      <div class="tamarind-controls-control-title">
+        <span class="tamarind-controls-control-name"></span>
+        <span class="tamarind-controls-control-value"></span>
+      </div>
+      <div class="tamarind-controls-control-ui">
+      </div>
+    </div>
+  '''
+
+  ##
+  ## NOTE!
+  ##
+  ## It is important that this class and its subclasses don't have any references to
+  ## their instances except through ControlDrawer. This includes registering for
+  ## event listeners on the State.
+  ##
+
+
+  constructor: (@_input, _state) ->
+    super(_state, TEMPLATE)
+    @_inputElement = @makeInputElement()
+    if @_inputElement
+      @css('.tamarind-controls-control-ui').appendChild @_inputElement
+    @setInnerText '.tamarind-controls-control-name', @_input.name.replace(/^u_/, '').replace('_', ' ')
+
+
+  @defaults:
+    value: 0
+
+
+  @fieldOrder: []
+
+
+  handleInput: =>
+    @_state.setInputValue(@_input.name, @getValue())
+    return
+
+
+  # Return the current value of this control
+  getValue: ->
+    return parseFloat(@_inputElement.value) or 0
+
+
+  # Format a value for display to users
+  getPrettyValue: ->
+    return String(@getValue())
+
+
+  # return a DOM element for the user to interact with, or null of this kind of input doesn't have a DOM component
+  makeInputElement: ->
+    return null
+
+
+  # Given an input element returned by makeInputElement, set its value
+  setValue: (value) ->
+    @_inputElement.value = value
+    return
+
+
+class Tamarind.SliderInputEditor extends Tamarind.InputEditorBase
+
+  @defaults:
+    min: 0
+    max: 1
+    step: 0.01
+    value: 0
+
+  @fieldOrder: ['min', 'max', 'step']
+
+
+  valueToString: (value) ->
+    # minimum decimal places to show full precision of step
+    dp = ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @input.step))))
+    return value.toFixed(dp)
+
+  makeInputElement: ->
+    el = document.createElement 'input'
+    el.type = 'range'
+    el.min = @_input.min
+    el.max = @_input.max
+    el.step = @_input.step
+    el.value = @_input.value
+    el.addEventListener 'input', @handleInput
+    return el
+
+
+
+class Tamarind.MouseInputEditor extends Tamarind.InputEditorBase
+
+  @defaults:
+    delay: 0
+    average: 0
+    value: 0
+
+  @fieldOrder: ['delay', 'average']
+
+
 ###
   Manager for inputs.
 
@@ -6,17 +112,24 @@
   be a valid GLSL identifier, a value, and other properties according to the type, e.g. 'slider' inputs have a 'min'
   property.
 ###
-class Inputs
+class Tamarind.Inputs
 
-  # default values for each input type. Tis is also used to validate the member names and types of input objects.
-  @SCHEMA =
-    slider:
-      defaults:
-        min: 0
-        max: 1
-        step: 0.01
-        value: 0
-      fieldOrder: ['min', 'max', 'step']
+  @editorClasses =
+    slider: Tamarind.SliderInputEditor
+    mouse: Tamarind.MouseInputEditor
+
+  # Create an appropriate Tamarind.InputEditorBase subclass instance to edit the supplied input
+  # @param input [object] a validated input data object
+  @makeEditor: (input, state) ->
+    cls = @editorClasses[input.type]
+    unless cls
+      throw new Error("Invalid input type '#{input.type}'")
+    return new cls(input, state)
+
+
+  # Return an array of valid input type names
+  @getTypes: ->
+    return (k for k of @editorClasses)
 
 
   # given an input object, return a valid version of it (e.g. filling in missing properties with defaults)
@@ -24,16 +137,17 @@ class Inputs
   @validate = (input, state) ->
 
     unless state
+      debugger
       throw new Error 'Missing state argument'
 
-    scheme = @SCHEMA[input.type]
+    editorClass = @editorClasses[input.type]
 
-    unless scheme and typeof input.name is 'string'
+    unless editorClass and typeof input.name is 'string'
       state.logError "bad input name=#{JSON.stringify(input.name)} type=#{JSON.stringify(input.type)}"
       return null
 
     for key, value of input
-      if scheme.defaults[key] is undefined and key isnt 'type' and key isnt 'name'
+      if editorClass.defaults[key] is undefined and key isnt 'type' and key isnt 'name'
         state.logError "ignoring unrecognised property '#{key}': #{JSON.stringify(value)}"
 
 
@@ -45,7 +159,7 @@ class Inputs
       type: input.type
     }
 
-    for key, defaultValue of scheme.defaults
+    for key, defaultValue of editorClass.defaults
       value = input[key]
       if value is undefined
         value = defaultValue
@@ -71,7 +185,7 @@ class Inputs
       return null
     tokenEnd = 0
     tokenStart = 0
-    scheme = null
+    editorClass = null
     result = {}
     numberIndex = 0
     fieldKeyword = null
@@ -84,10 +198,10 @@ class Inputs
         continue
       if result.type is undefined
         result.type = token
-        scheme = @SCHEMA[token]
-        unless scheme
+        editorClass = @editorClasses[token]
+        unless editorClass
           return new Tamarind.InputDefinitionError("invalid type '#{token}'", tokenStart, tokenEnd)
-        for key, value of scheme.defaults
+        for key, value of editorClass.defaults
           result[key] = value
         continue
       if not result.name
@@ -100,12 +214,12 @@ class Inputs
       number = parseFloat token
       if isNaN number
         fieldKeyword = token
-        if scheme.defaults[token] is undefined
-          return new Tamarind.InputDefinitionError("invalid property '#{token}', expected one of '#{scheme.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
+        if editorClass.defaults[token] is undefined
+          return new Tamarind.InputDefinitionError("invalid property '#{token}', expected one of '#{editorClass.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
       else
-        numberField = fieldKeyword or scheme.fieldOrder[numberIndex]
+        numberField = fieldKeyword or editorClass.fieldOrder[numberIndex]
         if numberField is undefined
-          return new Tamarind.InputDefinitionError("too many arguments, expected at most #{scheme.fieldOrder.length} ('#{scheme.fieldOrder.join('\', \'')}')", tokenStart, text.length)
+          return new Tamarind.InputDefinitionError("too many arguments, expected at most #{editorClass.fieldOrder.length} ('#{editorClass.fieldOrder.join('\', \'')}')", tokenStart, text.length)
         result[numberField] = number
         numberIndex++
         fieldKeyword = null
@@ -119,7 +233,7 @@ class Inputs
     return result
 
   # split text into lines and parse each line, applying whole-program validation
-  # Return an array with one entry (as returned by Inputs.parseLine) per line in the source text
+  # Return an array with one entry (as returned by Tamarind.Inputs.parseLine) per line in the source text
   # @param inputLinesOnly if true, don't return input and empty lines
   @parseLines = (text, inputLinesOnly = false) ->
     items = []
@@ -139,15 +253,15 @@ class Inputs
 
 
   # convert valid input objects into a text representation that would create
-  # the same input objects if parsed with Inputs.parseLines.
+  # the same input objects if parsed with Tamarind.Inputs.parseLines.
   @unparseLines = (inputs) ->
     lines = ''
     for input, inputIndex in inputs
       if inputIndex > 0
         lines += '\n'
-      scheme = @SCHEMA[input.type]
+      editorClass = @editorClasses[input.type]
       lines += "#{input.type} #{input.name}: "
-      for field, fieldIndex in scheme.fieldOrder
+      for field, fieldIndex in editorClass.fieldOrder
         if fieldIndex > 0
           lines += ', '
         lines += "#{field} #{input[field]}"
