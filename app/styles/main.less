@@ -1,4 +1,5 @@
 @import "shared";
+@import "fonts";
 
 @menu-width: 50px;
 @editor-width: 400px;
@@ -49,6 +50,7 @@
 
 .tamarind-menu-button {
 
+  position: relative;
   color: @light-color;
   text-decoration: none;
   margin: @padding 0 0 @padding;
@@ -79,6 +81,57 @@
     &:extend(.tamarind-emboss-text);
   }
 }
+
+.tamarind-menu-icon-overlay {
+  .tamarind-icon();
+
+  @size: 13px;
+  @stroke: 2px;
+
+  width: @size;
+  height: @size;
+  font-size: @size;
+  border-radius: @size;
+  line-height: 0;
+  text-shadow: 0 0 @stroke #FFF, 0 0 @stroke #FFF, 0 0 @stroke #FFF, 0 0 @stroke #FFF, 0 0 @stroke #FFF, 0 0 @stroke #FFF;
+
+  color: #D33;
+  display: none;
+  position: absolute;
+  bottom: 5px;
+  left: 0px;
+
+  pointer-events: none;
+
+  &:before {
+    margin: 0;
+    content: '\e80a';
+  }
+}
+
+.tamarind-menu-icon-overlay.is-visible {
+  display: block;
+}
+
+.is-selected .tamarind-menu-icon-overlay.is-visible {
+  display: none;
+}
+
+.tamarind .CodeMirror-lint-marker-error {
+  .tamarind-icon();
+
+  font-size: 13px;
+  color: #D33;
+  background: none;
+
+  &:before {
+    margin: 0;
+    content: '\e80a';
+    position: absolute;
+    pointer-events: none;
+  }
+}
+
 
 //
 // EDITOR PANEL

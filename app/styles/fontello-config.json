@@ -13,6 +13,12 @@
       "src": "fontelico"
     },
     {
+      "uid": "c76b7947c957c9b78b11741173c8349b",
+      "css": "warning",
+      "code": 59401,
+      "src": "fontawesome"
+    },
+    {
       "uid": "98687378abd1faf8f6af97c254eb6cd6",
       "css": "config",
       "code": 59394,
@@ -53,6 +59,12 @@
       "css": "resize-normal",
       "code": 59398,
       "src": "typicons"
+    },
+    {
+      "uid": "189edfc41118cccbeb25788fcbb403da",
+      "css": "error",
+      "code": 59402,
+      "src": "mfglabs"
     },
     {
       "uid": "500cde26773d15aaac1bfaa2a33cc5a9",

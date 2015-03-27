@@ -120,7 +120,8 @@ class Inputs
 
   # split text into lines and parse each line, applying whole-program validation
   # Return an array with one entry (as returned by Inputs.parseLine) per line in the source text
-  @parseLines = (text, validLinesOnly = false) ->
+  # @param inputLinesOnly if true, don't return input and empty lines
+  @parseLines = (text, inputLinesOnly = false) ->
     items = []
     seen = {}
     for line in text.split(/\r|\n|\r\n/)
@@ -131,9 +132,8 @@ class Inputs
         else
           seen[parsed.name] = true
       items.push(parsed)
-    if validLinesOnly
+    if inputLinesOnly
       items = items.filter((x) ->
-        debugger
         return x and x not instanceof Tamarind.InputDefinitionError)
     return items
 

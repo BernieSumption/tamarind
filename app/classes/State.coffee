@@ -110,6 +110,12 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
 
+  # Return true is getShaderErrors(shaderType) would return an array of length > 1
+  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  hasShaderErrors: (shaderType) ->
+    @_validateShaderType(shaderType)
+    return @_transient.shaders[shaderType].errors.length > 0
+
   # Get the list of Tamarind.ShaderCompileError error objects for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->

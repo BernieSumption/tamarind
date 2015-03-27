@@ -11,8 +11,12 @@ class Tamarind.Main extends Tamarind.UIComponent
   TEMPLATE = """
     <div class="tamarind">
       <div class="tamarind-menu">
-        <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader"></a>
-        <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader"></a>
+        <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader">
+          <span class="tamarind-menu-icon-overlay" title="Fragment shader has errors"></span>
+        </a>
+        <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader">
+          <span class="tamarind-menu-icon-overlay" title="Vertex shader has errors"></span>
+        </a>
         <a href="javascript:void(0)" name="#{Tamarind.CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
       <div class="tamarind-editor-panel">
@@ -64,6 +68,9 @@ class Tamarind.Main extends Tamarind.UIComponent
     @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
     @_handleMenuItemSelect()
 
+    @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
+    @_handleShaderErrorsChange()
+
 
 
   # @private
@@ -91,4 +98,14 @@ class Tamarind.Main extends Tamarind.UIComponent
     if event.target not in @_links
       return
     @_state.selectedTab = event.target.name
+    return
+
+
+  _handleShaderErrorsChange: =>
+    fsError = @css '.tamarind-icon-fragment-shader .tamarind-menu-icon-overlay'
+    vsError = @css '.tamarind-icon-vertex-shader .tamarind-menu-icon-overlay'
+
+    @setClassIf 'is-visible', @_state.hasShaderErrors(Tamarind.FRAGMENT_SHADER), fsError
+    @setClassIf 'is-visible', @_state.hasShaderErrors(Tamarind.VERTEX_SHADER), vsError
+
     return

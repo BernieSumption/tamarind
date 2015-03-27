@@ -108,7 +108,7 @@ describe 'Inputs.parseLines', ->
 
 
 
-  it 'should strip out errors and empty lines if passed the validLinesOnly argument', ->
+  it 'should strip out errors and empty lines if passed the inputLinesOnly argument', ->
     expect(Inputs.parseLines '\n\nslider slider1: min -5, max 5\n\n\nderp! error!\n', true).toEqual [
       mockInput(name: 'slider1', min: -5, max: 5)
     ]

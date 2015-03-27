@@ -88,11 +88,11 @@ class Tamarind.UIComponent
 
     return
 
-  setClassIf: (className, condition) ->
+  setClassIf: (className, condition, element = @_element) ->
     if condition
-      @_element.classList.add className
+      element.classList.add className
     else
-      @_element.classList.remove className
+      element.classList.remove className
     return
 
 
