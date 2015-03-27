@@ -49,6 +49,9 @@
     <textarea id="VERTEX_SHADER"></textarea>
     <p>Fragment shader</p>
     <textarea id="FRAGMENT_SHADER"></textarea>
+    <p>Mouse</p>
+    <input id="mouseX" style="width: 30px">
+    <input id="mouseY" style="width: 30px">
     <p>Compile events</p>
     <textarea id="compileEvents"></textarea>
     <p>Image generation</p>
@@ -70,6 +73,8 @@
 
     bindInputToProperty("vertexCount", parseInt);
     bindInputToProperty("drawingMode");
+    bindInputToProperty("mouseX");
+    bindInputToProperty("mouseY");
     bindInputToShader("FRAGMENT_SHADER");
     bindInputToShader("VERTEX_SHADER");
 

@@ -79,9 +79,6 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     @_setupAddInputDropdown()
 
 
-  onAttachToDom: ->
-    @_codemirror.refresh()
-    return
 
   setVisible: (value) ->
     super(value)

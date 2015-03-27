@@ -43,7 +43,7 @@ interestingInput = (overrides = {}) ->
     min: -10
     max: 10
     step: 1
-    value: 5
+    value: [5]
   )
   for k, v of overrides
     input[k] = v

@@ -4,11 +4,8 @@
 ###
 class Tamarind.UIComponent extends Tamarind.EventEmitter
 
-  ATTACH = 'uiComponentAttach'
-
   constructor: (@_state, html) ->
     @_element = Tamarind.parseHTML html
-    @_state.on ATTACH, @_handleAttach
 
 
 
@@ -16,21 +13,17 @@ class Tamarind.UIComponent extends Tamarind.EventEmitter
   overwrite: (target) ->
     target.parentNode.insertBefore @_element, target
     target.parentNode.removeChild target
-    @_state.emit ATTACH
     return
 
   # Insert this component into an DOM node
   appendTo: (target) ->
     target.appendChild(@_element)
-    @_state.emit ATTACH
     return
 
   setVisible: (visible) ->
     @_element.style.display = if visible then '' else 'none'
     return
 
-  # override this in child components to do something when this element is first added to the DOM
-  onAttachToDom: ->
 
 
   # Remove an element's existing content and replace it with text
@@ -94,11 +87,3 @@ class Tamarind.UIComponent extends Tamarind.EventEmitter
     else
       element.classList.remove className
     return
-
-
-  _handleAttach: =>
-    if document.body.contains(@_element)
-      @_state.off ATTACH, @_handleAttach
-      @onAttachToDom()
-      return
-

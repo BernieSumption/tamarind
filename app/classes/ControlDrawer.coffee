@@ -16,8 +16,8 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
   '''
 
 
-  constructor: (state) ->
-    super(state, TEMPLATE)
+  constructor: (@_state) ->
+    super(_state, TEMPLATE)
 
     @_editorsByName = {}
 
@@ -30,6 +30,8 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
     @_handleInputsChange @_state.inputs
 
     @_state.on @_state.INPUT_VALUE_CHANGE, @_handleInputValueChange
+    requestAnimationFrame @_handleAnimationFrame
+
 
 
   _toggleOpen: =>
@@ -63,3 +65,8 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
   _handleInputValueChange: (inputName) =>
     @_editorsByName[inputName].setValue @_state.getInputValue(inputName)
     return
+
+  _handleAnimationFrame: =>
+    requestAnimationFrame @_handleAnimationFrame
+    for name, editor of @_editorsByName
+      editor.onEachFrame()

@@ -17,6 +17,12 @@ class Tamarind.InputEditorBase extends Tamarind.UIComponent
     </div>
   '''
 
+
+  @defaults:
+    value: [0]
+
+  @fieldOrder: []
+
   ##
   ## NOTE!
   ##
@@ -26,45 +32,59 @@ class Tamarind.InputEditorBase extends Tamarind.UIComponent
   ##
 
 
+
   constructor: (@_input, _state) ->
     super(_state, TEMPLATE)
-    @_inputElement = @makeInputElement()
+    @_inputElement = @_makeInputElement()
     if @_inputElement
       @css('.tamarind-controls-control-ui').appendChild @_inputElement
     @setInnerText '.tamarind-controls-control-name', @_input.name.replace(/^u_/, '').replace('_', ' ')
+    @_valueDisplay = @css '.tamarind-controls-control-value'
+    @_displayDP = @_getDisplayDP()
+    @setValue(@_input.value)
 
 
-  @defaults:
-    value: 0
+  # Called by the ControlDrawer when this input's value in the state has been changed
+  setValue: (value) ->
+    if @_inputElement
+      @_inputElement.value = value[0]
 
+    pretty = value.map((item) => item.toFixed(@_displayDP)).join(', ')
 
-  @fieldOrder: []
-
-
-  handleInput: =>
-    @_state.setInputValue(@_input.name, @getValue())
+    @setInnerText @_valueDisplay, pretty
     return
 
 
-  # Return the current value of this control
-  getValue: ->
-    return parseFloat(@_inputElement.value) or 0
-
-
-  # Format a value for display to users
-  getPrettyValue: ->
-    return String(@getValue())
+  # called each frame unconditionally
+  onEachFrame: () ->
 
 
   # return a DOM element for the user to interact with, or null of this kind of input doesn't have a DOM component
-  makeInputElement: ->
+  _makeInputElement: ->
     return null
 
 
-  # Given an input element returned by makeInputElement, set its value
-  setValue: (value) ->
-    @_inputElement.value = value
+  # return the number of decimal places that values should be displayed to
+  _getDisplayDP: ->
+    return 2
+
+
+  # Subclasses just arrange for this to be called when the input value changes
+  _notifyOfValueChange: =>
+    @_state.setInputValue(@_input.name, @_getValue())
     return
+
+
+  # Return the current value of the input
+  _getValue: ->
+    if @_inputElement
+      return [parseFloat(@_inputElement.value) or 0]
+    return 0
+
+
+  # Format a value for display to users
+  _getPrettyValue: ->
+    return String(@_getValue())
 
 
 class Tamarind.SliderInputEditor extends Tamarind.InputEditorBase
@@ -73,24 +93,21 @@ class Tamarind.SliderInputEditor extends Tamarind.InputEditorBase
     min: 0
     max: 1
     step: 0.01
-    value: 0
+    value: [0]
 
   @fieldOrder: ['min', 'max', 'step']
 
-
-  valueToString: (value) ->
+  _getDisplayDP: ->
     # minimum decimal places to show full precision of step
-    dp = ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @input.step))))
-    return value.toFixed(dp)
+    return ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @_input.step))))
 
-  makeInputElement: ->
+  _makeInputElement: ->
     el = document.createElement 'input'
     el.type = 'range'
     el.min = @_input.min
     el.max = @_input.max
     el.step = @_input.step
-    el.value = @_input.value
-    el.addEventListener 'input', @handleInput
+    el.addEventListener 'input', @_notifyOfValueChange
     return el
 
 
@@ -100,9 +117,22 @@ class Tamarind.MouseInputEditor extends Tamarind.InputEditorBase
   @defaults:
     delay: 0
     average: 0
-    value: 0
+    value: [0, 0]
 
   @fieldOrder: ['delay', 'average']
+
+  _getValue: ->
+    return [@_state.mouseX, @_state.mouseY]
+
+
+  onEachFrame: ->
+    mouseY = @_state.mouseY
+    mouseX = @_state.mouseX
+    unless @_prevMouseY is mouseY and @_prevMouseX is mouseX
+      @_prevMouseX = mouseX
+      @_prevMouseY = mouseY
+      @_notifyOfValueChange()
+    return
 
 
 ###
@@ -163,12 +193,20 @@ class Tamarind.Inputs
       value = input[key]
       if value is undefined
         value = defaultValue
-      if typeof value isnt typeof defaultValue
+      if (typeof value isnt typeof defaultValue) or (Array.isArray(defaultValue) and value.length isnt defaultValue.length)
         state.logError "bad value for #{key} (expected #{typeof defaultValue}, got #{typeof value} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
         value = defaultValue
+
+
       sanitised[key] = value
 
     return sanitised
+
+  @_getTypeKey: (value) ->
+    type = typeof value
+    unless type is 'object'
+      return type
+    unless type is 
 
   @_validateName = (name, defaultName) ->
     return String(name)

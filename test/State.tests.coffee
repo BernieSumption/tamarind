@@ -6,7 +6,7 @@ describe 'State', ->
 
     listener = {}
 
-    for prop in ['PROPERTY_CHANGE', 'SHADER_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
+    for prop in ['SHADER_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
       listener[prop] = ->
       spyOn(listener, prop)
       state.on state[prop], listener[prop]
@@ -30,7 +30,6 @@ describe 'State', ->
     state.debugMode = true
 
     # expect one general PROPERTY_CHANGE event per change with property name as argument
-    expectCallHistory listener.PROPERTY_CHANGE, ['vertexCount', 'vertexCount', 'debugMode']
     expect(state.vertexCount).toEqual 222
     expect(state.debugMode).toEqual true
 
@@ -75,7 +74,7 @@ describe 'State', ->
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag'
     state.setShaderSource Tamarind.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
-    state.inputs = [ interestingInput(name: 'my_input') ]
+    state.inputs = [ interestingInput(name: 'my_input', value: [2]) ]
 
     serialized = state.save()
 
@@ -92,16 +91,17 @@ describe 'State', ->
     expect(state.vertexCount).toEqual(12345)
     expect(state.getShaderSource Tamarind.FRAGMENT_SHADER).toEqual('frag')
     expect(state.getShaderSource Tamarind.VERTEX_SHADER).toEqual('vert')
-    expect(state.inputs).toEqual [ interestingInput(name: 'my_input') ]
+    expect(state.inputs).toEqual [ interestingInput(name: 'my_input', value: [2]) ]
 
 
     expectCallHistory listener.PROPERTY_CHANGE, ['inputs', 'vertexCount']
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
-    expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input') ] ]
+    expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input', value: [2]) ] ]
     expectCallHistory listener.controlsExpanded, [false]
 
     return
+
 
   it 'should log an error if invalid properties given to restore', ->
 
@@ -180,7 +180,7 @@ describe 'State', ->
         min: 0
         max: 10
         step: 0.1
-        value: 0
+        value: [0]
       }
     ]
 
@@ -216,17 +216,17 @@ describe 'State', ->
 
     spyOn(console, 'error')
 
-    state.inputs = [ interestingInput(name: 'my_slider', value: 5) ]
+    state.inputs = [ interestingInput(name: 'my_slider', value: [5]) ]
 
-    expect(state.getInputValue 'my_slider').toEqual 5
+    expect(state.getInputValue 'my_slider').toEqual [5]
 
     state.setInputValue 'my_slider', null # error message, no event, no effect
 
-    expect(state.getInputValue 'my_slider').toEqual 5
+    expect(state.getInputValue 'my_slider').toEqual [5]
 
-    state.setInputValue 'my_slider', 5 # no change, no effect
+    state.setInputValue 'my_slider', [5] # no change, no effect
 
-    state.setInputValue 'my_slider', 6 # change
+    state.setInputValue 'my_slider', [6] # change
 
     expectCallHistory console.error, ['invalid value for my_slider: null']
 

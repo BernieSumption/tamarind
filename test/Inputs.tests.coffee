@@ -165,6 +165,7 @@ describe 'Inputs.validate', ->
     spyOn console, 'error'
 
     badPropertyType = mockInput(value: null, min: 'foo')
+    debugger
     input = Tamarind.Inputs.validate badPropertyType, normalState
 
     expectCallHistory console.error, [

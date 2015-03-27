@@ -32,8 +32,6 @@ class Tamarind.WebGLCanvas
 
   VALID_DRAWING_MODES = 'POINTS,LINES,LINE_LOOP,LINE_STRIP,TRIANGLES,TRIANGLE_STRIP,TRIANGLE_FAN'.split(',')
 
-  SET_UNIFORM_FUNCTION_NAMES = [null, 'uniform1f', 'uniform2f', 'uniform3f', 'uniform4f']
-
 
   ##
   ## PUBLIC API METHODS
@@ -41,7 +39,7 @@ class Tamarind.WebGLCanvas
 
   # @param [HTMLCanvasElement] @canvasElement the canvas element to render onto
   # @param [Tamarind.State] @state the state object for this canvas, or null to create one
-  constructor: (@canvasElement, state = null) ->
+  constructor: (@canvasElement, @_state) ->
 
     unless Tamarind.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
@@ -53,7 +51,7 @@ class Tamarind.WebGLCanvas
     @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
     @canvasElement.addEventListener 'webglcontextrestored', @_handleContextRestored
 
-    @_state = state or new Tamarind.State()
+    @canvasElement.addEventListener 'mousemove', @_handleMouseMove
 
     @_state.on @_state.CHANGE, @_doFrame
 
@@ -70,6 +68,16 @@ class Tamarind.WebGLCanvas
 
     return
 
+  _handleMouseMove: (event) =>
+    pos = @canvasElement.getBoundingClientRect()
+    centreX = pos.left + pos.width / 2
+    centreY = pos.top + pos.height / 2
+    mouseRelX = event.clientX - centreX
+    mouseRelY = event.clientY - centreY
+    state.mouseX = mouseRelX / pos.width * 2
+    state.mouseY = -(mouseRelY / pos.height * 2)
+    return
+
 
   # Simulate GL context loss for debugging
   debugLoseContext: ->
@@ -83,7 +91,6 @@ class Tamarind.WebGLCanvas
     @_loseContext = @_loseContext or @gl.getExtension('WEBGL_lose_context')
     @_loseContext.restoreContext()
     return
-
 
 
   # Take a snapshot of the current scene and return it as a PNG encoded data url
@@ -327,7 +334,7 @@ class Tamarind.WebGLCanvas
 
 
   # @private
-  _setUniform: (name, args...) ->
+  _setUniform: (name, values) ->
     gl = @gl
 
     uniformInfo = @_uniformInfoByName[name]
@@ -335,13 +342,17 @@ class Tamarind.WebGLCanvas
     unless uniformInfo
       return
 
-#    uniformInfo.location = gl.getUniformLocation(@_program, 'u_CanvasSize')
-
-    f = SET_UNIFORM_FUNCTION_NAMES[args.length]
-    unless f
-      throw new Error("Can't set uniform with #{args.length} values")
-
-    gl[f](uniformInfo.location, args...)
+    switch values.length
+      when 1
+        gl.uniform1f(uniformInfo.location, values[0])
+      when 2
+        gl.uniform2f(uniformInfo.location, values[0], values[1])
+      when 3
+        gl.uniform3f(uniformInfo.location, values[0], values[1], values[2])
+      when 4
+        gl.uniform4f(uniformInfo.location, values[0], values[1], values[2], values[3])
+      else
+        throw new Error("Can't set uniform with #{values.length} values")
 
     return true
 

@@ -24,6 +24,12 @@ class Tamarind.State extends Tamarind.EventEmitter
   # slow. Don't use this in production
   debugMode: false
 
+  # @property [Number] the x position of the mouse, 0 at centre, -1 at left, 1 at right
+  mouseX: 0
+
+  # @property [Number] the y position of the mouse, 0 at centre, -1 at top, 1 at bottom
+  mouseY: 0
+
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
@@ -35,9 +41,6 @@ class Tamarind.State extends Tamarind.EventEmitter
 
   # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, is passed as the event argument.
   SHADER_CHANGE: 'shaderChange'
-
-  # @property [string] Name of event emitted when a top level property like vertexCount changes. The property name, e.g. 'vertexCount', will be the event argument.
-  PROPERTY_CHANGE: 'propertyChange'
 
   # @property [string] This event is dispatched asynchronously when any non-transient state changes, with
   #                    one event dispatched per animation frame if there were 1 or more changes in the previous frame
@@ -56,6 +59,8 @@ class Tamarind.State extends Tamarind.EventEmitter
     # state that lasts the lifetime of this State object
     @_lifetime = {
       debugMode: PROPERTY_DEFAULTS.debugMode
+      mouseX: PROPERTY_DEFAULTS.mouseX
+      mouseY: PROPERTY_DEFAULTS.mouseY
     }
 
 
@@ -98,11 +103,11 @@ class Tamarind.State extends Tamarind.EventEmitter
   # Set the source code for a shader
   # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
   # @param value GLSL source code for the shader
-  setShaderSource: (shaderType, value) ->
+  setShaderSource: (shaderType, source) ->
     @_validateShaderType(shaderType)
-    @_validateType(value, 'string', 'shaderType')
-    if @_persistent[shaderType] isnt value
-      @_persistent[shaderType] = value
+    @_validateType(source, 'string', 'shaderType')
+    if @_persistent[shaderType] isnt source
+      @_persistent[shaderType] = source
       @emit @SHADER_CHANGE, shaderType
       @_scheduleChangeEvent()
     return
@@ -160,11 +165,16 @@ class Tamarind.State extends Tamarind.EventEmitter
 
   # set the value of a specific input
   setInputValue: (inputName, value) ->
-    unless typeof value is 'number' and not isNaN(value)
+    input = @_getInputByName(inputName)
+    unless Array.isArray(value) and value.length is input.value.length
       @logError "invalid value for #{inputName}: " + JSON.stringify(value)
       return
-    input = @_getInputByName(inputName)
-    unless input.value is value
+    changed = false
+    for item, i in value
+      unless item is input.value[i]
+        changed = true
+        break
+    if changed
       input.value = value
       @emit @INPUT_VALUE_CHANGE, inputName
       @_scheduleChangeEvent()
@@ -281,7 +291,6 @@ class Tamarind.State extends Tamarind.EventEmitter
           if isMutable
             newValue = JSON.parse(JSON.stringify newValue)
           @[storage][propertyName] = newValue
-          @emit @PROPERTY_CHANGE, propertyName
           @emit PROPERTY_CHANGE_EVENTS[propertyName], newValue
           @_scheduleChangeEvent()
         return
@@ -296,5 +305,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   _defineProperty 'controlsExpanded', '_persistent'
   _defineProperty 'inputs', '_persistent', '_validateInputs'
   _defineProperty 'debugMode', '_lifetime'
+  _defineProperty 'mouseX', '_lifetime'
+  _defineProperty 'mouseY', '_lifetime'
   _defineProperty 'selectedTab', '_transient'
 

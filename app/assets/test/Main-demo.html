@@ -35,19 +35,21 @@
 
 
 <script>
-  var state = new Tamarind.State()
-  state.debugMode = true
-  state.controlsExpanded = true
-  state.inputs = [
-    {
-      type: 'slider',
-      name: 'u_slider'
-    }
-  ]
-  var editor = new Tamarind.Main(state);
-  editor.overwrite(document.getElementById('editor-location'));
+//  (function() {
+    var state = new Tamarind.State()
+    state.debugMode = true
+    state.controlsExpanded = true
+    state.inputs = [
+      {
+        type: 'mouse',
+        name: 'mouse'
+      }
+    ]
+    var editor = new Tamarind.Main(state);
+    editor.overwrite(document.getElementById('editor-location'));
 
-  var loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
+    window.loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
+//  })()
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 
