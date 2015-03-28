@@ -193,20 +193,24 @@ class Tamarind.Inputs
       value = input[key]
       if value is undefined
         value = defaultValue
-      if (typeof value isnt typeof defaultValue) or (Array.isArray(defaultValue) and value.length isnt defaultValue.length)
-        state.logError "bad value for #{key} (expected #{typeof defaultValue}, got #{typeof value} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
-        value = defaultValue
 
+      error = false
+      if typeof value isnt typeof defaultValue
+        error = "expected #{typeof defaultValue}, got #{typeof value}"
+      else if Array.isArray(defaultValue)
+        if Array.isArray(value)
+          unless value.length is defaultValue.length
+            error = "expected array of #{defaultValue.length}, got array of #{value.length}"
+        else
+          error = "expected array, got"
+
+      if error
+        state.logError "bad value for #{key} (#{error} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
+        value = defaultValue
 
       sanitised[key] = value
 
     return sanitised
-
-  @_getTypeKey: (value) ->
-    type = typeof value
-    unless type is 'object'
-      return type
-    unless type is 
 
   @_validateName = (name, defaultName) ->
     return String(name)

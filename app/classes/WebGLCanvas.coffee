@@ -304,7 +304,7 @@ class Tamarind.WebGLCanvas
     width = explicitWidth or Math.round(@canvasElement.offsetWidth * (window.devicePixelRatio or 1))
     height = explicitHeight or Math.round(@canvasElement.offsetHeight * (window.devicePixelRatio or 1))
 
-    @_setUniform 'u_CanvasSize', width, height
+    @_setUniform 'u_CanvasSize', [width, height]
 
     unless width is @_width and height is @_height
 
@@ -312,7 +312,6 @@ class Tamarind.WebGLCanvas
       @_height = @canvasElement.height = height
 
       gl.viewport 0, 0, width, height
-
 
 
     gl.clearColor 0, 0, 0, 0
@@ -352,6 +351,7 @@ class Tamarind.WebGLCanvas
       when 4
         gl.uniform4f(uniformInfo.location, values[0], values[1], values[2], values[3])
       else
+        debugger
         throw new Error("Can't set uniform with #{values.length} values")
 
     return true

@@ -165,12 +165,11 @@ describe 'Inputs.validate', ->
     spyOn console, 'error'
 
     badPropertyType = mockInput(value: null, min: 'foo')
-    debugger
     input = Tamarind.Inputs.validate badPropertyType, normalState
 
     expectCallHistory console.error, [
       'bad value for min (expected number, got string "foo"), using default of 0'
-      'bad value for value (expected number, got object null), using default of 0'
+      'bad value for value (expected array, got null), using default of [0]'
     ]
     expect(input.min).toEqual 0
 

@@ -94,7 +94,6 @@ describe 'State', ->
     expect(state.inputs).toEqual [ interestingInput(name: 'my_input', value: [2]) ]
 
 
-    expectCallHistory listener.PROPERTY_CHANGE, ['inputs', 'vertexCount']
     expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
     expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input', value: [2]) ] ]
