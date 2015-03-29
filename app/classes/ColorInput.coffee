@@ -15,17 +15,35 @@ class Tamarind.ColorInput extends Tamarind.InputBase
     # parse #RRGGBB value
     parts = @_inputElement.value.match(/\w\w/g)
     unless parts?.length is 3
-      return @_lastValidValue or @defaults.value
+      parts = ['00', '00', '00']
 
     @_lastValidValue = parts.map((v) -> parseInt(v, 16) / 255 or 0)
     return @_lastValidValue
 
 
   _updateInputElement: (value) ->
-    @_inputElement.value = @_formatValueForUser value
+    @_inputElement.value = @_valueToHex value
     return
 
   _formatValueForUser: (value) ->
+    if @_supported
+      return @_valueToHex value
+    else
+      return '#RRGGBB'
+
+  _makeInputElement: ->
+    el = document.createElement 'input'
+    el.type = 'color'
+    if el.type is 'color'
+      @_supported = true
+      event = 'input'
+    else
+      @_supported = false
+      event = 'change'
+    el.addEventListener event, @_notifyOfValueChange
+    return el
+
+  _valueToHex: (value) ->
     color = '#'
     for part in value
       hex = Math.round(part * 255).toString(16)
@@ -34,10 +52,5 @@ class Tamarind.ColorInput extends Tamarind.InputBase
       color += hex
     return color
 
-  _makeInputElement: ->
-    el = document.createElement 'input'
-    el.type = 'color'
-    el.addEventListener 'input', @_notifyOfValueChange
-    return el
 
 
