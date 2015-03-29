@@ -14,6 +14,7 @@ exports.config =
           'app/classes/Tamarind.coffee'
           'app/classes/EventEmitter.coffee'
           'app/classes/UIComponent.coffee'
+          'app/classes/InputBase.coffee'
         ]
         after: [
           'app/classes/Inputs.coffee'

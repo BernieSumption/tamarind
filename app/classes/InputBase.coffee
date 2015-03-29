@@ -45,12 +45,8 @@ class Tamarind.InputBase extends Tamarind.UIComponent
 
   # Called by the ControlDrawer when this input's value in the state has been changed
   setValue: (value) ->
-    if @_inputElement
-      @_inputElement.value = value[0]
-
-    pretty = value.map((item) => item.toFixed(@_displayDP)).join(', ')
-
-    @setInnerText @_valueDisplay, pretty
+    @_updateInputElement value
+    @setInnerText @_valueDisplay, @_formatValueForUser value
     return
 
 
@@ -61,6 +57,16 @@ class Tamarind.InputBase extends Tamarind.UIComponent
     # return a DOM element for the user to interact with, or null of this kind of input doesn't have a DOM component
   _makeInputElement: ->
     return null
+
+
+  _updateInputElement: (value) ->
+    if @_inputElement
+      @_inputElement.value = value[0]
+    return
+
+
+  _formatValueForUser: (value) ->
+    return value.map((item) => item.toFixed(@_displayDP)).join(', ')
 
 
   # return the number of decimal places that values should be displayed to

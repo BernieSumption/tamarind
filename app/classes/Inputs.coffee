@@ -13,6 +13,7 @@ class Tamarind.Inputs
   @inputClasses =
     slider: Tamarind.SliderInput
     mouse: Tamarind.MouseInput
+    color: Tamarind.ColorInput
 
   # Create an appropriate Tamarind.InputBase subclass instance to edit the supplied input
   # @param input [object] a validated input data object
