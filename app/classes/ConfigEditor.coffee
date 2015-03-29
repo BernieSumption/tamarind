@@ -68,7 +68,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
         'Ctrl-C': @_cancelCurrentEdit
         'Cmd-.': @_cancelCurrentEdit
     )
-    @_codemirror.on 'change', => return @_setDirty(true)
+    @_codemirror.on 'change', => @_setDirty(true)
 
     @_state.onPropertyChange 'inputs', @_setValueFromState
     @_setValueFromState()
@@ -84,6 +84,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     super(value)
     if value
       @_codemirror.refresh()
+    return
 
   _getLintAnnotations: (value) ->
     result = []
@@ -102,24 +103,30 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
 
   _setDirty: (value) ->
     @setClassIf 'is-dirty', value
+    return
 
   _setValueFromState: =>
     value = Tamarind.Inputs.unparseLines(@_state.inputs)
     @_valueBeforeEdit = value
     @_codemirror.setValue value
     @_setDirty false
+    return
 
   _commitCurrentEdit: =>
     @_codemirror.getInputField().blur()
     requestAnimationFrame =>
       @_state.inputs = Tamarind.Inputs.parseLines(@_codemirror.getValue(), true)
       @_setDirty false
+      return
+    return
 
   _cancelCurrentEdit: =>
     @_codemirror.getInputField().blur()
     requestAnimationFrame =>
       @_codemirror.setValue @_valueBeforeEdit
       @_setDirty false
+      return
+    return
 
   _setupAddInputDropdown: ->
     dropdown = @css('select[name="addANew"]')
@@ -137,5 +144,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
       }
       @_state.inputs = inputs
       dropdown.selectedIndex = 0
+      return
+    return
 
 

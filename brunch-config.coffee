@@ -15,6 +15,9 @@ exports.config =
           'app/classes/EventEmitter.coffee'
           'app/classes/UIComponent.coffee'
         ]
+        after: [
+          'app/classes/Inputs.coffee'
+        ]
 
     stylesheets:
       joinTo: 'tamarind.css'

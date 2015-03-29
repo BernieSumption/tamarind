@@ -1,139 +1,5 @@
 
 
-###
-  Base class for input editors. Instances of these classes encapsulate the controls used
-  to edit the values of inputs, and the classes themselves contain metadata e.g. default values
-###
-class Tamarind.InputEditorBase extends Tamarind.UIComponent
-
-  TEMPLATE = '''
-    <div class="tamarind-controls-control">
-      <div class="tamarind-controls-control-title">
-        <span class="tamarind-controls-control-name"></span>
-        <span class="tamarind-controls-control-value"></span>
-      </div>
-      <div class="tamarind-controls-control-ui">
-      </div>
-    </div>
-  '''
-
-
-  @defaults:
-    value: [0]
-
-  @fieldOrder: []
-
-  ##
-  ## NOTE!
-  ##
-  ## It is important that this class and its subclasses don't have any references to
-  ## their instances except through ControlDrawer. This includes registering for
-  ## event listeners on the State.
-  ##
-
-
-
-  constructor: (@_input, _state) ->
-    super(_state, TEMPLATE)
-    @_inputElement = @_makeInputElement()
-    if @_inputElement
-      @css('.tamarind-controls-control-ui').appendChild @_inputElement
-    @setInnerText '.tamarind-controls-control-name', @_input.name.replace(/^u_/, '').replace('_', ' ')
-    @_valueDisplay = @css '.tamarind-controls-control-value'
-    @_displayDP = @_getDisplayDP()
-    @setValue(@_input.value)
-
-
-  # Called by the ControlDrawer when this input's value in the state has been changed
-  setValue: (value) ->
-    if @_inputElement
-      @_inputElement.value = value[0]
-
-    pretty = value.map((item) => item.toFixed(@_displayDP)).join(', ')
-
-    @setInnerText @_valueDisplay, pretty
-    return
-
-
-  # called each frame unconditionally
-  onEachFrame: () ->
-
-
-  # return a DOM element for the user to interact with, or null of this kind of input doesn't have a DOM component
-  _makeInputElement: ->
-    return null
-
-
-  # return the number of decimal places that values should be displayed to
-  _getDisplayDP: ->
-    return 2
-
-
-  # Subclasses just arrange for this to be called when the input value changes
-  _notifyOfValueChange: =>
-    @_state.setInputValue(@_input.name, @_getValue())
-    return
-
-
-  # Return the current value of the input
-  _getValue: ->
-    if @_inputElement
-      return [parseFloat(@_inputElement.value) or 0]
-    return 0
-
-
-  # Format a value for display to users
-  _getPrettyValue: ->
-    return String(@_getValue())
-
-
-class Tamarind.SliderInputEditor extends Tamarind.InputEditorBase
-
-  @defaults:
-    min: 0
-    max: 1
-    step: 0.01
-    value: [0]
-
-  @fieldOrder: ['min', 'max', 'step']
-
-  _getDisplayDP: ->
-    # minimum decimal places to show full precision of step
-    return ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @_input.step))))
-
-  _makeInputElement: ->
-    el = document.createElement 'input'
-    el.type = 'range'
-    el.min = @_input.min
-    el.max = @_input.max
-    el.step = @_input.step
-    el.addEventListener 'input', @_notifyOfValueChange
-    return el
-
-
-
-class Tamarind.MouseInputEditor extends Tamarind.InputEditorBase
-
-  @defaults:
-    delay: 0
-    average: 0
-    value: [0, 0]
-
-  @fieldOrder: ['delay', 'average']
-
-  _getValue: ->
-    return [@_state.mouseX, @_state.mouseY]
-
-
-  onEachFrame: ->
-    mouseY = @_state.mouseY
-    mouseX = @_state.mouseX
-    unless @_prevMouseY is mouseY and @_prevMouseX is mouseX
-      @_prevMouseX = mouseX
-      @_prevMouseY = mouseY
-      @_notifyOfValueChange()
-    return
-
 
 ###
   Manager for inputs.
@@ -144,14 +10,14 @@ class Tamarind.MouseInputEditor extends Tamarind.InputEditorBase
 ###
 class Tamarind.Inputs
 
-  @editorClasses =
-    slider: Tamarind.SliderInputEditor
-    mouse: Tamarind.MouseInputEditor
+  @inputClasses =
+    slider: Tamarind.SliderInput
+    mouse: Tamarind.MouseInput
 
-  # Create an appropriate Tamarind.InputEditorBase subclass instance to edit the supplied input
+  # Create an appropriate Tamarind.InputBase subclass instance to edit the supplied input
   # @param input [object] a validated input data object
   @makeEditor: (input, state) ->
-    cls = @editorClasses[input.type]
+    cls = @inputClasses[input.type]
     unless cls
       throw new Error("Invalid input type '#{input.type}'")
     return new cls(input, state)
@@ -159,7 +25,7 @@ class Tamarind.Inputs
 
   # Return an array of valid input type names
   @getTypes: ->
-    return (k for k of @editorClasses)
+    return (k for k of @inputClasses)
 
 
   # given an input object, return a valid version of it (e.g. filling in missing properties with defaults)
@@ -167,17 +33,16 @@ class Tamarind.Inputs
   @validate = (input, state) ->
 
     unless state
-      debugger
       throw new Error 'Missing state argument'
 
-    editorClass = @editorClasses[input.type]
+    inputClass = @inputClasses[input.type]
 
-    unless editorClass and typeof input.name is 'string'
+    unless inputClass and typeof input.name is 'string'
       state.logError "bad input name=#{JSON.stringify(input.name)} type=#{JSON.stringify(input.type)}"
       return null
 
     for key, value of input
-      if editorClass.defaults[key] is undefined and key isnt 'type' and key isnt 'name'
+      if inputClass.defaults[key] is undefined and key isnt 'type' and key isnt 'name'
         state.logError "ignoring unrecognised property '#{key}': #{JSON.stringify(value)}"
 
 
@@ -189,7 +54,7 @@ class Tamarind.Inputs
       type: input.type
     }
 
-    for key, defaultValue of editorClass.defaults
+    for key, defaultValue of inputClass.defaults
       value = input[key]
       if value is undefined
         value = defaultValue
@@ -202,7 +67,7 @@ class Tamarind.Inputs
           unless value.length is defaultValue.length
             error = "expected array of #{defaultValue.length}, got array of #{value.length}"
         else
-          error = "expected array, got"
+          error = 'expected array, got'
 
       if error
         state.logError "bad value for #{key} (#{error} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
@@ -227,7 +92,7 @@ class Tamarind.Inputs
       return null
     tokenEnd = 0
     tokenStart = 0
-    editorClass = null
+    inputClass = null
     result = {}
     numberIndex = 0
     fieldKeyword = null
@@ -240,10 +105,10 @@ class Tamarind.Inputs
         continue
       if result.type is undefined
         result.type = token
-        editorClass = @editorClasses[token]
-        unless editorClass
+        inputClass = @inputClasses[token]
+        unless inputClass
           return new Tamarind.InputDefinitionError("invalid type '#{token}'", tokenStart, tokenEnd)
-        for key, value of editorClass.defaults
+        for key, value of inputClass.defaults
           result[key] = value
         continue
       if not result.name
@@ -256,12 +121,12 @@ class Tamarind.Inputs
       number = parseFloat token
       if isNaN number
         fieldKeyword = token
-        if editorClass.defaults[token] is undefined
-          return new Tamarind.InputDefinitionError("invalid property '#{token}', expected one of '#{editorClass.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
+        if inputClass.defaults[token] is undefined
+          return new Tamarind.InputDefinitionError("invalid property '#{token}', expected one of '#{inputClass.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
       else
-        numberField = fieldKeyword or editorClass.fieldOrder[numberIndex]
+        numberField = fieldKeyword or inputClass.fieldOrder[numberIndex]
         if numberField is undefined
-          return new Tamarind.InputDefinitionError("too many arguments, expected at most #{editorClass.fieldOrder.length} ('#{editorClass.fieldOrder.join('\', \'')}')", tokenStart, text.length)
+          return new Tamarind.InputDefinitionError("too many arguments, expected at most #{inputClass.fieldOrder.length} ('#{inputClass.fieldOrder.join('\', \'')}')", tokenStart, text.length)
         result[numberField] = number
         numberIndex++
         fieldKeyword = null
@@ -301,13 +166,14 @@ class Tamarind.Inputs
     for input, inputIndex in inputs
       if inputIndex > 0
         lines += '\n'
-      editorClass = @editorClasses[input.type]
+      inputClass = @inputClasses[input.type]
       lines += "#{input.type} #{input.name}: "
-      for field, fieldIndex in editorClass.fieldOrder
+      for field, fieldIndex in inputClass.fieldOrder
         if fieldIndex > 0
           lines += ', '
         lines += "#{field} #{input[field]}"
     return lines
+
 
 
 

@@ -30,7 +30,7 @@ mockInput = (overrides = {}) ->
     type: 'slider'
     name: 'my_slider'
   }
-  for k, v of Tamarind.Inputs.editorClasses.slider.defaults
+  for k, v of Tamarind.Inputs.inputClasses.slider.defaults
     input[k] = v
   for k, v of overrides
     input[k] = v
