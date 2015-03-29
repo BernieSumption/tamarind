@@ -20,13 +20,17 @@ class Tamarind.ColorInput extends Tamarind.InputBase
     @_lastValidValue = parts.map((v) -> parseInt(v, 16) / 255 or 0)
     return @_lastValidValue
 
+  _parseValue: ->
+
 
   _updateInputElement: (value) ->
-    @_inputElement.value = @_valueToHex value
+    hexValue = @_valueToHex value
+    unless @_inputElement.value.toLowerCase() is hexValue.toLowerCase()
+      @_inputElement.value = hexValue
     return
 
   _formatValueForUser: (value) ->
-    if @_supported
+    if @_colorInputSupported
       return @_valueToHex value
     else
       return '#RRGGBB'
@@ -34,13 +38,18 @@ class Tamarind.ColorInput extends Tamarind.InputBase
   _makeInputElement: ->
     el = document.createElement 'input'
     el.type = 'color'
-    if el.type is 'color'
-      @_supported = true
-      event = 'input'
-    else
-      @_supported = false
-      event = 'change'
-    el.addEventListener event, @_notifyOfValueChange
+    @_colorInputSupported = el.type is 'color'
+
+    el.addEventListener 'input', =>
+      if @_inputElement.value.match(/^\s*#[a-zA-Z0-9]{6}\s*$/)
+        @_notifyOfValueChange()
+      return
+    el.addEventListener 'change', =>
+      unless @_colorInputSupported
+        @_updateInputElement(@_getValue()) # ensure text input is nicely formatted when we've finished
+      @_notifyOfValueChange()
+      return
+
     return el
 
   _valueToHex: (value) ->
