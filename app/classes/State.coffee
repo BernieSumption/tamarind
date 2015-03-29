@@ -84,9 +84,10 @@ class Tamarind.State extends Tamarind.EventEmitter
           errorText: []
         VERTEX_SHADER:
           errors: []
-          errorText: [],
-      propertyJSON: {},
+          errorText: []
+      propertyJSON: {}
       selectedTab: PROPERTY_DEFAULTS.selectedTab
+      inputsByName: {}
     }
 
     return
@@ -151,13 +152,32 @@ class Tamarind.State extends Tamarind.EventEmitter
     return
 
 
+  # Overwrite the existing inputs array with a new one.
+  # @param inputs an array of objects representing inputs, see the Tamarind.Inputs class for details.
+  # @param preserveValues if true, inputs
+  setInputs: (inputs, preserveValues = false) ->
+    inputsByName = {}
+    sanitised = []
+    for input in inputs
+      input = Tamarind.Inputs.validate(input, @)
+      if input
+        if preserveValues and @hasInput(input.name)
+          input.value = @getInputValue(input.name)
+        sanitised.push(input)
+        inputsByName[input.name] = input
+
+    @_persistent.inputs = sanitised
+    @_transient.inputsByName = inputsByName
+
+    @emit PROPERTY_CHANGE_EVENTS.inputs, @_persistent.inputs
+    @_scheduleChangeEvent()
+
+    return sanitised
+
 
   # get the value of a specific input
   hasInput: (inputName) ->
-    for candidate in @_persistent.inputs by 1
-      if candidate.name is inputName
-        return true
-    return false
+    return @_transient.inputsByName[inputName] isnt undefined
 
   # get the value of a specific input
   getInputValue: (inputName) ->
@@ -181,11 +201,7 @@ class Tamarind.State extends Tamarind.EventEmitter
     return
 
   _getInputByName: (inputName) ->
-    input = null
-    for candidate in @_persistent.inputs by 1
-      if candidate.name is inputName
-        input = candidate
-        break
+    input = @_transient.inputsByName[inputName]
     unless input
       throw new Error("no input '#{inputName}'")
     return input
@@ -203,7 +219,7 @@ class Tamarind.State extends Tamarind.EventEmitter
       if key is Tamarind.FRAGMENT_SHADER or key is Tamarind.VERTEX_SHADER
         @setShaderSource key, value
       else if key is 'inputs'
-        @inputs = value
+        @setInputs value
       else if PROPERTY_DEFAULTS[key] isnt undefined
         @[key] = value
         @emit PROPERTY_CHANGE_EVENTS[key], value
@@ -248,24 +264,15 @@ class Tamarind.State extends Tamarind.EventEmitter
     unless typeof actualValue is expectedType
       throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")
 
-  _validateInputs: (inputs) ->
-    sanitised = []
-    for input in inputs
-      input = Tamarind.Inputs.validate(input, @)
-      if input
-        sanitised.push(input)
-    return sanitised
-
 
   PROPERTY_DEFAULTS = {}
   PROPERTY_CHANGE_EVENTS = {}
 
   # define a read/write property that maps to getProperty and setProperty
-  _defineProperty = (propertyName, storage, validateFunctionName = null) =>
+  _defineProperty = (propertyName, storage, readOnly = false) =>
 
     defaultValue = State.prototype[propertyName]
     valueType = typeof defaultValue
-    isMutable = valueType is 'object'
 
     if valueType is 'undefined'
       throw new Error('No default value for property ' + propertyName)
@@ -277,19 +284,13 @@ class Tamarind.State extends Tamarind.EventEmitter
     config =
       enumerable: true
 
-      get: ->
-        value = @[storage][propertyName]
-        if isMutable
-          value = JSON.parse(JSON.stringify @[storage][propertyName])
-        return value
+      get: -> @[storage][propertyName]
 
       set: (newValue) ->
+        if readOnly
+          throw new Error("#{propertyName} is read only")
         @_validateType(newValue, valueType, propertyName)
-        if validateFunctionName
-          newValue = @[validateFunctionName](newValue)
         unless @[storage][propertyName] is newValue
-          if isMutable
-            newValue = JSON.parse(JSON.stringify newValue)
           @[storage][propertyName] = newValue
           @emit PROPERTY_CHANGE_EVENTS[propertyName], newValue
           @_scheduleChangeEvent()
@@ -303,7 +304,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   _defineProperty 'vertexCount', '_persistent'
   _defineProperty 'drawingMode', '_persistent'
   _defineProperty 'controlsExpanded', '_persistent'
-  _defineProperty 'inputs', '_persistent', '_validateInputs'
+  _defineProperty 'inputs', '_persistent', true
   _defineProperty 'debugMode', '_lifetime'
   _defineProperty 'mouseX', '_lifetime'
   _defineProperty 'mouseY', '_lifetime'

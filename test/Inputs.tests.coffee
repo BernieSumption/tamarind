@@ -173,6 +173,16 @@ describe 'Inputs.validate', ->
     ]
     expect(input.min).toEqual 0
 
+    console.error.calls.reset()
+
+    badPropertyType = mockInput(value: [0, 0])
+    input = Tamarind.Inputs.validate badPropertyType, normalState
+
+    expectCallHistory console.error, [
+      'bad value for value (expected array of 1, got array of 2 [0,0]), using default of [0]'
+    ]
+    expect(input.min).toEqual 0
+
     return
 
 

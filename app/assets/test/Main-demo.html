@@ -39,13 +39,13 @@
     var state = new Tamarind.State()
     state.debugMode = true
     state.controlsExpanded = true
-    state.inputs = [
+    state.setInputs([
       {
         type: 'mouse',
         name: 'mouse',
         damping: 0.8
       }
-    ]
+    ]);
     var editor = new Tamarind.Main(state);
     editor.overwrite(document.getElementById('editor-location'));
 

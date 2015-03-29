@@ -74,7 +74,7 @@ describe 'State', ->
     state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag'
     state.setShaderSource Tamarind.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
-    state.inputs = [ interestingInput(name: 'my_input', value: [2]) ]
+    state.setInputs [ interestingInput(name: 'my_input', value: [2]) ]
 
     serialized = state.save()
 
@@ -124,27 +124,6 @@ describe 'State', ->
 
     return
 
-  it 'should not expose mutable state through the (get/set)ShaderErrors API', ->
-
-    state = new Tamarind.State()
-
-    # mutating refs returned from getShaderErrors shouldn't alter internal state
-    errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
-    expect(errors).toEqual []
-    errors.push(new Tamarind.ShaderCompileError('Message', 0))
-    errors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
-    expect(errors).toEqual []
-
-    # mutating input passed to setShaderErrors shouldn't alter internal state
-    error = new Tamarind.ShaderCompileError('', 0)
-    errorsRef = [error]
-    state.setShaderErrors Tamarind.FRAGMENT_SHADER, '', [error]
-    expect(state.getShaderErrors Tamarind.FRAGMENT_SHADER).toEqual [error]
-    errorsRef.push(new Tamarind.ShaderCompileError('', 1))
-    expect(state.getShaderErrors Tamarind.FRAGMENT_SHADER).toEqual [error]
-
-    return
-
 
 
   it 'should handle log and error messages', ->
@@ -165,45 +144,53 @@ describe 'State', ->
 
     return
 
-  it 'should dispatch events when inputs change', ->
+  it 'should allow setting of inputs through setInputs', ->
 
     state = new Tamarind.State()
     listener = stateListener(state)
 
     expect(state.inputs).toEqual []
 
-    evts = [
-      {
-        type: 'slider'
-        name: 'my_slider'
-        min: 0
-        max: 10
-        step: 0.1
-        value: [0]
-      }
-    ]
+    evts = [ interestingInput(name: 'in', value: [4]) ]
 
-    state.inputs = [] # no change
-    state.inputs = evts
-#    state.inputs = evts.slice() # no change
+    state.setInputs evts
+    #    state.setInputs evts.slice() # no change
 
+    expect(state.getInputValue('in')).toEqual [4]
     expect(state.inputs).toEqual(evts)
-    expectCallHistory listener.inputs, [[], evts]
+    expectCallHistory listener.inputs, [evts]
+
+    state.setInputs [interestingInput(name: 'in', value: [7])]
+    expect(state.getInputValue('in')).toEqual [7]
 
     return
 
-  it 'should not expose mutable state through the (get/set)Inputs API', ->
+  it 'should preserve the existing values of inputs through setInputs when asked', ->
 
     state = new Tamarind.State()
+    listener = stateListener(state)
 
-    inputs = state.inputs
-    inputs.push interestingInput(name: 'a')
-    expect(state.inputs).toEqual([])
+    state.setInputs [
+      interestingInput(name: 'a', value: [1])
+      interestingInput(name: 'b', value: [2])
+    ]
 
-    inputs = [interestingInput(name: 'b')]
-    state.inputs = inputs
-    inputs.push interestingInput(name: 'c')
-    expect(state.inputs).toEqual [ interestingInput(name: 'b') ]
+    expect(state.inputs).toEqual [
+      interestingInput(name: 'a', value: [1])
+      interestingInput(name: 'b', value: [2])
+    ]
+
+    state.setInputs [
+      interestingInput(name: 'a', value: [3])
+      interestingInput(name: 'b', value: [4])
+      interestingInput(name: 'c', value: [5])
+    ], true
+
+    expect(state.inputs).toEqual [
+      interestingInput(name: 'a', value: [1])
+      interestingInput(name: 'b', value: [2])
+      interestingInput(name: 'c', value: [5])
+    ]
 
     return
 
@@ -215,7 +202,7 @@ describe 'State', ->
 
     spyOn(console, 'error')
 
-    state.inputs = [ interestingInput(name: 'my_slider', value: [5]) ]
+    state.setInputs [ interestingInput(name: 'my_slider', value: [5]) ]
 
     expect(state.getInputValue 'my_slider').toEqual [5]
 

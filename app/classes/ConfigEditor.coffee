@@ -112,10 +112,11 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     @_setDirty false
     return
 
+
   _commitCurrentEdit: =>
     @_codemirror.getInputField().blur()
     requestAnimationFrame =>
-      @_state.inputs = Tamarind.Inputs.parseLines(@_codemirror.getValue(), true)
+      @_state.setInputs Tamarind.Inputs.parseLines(@_codemirror.getValue(), true), true # preserve existing values
       @_setDirty false
       return
     return
@@ -142,7 +143,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
         type: dropdown.value
         name: name + suffix
       }
-      @_state.inputs = inputs
+      @_state.setInputs inputs
       dropdown.selectedIndex = 0
       return
     return
