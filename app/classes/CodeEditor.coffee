@@ -16,7 +16,7 @@ class Tamarind.CodeEditor extends Tamarind.UIComponent
 
     @_shaderDocs = {}
     createDoc = (shaderType) =>
-      doc = CodeMirror.Doc(@_state.getShaderSource(shaderType), 'clike')
+      doc = CodeMirror.Doc(@_state.getShaderSource(shaderType), 'x-shader/x-fragment')
       doc.shaderType = shaderType
       @_shaderDocs[shaderType] = doc
       return
