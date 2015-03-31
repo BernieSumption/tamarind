@@ -1,6 +1,7 @@
+InputBase = require './InputBase.coffee'
 
 
-class Tamarind.ColorInput extends Tamarind.InputBase
+class ColorInput extends InputBase
 
   @defaults:
     value: [0, 0, 0]
@@ -62,4 +63,4 @@ class Tamarind.ColorInput extends Tamarind.InputBase
     return color
 
 
-
+module.exports = ColorInput

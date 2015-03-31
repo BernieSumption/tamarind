@@ -1,5 +1,4 @@
-
-
+InputDefinitionError = require './InputDefinitionError.coffee'
 
 ###
   Manager for inputs.
@@ -8,14 +7,14 @@
   be a valid GLSL identifier, a value, and other properties according to the type, e.g. 'slider' inputs have a 'min'
   property.
 ###
-class Tamarind.Inputs
+class Inputs
 
   @inputClasses =
-    slider: Tamarind.SliderInput
-    mouse: Tamarind.MouseInput
-    color: Tamarind.ColorInput
+    slider: require './SliderInput.coffee'
+    mouse:  require './MouseInput.coffee'
+    color:  require './ColorInput.coffee'
 
-  # Create an appropriate Tamarind.InputBase subclass instance to edit the supplied input
+  # Create an appropriate InputBase subclass instance to edit the supplied input
   # @param input [object] a validated input data object
   @makeEditor: (input, state) ->
     cls = @inputClasses[input.type]
@@ -87,7 +86,7 @@ class Tamarind.Inputs
 
   # Parse a line and return an input object if the line is a valid input description,
   # null if the line doesn't represent an input but has no errors (e.g. is all white space),
-  # or a Tamarind.InputDefinitionError object if the
+  # or a InputDefinitionError object if the
   @parseLine = (text) ->
     if text is ''
       return null
@@ -108,14 +107,14 @@ class Tamarind.Inputs
         result.type = token
         inputClass = @inputClasses[token]
         unless inputClass
-          return new Tamarind.InputDefinitionError("invalid type '#{token}'", tokenStart, tokenEnd)
+          return new InputDefinitionError("invalid type '#{token}'", tokenStart, tokenEnd)
         for key, value of inputClass.defaults
           result[key] = value
         continue
       if not result.name
         validName = @_validateName token, false
         unless validName and validName is token
-          return new Tamarind.InputDefinitionError("invalid name '#{token}', how about 'u_#{result.type}'?", tokenStart, tokenEnd)
+          return new InputDefinitionError("invalid name '#{token}', how about 'u_#{result.type}'?", tokenStart, tokenEnd)
         result.name = token
         continue
 
@@ -123,11 +122,11 @@ class Tamarind.Inputs
       if isNaN number
         fieldKeyword = token
         if inputClass.defaults[token] is undefined
-          return new Tamarind.InputDefinitionError("invalid property '#{token}', expected one of '#{inputClass.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
+          return new InputDefinitionError("invalid property '#{token}', expected one of '#{inputClass.fieldOrder.join('\', \'')}'", tokenStart, tokenEnd)
       else
         numberField = fieldKeyword or inputClass.fieldOrder[numberIndex]
         if numberField is undefined
-          return new Tamarind.InputDefinitionError("too many arguments, expected at most #{inputClass.fieldOrder.length} ('#{inputClass.fieldOrder.join('\', \'')}')", tokenStart, text.length)
+          return new InputDefinitionError("too many arguments, expected at most #{inputClass.fieldOrder.length} ('#{inputClass.fieldOrder.join('\', \'')}')", tokenStart, text.length)
         result[numberField] = number
         numberIndex++
         fieldKeyword = null
@@ -136,12 +135,12 @@ class Tamarind.Inputs
       return null
 
     unless result.name
-      return new Tamarind.InputDefinitionError("#{result.type} has no name", 0, text.length)
+      return new InputDefinitionError("#{result.type} has no name", 0, text.length)
 
     return result
 
   # split text into lines and parse each line, applying whole-program validation
-  # Return an array with one entry (as returned by Tamarind.Inputs.parseLine) per line in the source text
+  # Return an array with one entry (as returned by Inputs.parseLine) per line in the source text
   # @param inputLinesOnly if true, don't return input and empty lines
   @parseLines = (text, inputLinesOnly = false) ->
     items = []
@@ -150,18 +149,18 @@ class Tamarind.Inputs
       parsed = @parseLine line
       if parsed and parsed.name
         if seen[parsed.name]
-          parsed = new Tamarind.InputDefinitionError("a previous input is already named '#{parsed.name}'", 0, line.length)
+          parsed = new InputDefinitionError("a previous input is already named '#{parsed.name}'", 0, line.length)
         else
           seen[parsed.name] = true
       items.push(parsed)
     if inputLinesOnly
       items = items.filter((x) ->
-        return x and x not instanceof Tamarind.InputDefinitionError)
+        return x and x not instanceof InputDefinitionError)
     return items
 
 
   # convert valid input objects into a text representation that would create
-  # the same input objects if parsed with Tamarind.Inputs.parseLines.
+  # the same input objects if parsed with Inputs.parseLines.
   @unparseLines = (inputs) ->
     lines = ''
     for input, inputIndex in inputs
@@ -176,8 +175,4 @@ class Tamarind.Inputs
     return lines
 
 
-
-
-class Tamarind.InputDefinitionError
-
-  constructor: (@message, @start = 0, @end = undefined) ->
+module.exports = Inputs

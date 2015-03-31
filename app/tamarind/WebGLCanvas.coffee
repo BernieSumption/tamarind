@@ -1,3 +1,6 @@
+utils = require('./utils.coffee')
+constants = require('./constants.coffee')
+WebGLDebugUtils = require('./WebGLDebugUtils.js')
 
 
 ###
@@ -26,7 +29,7 @@
   are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
   requires uniforms to be set again.
 ###
-class Tamarind.WebGLCanvas
+class WebGLCanvas
 
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
@@ -38,10 +41,10 @@ class Tamarind.WebGLCanvas
   ##
 
   # @param [HTMLCanvasElement] @canvasElement the canvas element to render onto
-  # @param [Tamarind.State] @state the state object for this canvas, or null to create one
+  # @param [State] @state the state object for this canvas, or null to create one
   constructor: (@canvasElement, @_state) ->
 
-    unless Tamarind.browserSupportsRequiredFeatures()
+    unless utils.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
 
     @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
@@ -136,7 +139,7 @@ class Tamarind.WebGLCanvas
 
 
     shadersCompiled = true
-    for shaderType in [Tamarind.VERTEX_SHADER, Tamarind.FRAGMENT_SHADER]
+    for shaderType in [constants.VERTEX_SHADER, constants.FRAGMENT_SHADER]
       if isNewContext or @_shaders[shaderType] is undefined or @gl.getShaderSource(@_shaders[shaderType]) isnt @_state.getShaderSource(shaderType)
         unless @_compileShader(shaderType)
           shadersCompiled = false
@@ -232,7 +235,7 @@ class Tamarind.WebGLCanvas
       @_state.setShaderErrors shaderType, null, []
     else
       errorText = gl.getShaderInfoLog(shader)
-      errors = Tamarind.ShaderCompileError.fromErrorMessage(errorText)
+      errors = ShaderCompileError.fromErrorMessage(errorText)
       @_state.setShaderErrors shaderType, errorText, errors
       gl.detachShader(@_program, shader)
       gl.deleteShader(shader)
@@ -253,13 +256,13 @@ class Tamarind.WebGLCanvas
     linked = gl.getProgramParameter(@_program, gl.LINK_STATUS)
     unless linked
       errorText = gl.getProgramInfoLog(@_program).trim()
-      error = new Tamarind.ShaderCompileError(errorText, -1)
-      @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, errorText, [error]
-      @_state.setShaderErrors Tamarind.VERTEX_SHADER, errorText, [error]
+      error = new ShaderCompileError(errorText, -1)
+      @_state.setShaderErrors constants.FRAGMENT_SHADER, errorText, [error]
+      @_state.setShaderErrors constants.VERTEX_SHADER, errorText, [error]
       return false
 
-    @_state.setShaderErrors Tamarind.FRAGMENT_SHADER, null, []
-    @_state.setShaderErrors Tamarind.VERTEX_SHADER, null, []
+    @_state.setShaderErrors constants.FRAGMENT_SHADER, null, []
+    @_state.setShaderErrors constants.VERTEX_SHADER, null, []
 
     gl.useProgram @_program
 
@@ -376,3 +379,4 @@ class Tamarind.WebGLCanvas
 
 
 
+module.exports = WebGLCanvas

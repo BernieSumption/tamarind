@@ -19,7 +19,8 @@
     "build:debug": "npm install && node_modules/brunch/bin/brunch build",
     "build:dist": "npm install && node_modules/brunch/bin/brunch build --production",
     "docs": "npm install && node_modules/brunch/bin/brunch build && node_modules/codo/bin/codo app/**/*.coffee && mkdir -p docs/extra/branding && cp branding/logo.png docs/extra/branding/logo.png",
-    "dist": "npm run clean && npm run test && npm run build:dist && npm run docs && rm -rf dist && mv build dist"
+    "dist": "npm run clean && npm run test && npm run build:dist && npm run docs && rm -rf dist && mv build dist",
+    "live": "./node_modules/.bin/beefy app/tamarind/Tamarind.coffee:tamarind.js --live --index app/assets/test/Tamarind-demo.html -- --standalone Tamarind"
   },
   "author": "Bernie Sumption",
   "license": "MIT",
@@ -28,24 +29,23 @@
   },
   "homepage": "https://github.com/BernieSumption/tamarind",
   "devDependencies": {
-    "auto-reload-brunch": "^1.7.7",
-    "brunch": "^1.7.20",
-    "codo": "https://github.com/coffeedoc/codo/archive/6e84a7d7837d95cbd9477d91fd4226652c16aa52.tar.gz",
+    "beefy": "^2.1.3",
+    "browserify": "^9.0.3",
+    "codemirror": "^5.1.0",
     "coffee-script": "^1.9.1",
-    "coffee-script-brunch": "^1.8.1",
-    "coffeelint": "^1.9.2",
-    "coffeelint-brunch": "^1.7.0",
-    "coffeelint-no-implicit-returns": "^0.0.4",
-    "css-brunch": "^1.7.0",
-    "jasmine-core": "^2.2.0",
-    "javascript-brunch": "^1.7.1",
-    "karma": "^0.12.31",
-    "karma-chrome-launcher": "^0.1.7",
-    "karma-cli": "0.0.4",
-    "karma-jasmine": "^0.3.5",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "karma-sourcemap-loader": "^0.3.4",
-    "less-brunch": "^1.8.1",
-    "phantomjs": "^1.9.16"
+    "coffeeify": "^1.0.0",
+    "gulp": "^3.8.11",
+    "gulp-sourcemaps": "^1.5.1",
+    "gulp-util": "^3.0.4",
+    "node-lessify": "BernieSumption/node-lessify#b0b35cd345",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.1.0"
+  },
+  "browserify": {
+    "transform": [
+      "coffeeify",
+      "node-lessify"
+    ]
   }
 }

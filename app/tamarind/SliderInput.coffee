@@ -1,6 +1,7 @@
+InputBase = require './InputBase.coffee'
 
 
-class Tamarind.SliderInput extends Tamarind.InputBase
+class SliderInput extends InputBase
 
   @defaults:
     min: 0
@@ -23,3 +24,5 @@ class Tamarind.SliderInput extends Tamarind.InputBase
     el.addEventListener 'input', @_notifyOfValueChange
     return el
 
+
+module.exports = SliderInput

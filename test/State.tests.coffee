@@ -21,7 +21,7 @@ describe 'State', ->
 
   it 'should dispatch events when properties change', (done) ->
 
-    state = new Tamarind.State()
+    state = new State()
     listener = stateListener(state)
 
     state.vertexCount = 111
@@ -56,45 +56,45 @@ describe 'State', ->
 
   it 'should dispatch an event when a shader changes', ->
 
-    state = new Tamarind.State()
+    state = new State()
     listener = stateListener(state)
 
-    state.setShaderSource Tamarind.VERTEX_SHADER, Tamarind.DEFAULT_VSHADER_SOURCE # no event
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag' # yes event
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag' # no event
+    state.setShaderSource constants.VERTEX_SHADER, constants.DEFAULT_VSHADER_SOURCE # no event
+    state.setShaderSource constants.FRAGMENT_SHADER, 'frag' # yes event
+    state.setShaderSource constants.FRAGMENT_SHADER, 'frag' # no event
 
-    expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER]
+    expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER]
 
     return
 
   it 'should allow saving and restoring of content', ->
 
-    state = new Tamarind.State()
+    state = new State()
 
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, 'frag'
-    state.setShaderSource Tamarind.VERTEX_SHADER, 'vert'
+    state.setShaderSource constants.FRAGMENT_SHADER, 'frag'
+    state.setShaderSource constants.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
     state.setInputs [ interestingInput(name: 'my_input', value: [2]) ]
 
     serialized = state.save()
 
-    state = new Tamarind.State()
+    state = new State()
 
     expect(state.vertexCount).not.toEqual(12345)
-    expect(state.getShaderSource Tamarind.FRAGMENT_SHADER).not.toEqual('frag')
-    expect(state.getShaderSource Tamarind.VERTEX_SHADER).not.toEqual('vert')
+    expect(state.getShaderSource constants.FRAGMENT_SHADER).not.toEqual('frag')
+    expect(state.getShaderSource constants.VERTEX_SHADER).not.toEqual('vert')
 
     listener = stateListener(state)
 
     state.restore(serialized)
 
     expect(state.vertexCount).toEqual(12345)
-    expect(state.getShaderSource Tamarind.FRAGMENT_SHADER).toEqual('frag')
-    expect(state.getShaderSource Tamarind.VERTEX_SHADER).toEqual('vert')
+    expect(state.getShaderSource constants.FRAGMENT_SHADER).toEqual('frag')
+    expect(state.getShaderSource constants.VERTEX_SHADER).toEqual('vert')
     expect(state.inputs).toEqual [ interestingInput(name: 'my_input', value: [2]) ]
 
 
-    expectCallHistory listener.SHADER_CHANGE, [Tamarind.FRAGMENT_SHADER, Tamarind.VERTEX_SHADER]
+    expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER, constants.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
     expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input', value: [2]) ] ]
     expectCallHistory listener.controlsExpanded, [false]
@@ -104,7 +104,7 @@ describe 'State', ->
 
   it 'should log an error if invalid properties given to restore', ->
 
-    state = new Tamarind.State()
+    state = new State()
     state.debugMode = true
     expect(-> state.restore '{"blarty": "shiz"}').toThrow(new Error('debugMode: restore() ignoring unrecognised key blarty'))
 
@@ -112,22 +112,22 @@ describe 'State', ->
 
   it 'should delete transient state on restore', ->
 
-    state = new Tamarind.State()
+    state = new State()
     saved = state.save()
-    state.setShaderErrors Tamarind.VERTEX_SHADER, '', [new Tamarind.ShaderCompileError('', 1)]
+    state.setShaderErrors constants.VERTEX_SHADER, '', [new ShaderCompileError('', 1)]
     state.selectedTab = 'CONFIG'
 
     state.restore(saved)
 
     expect(state.selectedTab).not.toEqual('config')
-    expect(state.getShaderErrors Tamarind.VERTEX_SHADER).toEqual([])
+    expect(state.getShaderErrors constants.VERTEX_SHADER).toEqual([])
 
     return
 
 
 
   it 'should handle log and error messages', ->
-    state = new Tamarind.State()
+    state = new State()
 
     spyOn(console, 'log')
     spyOn(console, 'error')
@@ -146,7 +146,7 @@ describe 'State', ->
 
   it 'should allow setting of inputs through setInputs', ->
 
-    state = new Tamarind.State()
+    state = new State()
     listener = stateListener(state)
 
     expect(state.inputs).toEqual []
@@ -167,7 +167,7 @@ describe 'State', ->
 
   it 'should preserve the existing values of inputs through setInputs when asked', ->
 
-    state = new Tamarind.State()
+    state = new State()
     listener = stateListener(state)
 
     state.setInputs [
@@ -197,7 +197,7 @@ describe 'State', ->
 
   it 'should allow the access to input values through (get/set)InputValue', ->
 
-    state = new Tamarind.State()
+    state = new State()
     listener = stateListener(state)
 
     spyOn(console, 'error')

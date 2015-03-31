@@ -1,6 +1,7 @@
+InputBase = require './InputBase.coffee'
 
 
-class Tamarind.MouseInput extends Tamarind.InputBase
+class MouseInput extends InputBase
 
   @defaults:
     damping: 0
@@ -21,3 +22,7 @@ class Tamarind.MouseInput extends Tamarind.InputBase
       @_mouseY = mouseY
       @_notifyOfValueChange()
     return
+
+
+
+module.exports = MouseInput

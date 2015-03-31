@@ -74,17 +74,17 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 describe 'WebGLCanvas', ->
 
   createCanvasAndState = (debugMode = true) ->
-    state = new Tamarind.State()
+    state = new State()
     state.debugMode = debugMode
-    canvas = new Tamarind.WebGLCanvas(document.createElement('canvas'), state)
+    canvas = new WebGLCanvas(document.createElement('canvas'), state)
     return [canvas, state]
 
   it 'should render a test image', (done) ->
 
     [canvas, state] = createCanvasAndState()
 
-    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_REFERENCE
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_REFERENCE
+    state.setShaderSource constants.VERTEX_SHADER, VSHADER_REFERENCE
+    state.setShaderSource constants.FRAGMENT_SHADER, FSHADER_REFERENCE
 
     compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
 
@@ -102,8 +102,8 @@ describe 'WebGLCanvas', ->
         return
       ->
         # set some state while the context is lost
-        state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_REFERENCE
-        state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_REFERENCE
+        state.setShaderSource constants.VERTEX_SHADER, VSHADER_REFERENCE
+        state.setShaderSource constants.FRAGMENT_SHADER, FSHADER_REFERENCE
         return
       ->
         canvas.debugRestoreContext()
@@ -129,13 +129,13 @@ describe 'WebGLCanvas', ->
 
     [canvas, state] = createCanvasAndState()
 
-    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
+    state.setShaderSource constants.VERTEX_SHADER, VSHADER_HEADER + '''
       void main() {
         blarty foo
       }
     '''
 
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
+    state.setShaderSource constants.FRAGMENT_SHADER, FSHADER_HEADER + '''
       void main() {
         gl_FragColor = nark;
       }
@@ -151,11 +151,11 @@ describe 'WebGLCanvas', ->
 
     [canvas, state] = createCanvasAndState(false)
 
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, fragmentShaderSource
+    state.setShaderSource constants.FRAGMENT_SHADER, fragmentShaderSource
 
     state.on state.SHADER_ERRORS_CHANGE, (shaderType) ->
-      if shaderType is Tamarind.FRAGMENT_SHADER
-        actualErrorLines = (err.line for err in state.getShaderErrors(Tamarind.FRAGMENT_SHADER))
+      if shaderType is constants.FRAGMENT_SHADER
+        actualErrorLines = (err.line for err in state.getShaderErrors(constants.FRAGMENT_SHADER))
         expect(actualErrorLines).toEqual(expectedErrorLines)
         done()
 
@@ -199,13 +199,13 @@ describe 'WebGLCanvas', ->
 
     [canvas, state] = createCanvasAndState()
 
-    state.setShaderSource Tamarind.FRAGMENT_SHADER, FSHADER_HEADER + '''
+    state.setShaderSource constants.FRAGMENT_SHADER, FSHADER_HEADER + '''
       varying vec4 doesntExist; // not present in vertex shader, that's a link error
       void main() {
         gl_FragColor = doesntExist;
       }
     '''
-    state.setShaderSource Tamarind.VERTEX_SHADER, VSHADER_HEADER + '''
+    state.setShaderSource constants.VERTEX_SHADER, VSHADER_HEADER + '''
       void main() {
         gl_Position = vec4(0);
       }
@@ -217,12 +217,12 @@ describe 'WebGLCanvas', ->
       ++eventCount
 
       if eventCount is 4 # two successful compiles, two failures during link
-        fragErrors = state.getShaderErrors(Tamarind.FRAGMENT_SHADER)
+        fragErrors = state.getShaderErrors(constants.FRAGMENT_SHADER)
         expect(fragErrors.length).toEqual 1
         expect(fragErrors[0].line).toEqual -1
 
 
-        vertErrors = state.getShaderErrors(Tamarind.VERTEX_SHADER)
+        vertErrors = state.getShaderErrors(constants.VERTEX_SHADER)
         expect(vertErrors.length).toEqual 1
         expect(vertErrors[0].line).toEqual -1
 

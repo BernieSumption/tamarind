@@ -1,11 +1,13 @@
+EventEmitter = require './EventEmitter.coffee'
+utils = require('./utils.coffee')
 
 ###
   Superclass for visual components
 ###
-class Tamarind.UIComponent extends Tamarind.EventEmitter
+class UIComponent extends EventEmitter
 
   constructor: (@_state, html) ->
-    @_element = Tamarind.parseHTML html
+    @_element = utils.parseHTML html
 
 
 
@@ -87,3 +89,6 @@ class Tamarind.UIComponent extends Tamarind.EventEmitter
     else
       element.classList.remove className
     return
+
+
+module.exports = UIComponent

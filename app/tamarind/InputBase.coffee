@@ -1,9 +1,10 @@
+UIComponent = require './UIComponent.coffee'
 
 ###
   Base class for input editors. Instances of these classes encapsulate the controls used
   to edit the values of inputs, and the classes themselves contain metadata e.g. default values
 ###
-class Tamarind.InputBase extends Tamarind.UIComponent
+class InputBase extends UIComponent
 
   TEMPLATE = '''
     <div class="tamarind-controls-control">
@@ -90,3 +91,6 @@ class Tamarind.InputBase extends Tamarind.UIComponent
   # Format a value for display to users
   _getPrettyValue: ->
     return String(@_getValue())
+
+
+module.exports = InputBase

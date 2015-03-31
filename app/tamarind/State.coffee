@@ -1,10 +1,13 @@
+EventEmitter = require './EventEmitter.coffee'
+Inputs = require('./Inputs.coffee')
+constants    = require './constants.coffee'
 
 
 ###
   An object shared between the various Tamarind visual components that
   enables state synchronisation and event-based communication.
 ###
-class Tamarind.State extends Tamarind.EventEmitter
+class State extends EventEmitter
 
 
 
@@ -33,20 +36,20 @@ class Tamarind.State extends Tamarind.EventEmitter
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
-  # @property [Array] An array of objects representing inputs, see the Tamarind.Inputs class for object structure.
+  # @property [Array] An array of objects representing inputs, see the Inputs class for object structure.
   inputs: []
 
   # @property [String] the name of the currently selected UI tab. Not saved and restored.
-  selectedTab: Tamarind.FRAGMENT_SHADER
+  selectedTab: constants.FRAGMENT_SHADER
 
-  # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, is passed as the event argument.
+  # @property [string] Name of event emitted when shaders change. The shader type, e.g. constants.FRAGMENT_SHADER, is passed as the event argument.
   SHADER_CHANGE: 'shaderChange'
 
   # @property [string] This event is dispatched asynchronously when any non-transient state changes, with
   #                    one event dispatched per animation frame if there were 1 or more changes in the previous frame
   CHANGE: 'change'
 
-  # @property [string] Name of event emitted when shaders change. The shader type, e.g. Tamarind.FRAGMENT_SHADER, will be the event argument.
+  # @property [string] Name of event emitted when shaders change. The shader type, e.g. constants.FRAGMENT_SHADER, will be the event argument.
   SHADER_ERRORS_CHANGE: 'shaderErrorsChange'
 
   # @property [string] Name of event dispatched when the value of a specific input changes. The input name is passed as an event argument.
@@ -68,8 +71,8 @@ class Tamarind.State extends Tamarind.EventEmitter
   _resetState: ->
     # state that is save()'d and restore()'d
     @_persistent = {
-      FRAGMENT_SHADER: Tamarind.DEFAULT_FSHADER_SOURCE
-      VERTEX_SHADER: Tamarind.DEFAULT_VSHADER_SOURCE
+      FRAGMENT_SHADER: constants.DEFAULT_FSHADER_SOURCE
+      VERTEX_SHADER: constants.DEFAULT_VSHADER_SOURCE
       inputs: []
       vertexCount: PROPERTY_DEFAULTS.vertexCount
       drawingMode: PROPERTY_DEFAULTS.drawingMode
@@ -95,14 +98,14 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
   # Get the source code for a shader
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   getShaderSource: (shaderType) ->
     @_validateShaderType(shaderType)
     return @_persistent[shaderType]
 
 
   # Set the source code for a shader
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   # @param value GLSL source code for the shader
   setShaderSource: (shaderType, source) ->
     @_validateShaderType(shaderType)
@@ -117,22 +120,22 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
   # Return true is getShaderErrors(shaderType) would return an array of length > 1
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   hasShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
     return @_transient.shaders[shaderType].errors.length > 0
 
-  # Get the list of Tamarind.ShaderCompileError error objects for a shader
-  # @param shaderType either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # Get the list of ShaderCompileError error objects for a shader
+  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
     return @_transient.shaders[shaderType].errors.slice()
 
 
   # Set the list of errors for a shader
-  # @param shaderType [string] either Tamarind.VERTEX_SHADER or Tamarind.FRAGMENT_SHADER
+  # @param shaderType [string] either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   # @param errorText [String] the error text returned by the browser, used for the purposes of checking if the errors have changed
-  # @param errors [number] an array of Tamarind.ShaderCompileError objects
+  # @param errors [number] an array of ShaderCompileError objects
   setShaderErrors: (shaderType, errorText, errors) ->
     @_validateShaderType(shaderType)
     if @_transient.shaders[shaderType].errorText isnt errorText
@@ -153,13 +156,13 @@ class Tamarind.State extends Tamarind.EventEmitter
 
 
   # Overwrite the existing inputs array with a new one.
-  # @param inputs an array of objects representing inputs, see the Tamarind.Inputs class for details.
+  # @param inputs an array of objects representing inputs, see the Inputs class for details.
   # @param preserveValues if true, inputs
   setInputs: (inputs, preserveValues = false) ->
     inputsByName = {}
     sanitised = []
     for input in inputs
-      input = Tamarind.Inputs.validate(input, @)
+      input = Inputs.validate(input, @)
       if input
         if preserveValues and @hasInput(input.name)
           input.value = @getInputValue(input.name)
@@ -216,7 +219,7 @@ class Tamarind.State extends Tamarind.EventEmitter
   restore: (saved) ->
     @_resetState()
     for key, value of JSON.parse(saved)
-      if key is Tamarind.FRAGMENT_SHADER or key is Tamarind.VERTEX_SHADER
+      if key is constants.FRAGMENT_SHADER or key is constants.VERTEX_SHADER
         @setShaderSource key, value
       else if key is 'inputs'
         @setInputs value
@@ -310,3 +313,4 @@ class Tamarind.State extends Tamarind.EventEmitter
   _defineProperty 'mouseY', '_lifetime'
   _defineProperty 'selectedTab', '_transient'
 
+module.exports = State

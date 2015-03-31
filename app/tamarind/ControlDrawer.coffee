@@ -1,9 +1,11 @@
+UIComponent = require './UIComponent.coffee'
+Inputs      = require './Inputs.coffee'
+
 
 ###
   A component that shows a list of UI controls that provide input to shaders
 ###
-
-class Tamarind.ControlDrawer extends Tamarind.UIComponent
+class ControlDrawer extends UIComponent
 
   TEMPLATE = '''
     <div class="tamarind-controls">
@@ -16,7 +18,7 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
   '''
 
 
-  constructor: (@_state) ->
+  constructor: (_state) ->
     super(_state, TEMPLATE)
 
     @_editorsByName = {}
@@ -55,7 +57,7 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
     wrapper.innerHTML = ''
 
     for input in inputs
-      editor = Tamarind.Inputs.makeEditor(input, @_state)
+      editor = Inputs.makeEditor(input, @_state)
       editor.appendTo wrapper
       @_editorsByName[input.name] = editor
 
@@ -70,3 +72,6 @@ class Tamarind.ControlDrawer extends Tamarind.UIComponent
     requestAnimationFrame @_handleAnimationFrame
     for name, editor of @_editorsByName
       editor.onEachFrame()
+
+
+module.exports = ControlDrawer

@@ -23,7 +23,7 @@
 
 // Various functions for helping debug WebGL apps.
 
-WebGLDebugUtils = function() {
+module.exports = function() {
 
 /**
  * Wrapped logging function.

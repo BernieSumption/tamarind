@@ -1,8 +1,19 @@
+UIComponent = require './UIComponent.coffee'
+constants    = require './constants.coffee'
+CodeMirror  = require 'codemirror'
 
 
+# NOTE: if you remove addons from here, also remove the CSS imports from all.less
+require 'codemirror/lib/codemirror.js'
+require 'codemirror/mode/clike/clike.js'
+require 'codemirror/addon/dialog/dialog.js'
+require 'codemirror/addon/display/placeholder.js'
+require 'codemirror/addon/lint/lint.js'
+require 'codemirror/addon/search/search.js'
+require 'codemirror/addon/search/searchcursor.js'
 
 
-class Tamarind.CodeEditor extends Tamarind.UIComponent
+class CodeEditor extends UIComponent
 
   TEMPLATE = '''
     <div class="tamarind-editor tamarind-editor-code"></div>
@@ -20,11 +31,11 @@ class Tamarind.CodeEditor extends Tamarind.UIComponent
       doc.shaderType = shaderType
       @_shaderDocs[shaderType] = doc
       return
-    createDoc Tamarind.FRAGMENT_SHADER
-    createDoc Tamarind.VERTEX_SHADER
+    createDoc constants.FRAGMENT_SHADER
+    createDoc constants.VERTEX_SHADER
 
     @_codemirror = CodeMirror(@_element,
-      value: @_shaderDocs[Tamarind.FRAGMENT_SHADER]
+      value: @_shaderDocs[constants.FRAGMENT_SHADER]
       lineNumbers: true
       lineWrapping: true
       gutters: ['CodeMirror-lint-markers']
@@ -90,3 +101,7 @@ class Tamarind.CodeEditor extends Tamarind.UIComponent
     elt.style.textIndent = '-' + (offset + @_codeCharWidth * indentChars) + 'px'
     elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + 'px'
     return
+
+
+
+module.exports = CodeEditor

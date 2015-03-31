@@ -1,6 +1,6 @@
 
 
-class Tamarind.Directives
+class Directives
 
   #pragma slider: step: 0.1
 
@@ -17,7 +17,7 @@ class Tamarind.Directives
 
   `[uniform type name; ]//! command [: arg number [, arg value [, ...]]]`
 ###
-class Tamarind.Directive
+class Directive
 
   # @property [object] if this directive suffixes a uniform declaration, this property
   # will be a {name: String, type:String} object describing the uniform

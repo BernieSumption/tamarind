@@ -1,9 +1,7 @@
-
-
 ###
   Superclass to handle event dispatch
 ###
-class Tamarind.EventEmitter
+class EventEmitter
 
   # Register an event callback
   #
@@ -66,3 +64,6 @@ class Tamarind.EventEmitter
       throw new Error('eventName must be a string, not ' + JSON.stringify(eventName))
     if arguments.length > 1 and typeof callback isnt 'function'
       throw new Error('callback must be a function, not ' + JSON.stringify(callback))
+
+
+module.exports = EventEmitter

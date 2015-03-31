@@ -1,6 +1,10 @@
+UIComponent = require './UIComponent.coffee'
+Inputs      = require './Inputs.coffee'
+utils       = require './utils.coffee'
+CodeMirror  = require 'CodeMirror'
 
 
-class Tamarind.ConfigEditor extends Tamarind.UIComponent
+class ConfigEditor extends UIComponent
 
   TEMPLATE = '''
     <div class="tamarind-editor tamarind-editor-config">
@@ -88,8 +92,8 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
 
   _getLintAnnotations: (value) ->
     result = []
-    for lineResult, i in Tamarind.Inputs.parseLines(value)
-      if lineResult instanceof Tamarind.InputDefinitionError
+    for lineResult, i in Inputs.parseLines(value)
+      if lineResult instanceof InputDefinitionError
         result.push({
           message: lineResult.message
           from:
@@ -106,7 +110,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     return
 
   _setValueFromState: =>
-    value = Tamarind.Inputs.unparseLines(@_state.inputs)
+    value = Inputs.unparseLines(@_state.inputs)
     @_valueBeforeEdit = value
     @_codemirror.setValue value
     @_setDirty false
@@ -116,7 +120,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
   _commitCurrentEdit: =>
     @_codemirror.getInputField().blur()
     requestAnimationFrame =>
-      @_state.setInputs Tamarind.Inputs.parseLines(@_codemirror.getValue(), true), true # preserve existing values
+      @_state.setInputs Inputs.parseLines(@_codemirror.getValue(), true), true # preserve existing values
       @_setDirty false
       return
     return
@@ -131,8 +135,8 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
 
   _setupAddInputDropdown: ->
     dropdown = @css('select[name="addANew"]')
-    for inputType in Tamarind.Inputs.getTypes()
-      dropdown.appendChild(Tamarind.parseHTML("<option>#{inputType}</option>"))
+    for inputType in Inputs.getTypes()
+      dropdown.appendChild(utils.parseHTML("<option>#{inputType}</option>"))
     dropdown.addEventListener 'change', =>
       inputs = @_state.inputs
       name = 'u_' + dropdown.value
@@ -149,3 +153,4 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
     return
 
 
+module.exports = ConfigEditor

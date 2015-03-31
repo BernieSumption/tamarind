@@ -1,7 +1,27 @@
+constants    = require './constants.coffee'
+UIComponent   = require './UIComponent.coffee'
+State         = require './State.coffee'
+utils         = require './utils.coffee'
+ConfigEditor  = require './ConfigEditor.coffee'
+CodeEditor    = require './CodeEditor.coffee'
+ControlDrawer = require './ControlDrawer.coffee'
+WebGLCanvas   = require './WebGLCanvas.coffee'
 
 
+require '../styles/all.less'
 
-class Tamarind.Main extends Tamarind.UIComponent
+###
+  The main class. Create an instance `t` then use t.appendTo(el) to t.overwrite(el) to add the
+  editor to the page.
+###
+class Tamarind extends UIComponent
+
+  # Various aliases that define the public API
+  @FRAGMENT_SHADER = constants.FRAGMENT_SHADER
+  @VERTEX_SHADER = constants.VERTEX_SHADER
+  @CONFIG = constants.CONFIG
+  @State = State
+  @WebGLCanvas = WebGLCanvas
 
   NOT_SUPPORTED_HTML = '''
     <span class="tamarind-icon-unhappy tamarind-unsupported-icon" title="And lo there shall be no editor, and in that place there shall be wailing and gnashing of teeth."></span>
@@ -11,13 +31,13 @@ class Tamarind.Main extends Tamarind.UIComponent
   TEMPLATE = """
     <div class="tamarind">
       <div class="tamarind-menu">
-        <a href="javascript:void(0)" name="#{Tamarind.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader">
+        <a href="javascript:void(0)" name="#{constants.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader">
           <span class="tamarind-menu-icon-overlay" title="Fragment shader has errors"></span>
         </a>
-        <a href="javascript:void(0)" name="#{Tamarind.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader">
+        <a href="javascript:void(0)" name="#{constants.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader">
           <span class="tamarind-menu-icon-overlay" title="Vertex shader has errors"></span>
         </a>
-        <a href="javascript:void(0)" name="#{Tamarind.CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
+        <a href="javascript:void(0)" name="#{constants.CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
       <div class="tamarind-editor-panel">
       </div>
@@ -34,13 +54,13 @@ class Tamarind.Main extends Tamarind.UIComponent
 
 
   # Create a new Tamarind editor
-  # @param [HTMLElement] location an element in the DOM that will be removed and replaced with the Tamarind editor
-  # @param [Tamarind.State] state A state object, or null to create one
+  # @param location [HTMLElement] an element in the DOM that will be removed and replaced with the Tamarind editor
+  # @param state [State] A state object, or null to create one
   #
   constructor: (state = null) ->
-    super(state or new Tamarind.State(), TEMPLATE)
+    super(state or new State(), TEMPLATE)
 
-    unless Tamarind.browserSupportsRequiredFeatures()
+    unless utils.browserSupportsRequiredFeatures()
       @_element.innerHTML = NOT_SUPPORTED_HTML
       @_element.className += ' tamarind-unsupported'
       return
@@ -49,15 +69,15 @@ class Tamarind.Main extends Tamarind.UIComponent
 
     editorPanel = @css '.tamarind-editor-panel'
 
-    new Tamarind.WebGLCanvas(@css('.tamarind-render-canvas'), @_state)
+    new WebGLCanvas(@css('.tamarind-render-canvas'), @_state)
 
-    controlDrawer = new Tamarind.ControlDrawer(@_state)
+    controlDrawer = new ControlDrawer(@_state)
     controlDrawer.overwrite(@css('.tamarind-controls-marker'))
 
-    @_configEditor = new Tamarind.ConfigEditor(@_state)
+    @_configEditor = new ConfigEditor(@_state)
     @_configEditor.appendTo editorPanel
 
-    @_codeEditor = new Tamarind.CodeEditor(@_state)
+    @_codeEditor = new CodeEditor(@_state)
     @_codeEditor.appendTo editorPanel
 
 
@@ -77,7 +97,7 @@ class Tamarind.Main extends Tamarind.UIComponent
   _handleMenuItemSelect: =>
     item = @_state.selectedTab
 
-    if item is Tamarind.CONFIG
+    if item is constants.CONFIG
       @_codeEditor.setVisible false
       @_configEditor.setVisible true
     else
@@ -105,7 +125,10 @@ class Tamarind.Main extends Tamarind.UIComponent
     fsError = @css '.tamarind-icon-fragment-shader .tamarind-menu-icon-overlay'
     vsError = @css '.tamarind-icon-vertex-shader .tamarind-menu-icon-overlay'
 
-    @setClassIf 'is-visible', @_state.hasShaderErrors(Tamarind.FRAGMENT_SHADER), fsError
-    @setClassIf 'is-visible', @_state.hasShaderErrors(Tamarind.VERTEX_SHADER), vsError
+    @setClassIf 'is-visible', @_state.hasShaderErrors(constants.FRAGMENT_SHADER), fsError
+    @setClassIf 'is-visible', @_state.hasShaderErrors(constants.VERTEX_SHADER), vsError
 
     return
+
+
+module.exports = Tamarind

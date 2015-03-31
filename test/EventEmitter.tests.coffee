@@ -11,7 +11,7 @@ class Call
 describe 'EventEmitter', ->
 
   it 'should register callbacks with the off() method', ->
-    ee = new Tamarind.EventEmitter()
+    ee = new EventEmitter()
     call1 = Call.spy()
     call2 = Call.spy()
     call3 = Call.spy()
@@ -26,7 +26,7 @@ describe 'EventEmitter', ->
     return
 
   it 'should deregister callbacks with the off() method', ->
-    ee = new Tamarind.EventEmitter()
+    ee = new EventEmitter()
     call1 = Call.spy()
     call2 = Call.spy()
     ee.on 'foo', call1.back
@@ -40,7 +40,7 @@ describe 'EventEmitter', ->
     return
 
   it 'should a callback to be registered multiple times without multiple calls', ->
-    ee = new Tamarind.EventEmitter()
+    ee = new EventEmitter()
     call1 = Call.spy()
     ee.on 'foo', call1.back
     ee.on 'foo', call1.back
@@ -52,7 +52,7 @@ describe 'EventEmitter', ->
 
 
   it 'should throw an error when passed arguments of the wrong type', ->
-    ee = new Tamarind.EventEmitter()
+    ee = new EventEmitter()
     callback = ->
     ee.on 'foo', callback
     expect(-> ee.on 3, callback).toThrowError()
@@ -75,7 +75,7 @@ describe 'EventEmitter', ->
 
 
   it 'should not get confused if an event handler removes itself while being called', ->
-    ee = new Tamarind.EventEmitter()
+    ee = new EventEmitter()
     a = ->
       ee.off 'foo', a
       return
