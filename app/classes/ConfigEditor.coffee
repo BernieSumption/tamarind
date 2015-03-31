@@ -131,7 +131,7 @@ class Tamarind.ConfigEditor extends Tamarind.UIComponent
 
   _setupAddInputDropdown: ->
     dropdown = @css('select[name="addANew"]')
-    for inputType of Tamarind.Inputs.getTypes()
+    for inputType in Tamarind.Inputs.getTypes()
       dropdown.appendChild(Tamarind.parseHTML("<option>#{inputType}</option>"))
     dropdown.addEventListener 'change', =>
       inputs = @_state.inputs
