@@ -77,8 +77,8 @@ class WebGLCanvas
     centreY = pos.top + pos.height / 2
     mouseRelX = event.clientX - centreX
     mouseRelY = event.clientY - centreY
-    state.mouseX = mouseRelX / pos.width * 2
-    state.mouseY = -(mouseRelY / pos.height * 2)
+    @_state.mouseX = mouseRelX / pos.width * 2
+    @_state.mouseY = -(mouseRelY / pos.height * 2)
     return
 
 

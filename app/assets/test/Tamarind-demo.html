@@ -8,7 +8,7 @@
 
 <div id="insertEditorHere"></div>
 
-<script src="tamarind.js"></script>
+<script src="/tamarind.js"></script>
 
 <div id="editor-location"></div>
 
@@ -23,7 +23,7 @@
 
 
 <script>
-//  (function() {
+  (function() {
     var state = new Tamarind.State()
     state.debugMode = true
     state.controlsExpanded = true
@@ -37,7 +37,7 @@
     editor.overwrite(document.getElementById('editor-location'));
 
     window.loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
-//  })()
+  })()
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
 
