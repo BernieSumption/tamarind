@@ -1,4 +1,6 @@
-'use strict'
+
+EventEmitter = require '../EventEmitter.coffee'
+expectCallHistory = require('./testutils.coffee').expectCallHistory
 
 class Call
   @spy = ->

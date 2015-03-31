@@ -1,4 +1,7 @@
-
+State = require('../State.coffee')
+constants = require('../constants.coffee')
+ShaderCompileError = require('../ShaderCompileError.coffee')
+{mockInput, interestingInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
 
 describe 'State', ->
 

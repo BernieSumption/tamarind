@@ -1,4 +1,4 @@
-
+utils = require('../utils.coffee')
 
 describe 'parseHTML', ->
 

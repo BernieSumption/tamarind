@@ -1,3 +1,7 @@
+Inputs = require('../Inputs.coffee')
+State = require('../State.coffee')
+
+{mockInput, interestingInput, expectCallHistory} = require('./testutils.coffee')
 
 
 describe 'Inputs.parseLine', ->

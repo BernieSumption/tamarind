@@ -1,7 +1,7 @@
 utils = require('./utils.coffee')
 constants = require('./constants.coffee')
 WebGLDebugUtils = require('./WebGLDebugUtils.js')
-
+ShaderCompileError = require('./ShaderCompileError.coffee')
 
 ###
   An object associated with a canvas element that manages the WebGL context

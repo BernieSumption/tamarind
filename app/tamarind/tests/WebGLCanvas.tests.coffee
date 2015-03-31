@@ -1,3 +1,9 @@
+WebGLCanvas         = require '../WebGLCanvas.coffee'
+State               = require '../State.coffee'
+constants           = require '../constants.coffee'
+ShaderCompileError  = require '../ShaderCompileError.coffee'
+datauri             = require 'datauri'
+
 
 VSHADER_HEADER = '''
 attribute float a_VertexIndex;
@@ -28,6 +34,9 @@ FSHADER_REFERENCE = FSHADER_HEADER + '''
     gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
   }
 '''
+
+referenceImageUri = datauri(__dirname + '/reference-images/plain-shader.png')
+
 
 compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
@@ -86,7 +95,7 @@ describe 'WebGLCanvas', ->
     state.setShaderSource constants.VERTEX_SHADER, VSHADER_REFERENCE
     state.setShaderSource constants.FRAGMENT_SHADER, FSHADER_REFERENCE
 
-    compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
+    compareAgainstReferenceImage canvas, referenceImageUri, done
 
     return
 
@@ -109,7 +118,7 @@ describe 'WebGLCanvas', ->
         canvas.debugRestoreContext()
         return
       ->
-        compareAgainstReferenceImage canvas, '/base/build/test/reference-images/plain-shader.png', done
+        compareAgainstReferenceImage canvas, referenceImageUri, done
         return
     ]
 
