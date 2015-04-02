@@ -1,10 +1,10 @@
 
 
-class DirectiveError
+class CommandError
 
   isError: true
 
   constructor: (@message, @start, @end, @token) ->
 
 
-module.exports = DirectiveError
+module.exports = CommandError
