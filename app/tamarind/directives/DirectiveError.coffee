@@ -2,7 +2,9 @@
 
 class DirectiveError
 
-  constructor: (@message, @start = 0, @end = undefined) ->
+  isError: true
+
+  constructor: (@message, @start, @end, @token) ->
 
 
 module.exports = DirectiveError

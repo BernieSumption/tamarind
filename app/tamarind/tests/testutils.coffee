@@ -52,3 +52,18 @@ module.exports =
       input[k] = v
     return input
 
+
+  # similar to expect(test).toEqual(jasmine.objectContaining(properties)) but with more
+  # readable error messages and optionally both test and properties can be an array
+  expectProperties: (test, properties) ->
+    expect(test).toBeTruthy()
+    if test
+      if Array.isArray(properties)
+        expect(test.length).toEqual(properties.length)
+        if test.length is properties.length
+          for testItem, index in test
+            module.exports.expectProperties testItem, properties[index]
+      else
+        for k, v of properties
+          expect(test[k]).toEqual v
+

@@ -1,62 +1,38 @@
 Directives = require '../Directives.coffee'
 InputDirectiveType = require '../InputDirectiveType.coffee'
 CommandDirectiveType = require '../CommandDirectiveType.coffee'
+{expectProperties} = require '../../tests/testutils.coffee'
 
-###
-  Implementation notes:
+myInput = new InputDirectiveType(
+  'myInput',
+  [
+    ['in0', 10]
+    ['in1', 11]
+  ]
+)
+myCommand = new CommandDirectiveType(
+  'myCommand',
+  [
+    ['cmd0', 20]
+    ['cmd1', 21]
+  ]
+)
+dirs = new Directives [myInput, myCommand]
 
-  DirectiveType: represents a kind of directive. Subclasses StandaloneDirectiveType InputDirectiveType
 
-  Directive: a command embedded in GLSL source code
-###
-
-
-#TODO recognise full directive with uniform
-#TODO recognise short directive without uniform only if at start of line (allow whitepsace)
-#TODO directive without uniform and not at start of line is error
-#TODO uniform without directive is warning
-#TODO uniform without directive is OK if there is a directive for the same uniform in the other shader
-#TODO uniform directive must be on same line, not previous
-#TODO validation error if slider directive exists on its own
-#TODO validation error if vertexCount directive is after uniform
-#TODO validation if either directive is after a statement that is not a uniform declaration
-#TODO don't pick up directives inside block comments
-#TODO don't pick up directives inside line comments
-#
-fdescribe 'Directives', ->
+describe 'Directives.parseDirectiveComment', ->
 
 
   expectError = (directive, message, start, end) ->
-    expect(dirs._parseDirectiveComment directive).toEqual jasmine.objectContaining({
-      message: message
-      start: start
-      end: end
-    })
+    parsed = dirs.parseDirectiveComment directive
+    expect(parsed).not.toBeNull()
+    unless parsed
+      return
+    expect(parsed.message).toEqual message
+    expect(parsed.start).toEqual start
+    expect(parsed.end).toEqual end
     return
 
-  myInput = new InputDirectiveType(
-    'myInput',
-    [
-      ['in0', 10]
-      ['in1', 11]
-    ]
-  )
-  myCommand = new CommandDirectiveType(
-    'myCommand',
-    [
-      ['cmd0', 20]
-      ['cmd1', 21]
-    ]
-  )
-  dirs = new Directives [myInput, myCommand]
-
-
-  # TODO //! myCommand -> {name: 'command'}
-  # TODO //! myCommand: cmd0 -> {name: 'command', args: ['namedArg', null]}
-  # TODO //! myCommand: namedArg number -> {name: 'command', args: [['namedArg', number]]}
-  # TODO //! myCommand: number1 number2 -> {name: 'command', args: [[null, number1], [null, number2]]}
-  # TODO //! myCommand: cmd0, cmd1 -> error
-  # TODO //!   -> error
 
   it 'should parse a standalone directive comment', ->
 
@@ -72,17 +48,17 @@ fdescribe 'Directives', ->
     }
 
     # plain
-    expect(dirs._parseDirectiveComment '//! myCommand: cmd0 -5, cmd1 6.5').toEqual fiveSix
+    expectProperties dirs.parseDirectiveComment('//! myCommand: cmd0 -5, cmd1 6.5'), fiveSix
     # one or both names ommitted and inferred from order
-    expect(dirs._parseDirectiveComment '//! myCommand: -5 6.5').toEqual fiveSix
-    expect(dirs._parseDirectiveComment '//! myCommand: cmd0 -5 6.5').toEqual fiveSix
-    expect(dirs._parseDirectiveComment '//! myCommand: -5 cmd1 6.5').toEqual fiveSix
+    expectProperties dirs.parseDirectiveComment('//! myCommand: -5 6.5'), fiveSix
+    expectProperties dirs.parseDirectiveComment('//! myCommand: cmd0 -5 6.5'), fiveSix
+    expectProperties dirs.parseDirectiveComment('//! myCommand: -5 cmd1 6.5'), fiveSix
     # whitespace at start and end
-    expect(dirs._parseDirectiveComment ' \t   //!   myCommand: -5 cmd1 6.5    ').toEqual fiveSix
+    expectProperties dirs.parseDirectiveComment(' \t   //!   myCommand: -5 cmd1 6.5    '), fiveSix
 
 
     # order of args swapped
-    expect(dirs._parseDirectiveComment '//! myCommand: cmd1 6.5, cmd0 -5').toEqual {
+    expectProperties dirs.parseDirectiveComment('//! myCommand: cmd1 6.5, cmd0 -5'), {
       type: myCommand
       args: [
         ['cmd1', 6.5]
@@ -93,10 +69,12 @@ fdescribe 'Directives', ->
         cmd1: 6.5
     }
 
+    return
+
 
   it 'should fill in missing parameters with default values', ->
 
-    expect(dirs._parseDirectiveComment '//! myCommand: cmd0 5').toEqual {
+    expectProperties dirs.parseDirectiveComment('//! myCommand: cmd0 5'), {
       type: myCommand
       args: [
         ['cmd0', 5]
@@ -106,7 +84,7 @@ fdescribe 'Directives', ->
         cmd1: 21
     }
 
-    expect(dirs._parseDirectiveComment '//! myCommand').toEqual {
+    expectProperties dirs.parseDirectiveComment('//! myCommand'), {
       type: myCommand
       args: [
       ]
@@ -117,17 +95,20 @@ fdescribe 'Directives', ->
 
     return
 
+  it 'should return an error if there is no directive name', ->
+    expectError '//! : ', 'expected command', 0, 6
+    expectError '//!', 'expected command', 0, 3
+    return
+
   it 'should return an error if type is unrecognised', ->
     expectError '//!    badcommand', "invalid command 'badcommand'", 7, 17
     return
 
-  it 'should return an error if the input has no name', ->
-    expectError '//!  ', 'expected command', 0, 5
-    return
-
-
-  it 'should return an error if there is a keyword with no value', ->
-    expectError '//! myCommand: cmd0 cmd1', "invalid value for 'cmd0', expected a number", 20, 24
+  it 'should return an error if there is an argument name with no value', ->
+    expectError '//! myCommand: cmd0 cmd1', "invalid value for 'cmd0', expected a number", 15, 24
+    expectError '//! myCommand: cmd0 xyz', "invalid value for 'cmd0', expected a number", 15, 23
+    expectError '//! myCommand: cmd0', "missing value for 'cmd0'", 15, 19
+    expectError '//! myCommand: cmd0 ', "missing value for 'cmd0'", 15, 20
     return
 
   it 'should return an error if there are too many number arguments', ->
@@ -135,5 +116,154 @@ fdescribe 'Directives', ->
     expectError '//! myCommand: 1, 1, 1, 1, 1  ', "too many arguments, expected at most 2 ('cmd0', 'cmd1')", 21, 30
     return
 
+  it 'should return an error if there are too many number arguments', ->
+    expectError '//! myCommand: lala', "invalid property 'lala', expected one of 'cmd0', 'cmd1'", 15, 19
+    return
+
 
   return
+
+
+
+
+
+describe 'Directives.parseGLSL', ->
+
+  it 'should recognise an input directive with attached uniform', ->
+
+    source = '''
+      float foo = 4.0; /* bumpf before */
+      uniform vec3 foo; //! myInput: in0 5
+      void main() {} // bumpf after
+    '''
+    expectProperties dirs.parseGLSL(source), [
+      {
+        type: myInput
+        uniform: {
+          name: 'foo',
+          type: 'vec3'
+        }
+        args: [
+          ['in0', 5]
+        ]
+        data:
+          in0: 5
+          in1: 11
+      }
+    ]
+
+    return
+
+  it 'should be resistant to extra whitespace, comments and semicolons in uniform declarations', ->
+
+    source = '''
+      // foo
+      uniform /* */ vec3 // blarty
+         foo ; ; //! myInput
+      // lala!
+      void main() {} // bumpf after
+    '''
+    expectProperties dirs.parseGLSL(source), [
+      {
+        type: myInput
+      }
+    ]
+
+    return
+
+  it 'should return an error when an input directive does not appear directly after a uniform', ->
+
+# other code between uniform and directive is not OK
+    source = '\n\nuniform vec3 foo; float bar; //! myInput '
+    expectProperties dirs.parseGLSL(source), [
+      message: "'myInput' command must appear directly after a uniform declaration"
+      start: 0
+      end: 12
+    ]
+
+    # uniform on previous line is not OK
+    source = '\n\nuniform vec3 foo; \n //! myInput '
+    expectProperties dirs.parseGLSL(source), [
+      message: "'myInput' command must appear directly after a uniform declaration"
+    ]
+
+    return
+
+  it 'should have correct line and lineOffset properties on all errors', ->
+
+    # error picked up by parseGLSL
+    source = '\n\nuniform vec3 foo; float bar; //! myInput '
+    expectProperties dirs.parseGLSL(source), [
+      line: 2
+      lineOffset: 29
+    ]
+
+    # error picked up by parseDirectiveComment
+    source = '\nuniform vec3 foo; //! myInput: badArg'
+    expectProperties dirs.parseGLSL(source), [
+      line: 1
+      lineOffset: 18
+    ]
+
+    return
+
+  it 'should recognise a command directive without an attached uniform', ->
+
+    expected = [
+      {
+        type: myCommand
+        uniform: null
+        args: [
+          ['cmd1', -11.4]
+        ]
+        data:
+          cmd0: 20
+          cmd1: -11.4
+      }
+    ]
+
+    source = '''
+      float foo = 4.0; /* bumpf before */
+      //! myCommand: cmd1 -11.4
+      void main() {} // bumpf after
+    '''
+    expectProperties dirs.parseGLSL(source), expected
+
+    source = '//! myCommand: cmd1 -11.4'
+    expectProperties dirs.parseGLSL(source), expected
+    return
+
+  it 'should produce an error if a command directive has other code before it on its line', ->
+
+    # whitespace is OK
+    source = '\n  //! myCommand: cmd1 -11.4'
+    expectProperties dirs.parseGLSL(source), [
+      isError: false
+    ]
+
+    # uniform on previous line is OK
+    source = '''
+      uniform vec2 foo;
+      //! myCommand: cmd1 -11.4
+    '''
+    expectProperties dirs.parseGLSL(source), [
+      isError: false
+    ]
+
+    source = '''
+      uniform vec2 foo; //! myCommand: cmd1 -11.4
+    '''
+    expectProperties dirs.parseGLSL(source), [
+      message: "'myCommand' command must appear on its own line"
+    ]
+
+    source = '''
+      /*  */ //! myCommand: cmd1 -11.4
+    '''
+    expectProperties dirs.parseGLSL(source), [
+      message: "'myCommand' command must appear on its own line"
+    ]
+    return
+
+  return
+
