@@ -59,10 +59,11 @@ module.exports =
     expect(test).toBeTruthy()
     if test
       if Array.isArray(properties)
-        expect('array length ' + test.length).toEqual('array length ' + properties.length)
         if test.length is properties.length
           for testItem, index in test
             module.exports.expectProperties testItem, properties[index]
+        else
+          expect(test).toEqual properties
       else
         for k, v of properties
           expect(test[k]).toEqual v

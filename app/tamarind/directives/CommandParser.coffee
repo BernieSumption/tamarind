@@ -3,7 +3,7 @@ zipObject = require 'lodash/array/zipObject'
 tokenize = require 'glsl-tokenizer/string'
 CommandError = require('./CommandError.coffee')
 
-class Commands
+class CommandParser
 
   constructor: (@_commandTypes) ->
     @_typesByName = indexBy @_commandTypes, 'name'
@@ -12,25 +12,36 @@ class Commands
   parseGLSL: (glsl) ->
     tokens = tokenize glsl
     commands = []
+    seenStandalones = {}
     for token, i in tokens
       if token.data.indexOf('//!') is 0
-        command = @parseCommandComment token.data
+        lineNo = token.line - 1 # we use 0 indexed lines, glsl-tokenizer uses 1 indexed
+        tokenStart = token.column - token.data.length
+        command = @parseCommandComment token.data, lineNo, tokenStart
 
         isOnNewLine = i is 0 or tokens[i - 1].data.indexOf('\n') > -1
 
         unless command.isError
+          errorMessage = false
           command.uniform = findUniform(tokens, i)
           if command.type.isUniformSuffix is true
             if isOnNewLine or not command.uniform
-              command = new CommandError("'#{command.type.name}' command must appear directly after a uniform declaration", 0, token.data.length)
+              errorMessage = "'#{command.type.name}' command must appear directly after a uniform declaration"
+            else unless command.uniform.type is command.type.uniformType
+              errorMessage = "'#{command.type.name}' command can only be applied to a uniform #{command.type.uniformType}"
 
 
           else if command.type.isUniformSuffix is false
-            unless isOnNewLine
-              command = new CommandError("'#{command.type.name}' command must appear on its own line", 0, token.data.length)
+            if not isOnNewLine
+              errorMessage = "'#{command.type.name}' command must appear on its own line"
+            else if seenStandalones[command.type.name]
+              errorMessage = "there is already a '#{command.type.name}' command in the this shader"
 
-        command.line = token.line - 1 # we use 0 indexed lines, glsl-tokenizer uses 1 indexed
-        command.lineOffset = token.column - token.data.length
+            seenStandalones[command.type.name] = true
+
+          if errorMessage
+            command = new CommandError(errorMessage, lineNo, tokenStart, tokenStart + token.data.length)
+
         commands.push command
 
 
@@ -43,15 +54,17 @@ class Commands
   # - `type`: a CommandType subclass representing the command
   # - `args`: an array of ['arg0', value] pairs representing supplied arguments
   # - `data`: argument map after applying default values for missing arguments
-  parseCommandComment: (text) ->
-    tokenEnd = 0
-    tokenStart = 0
+  #
+  parseCommandComment: (text, line = 0, lineOffset = 0) ->
+    tokenEnd = lineOffset
+    tokenStart = lineOffset
+    lineEnd = lineOffset + text.length
     dType = null
     dArgs = []
     dData = {}
     argName = null
     argNameTokenStart = null
-    # state machine parser. Expects a command name then a sequence of `argument-name number` arguments
+    # state machine parser. Expects a command name then a sequence of `argumentName number` arguments
     for part in text.match /([,:!\/\s]+|[^,:!\/\s]+)/g
       tokenStart = tokenEnd
       tokenEnd += part.length
@@ -61,23 +74,23 @@ class Commands
       if dType is null
         dType = @_typesByName[part]
         unless dType
-          return new CommandError("invalid command '#{part}'", tokenStart, tokenEnd)
+          return new CommandError("invalid command '#{part}'", line, tokenStart, tokenEnd)
         dData = zipObject dType.params
         for key, value of dType.defaults
           result[key] = value
         continue
 
       if dArgs.length >= dType.params.length
-        return new CommandError("too many arguments, expected at most #{dType.params.length} ('#{dType.paramNames.join('\', \'')}')", tokenStart, text.length)
+        return new CommandError("too many arguments, expected at most #{dType.params.length} ('#{dType.paramNames.join('\', \'')}')", line, tokenStart, lineEnd)
 
       number = parseFloat part
       if isNaN number
         if argName
-          return new CommandError("invalid value for '#{argName}', expected a number", argNameTokenStart, tokenEnd)
+          return new CommandError("invalid value for '#{argName}', expected a number", line, argNameTokenStart, tokenEnd)
         argName = part
         argNameTokenStart = tokenStart
         unless dType.paramsByName[part]
-          return new CommandError("invalid property '#{part}', expected one of '#{dType.paramNames.join('\', \'')}'", tokenStart, tokenEnd)
+          return new CommandError("invalid property '#{part}', expected one of '#{dType.paramNames.join('\', \'')}'", line, tokenStart, tokenEnd)
       else
         unless argName
           # if no explicit name, infer name from argument position
@@ -87,16 +100,19 @@ class Commands
         argName = null
 
     unless dType
-      return new CommandError('expected command', 0, text.length)
+      return new CommandError('expected command', line, lineOffset, lineEnd)
 
     if argName
-      return new CommandError("missing value for '#{argName}'", argNameTokenStart, text.length)
+      return new CommandError("missing value for '#{argName}'", line, argNameTokenStart, lineEnd)
 
     return {
       isError: false
       type: dType
       args: dArgs
       data: dData
+      line: line
+      start: lineOffset
+      end: lineEnd
     }
 
 
@@ -128,4 +144,4 @@ findUniform = (tokens, i) ->
 
 
 
-module.exports = Commands
+module.exports = CommandParser

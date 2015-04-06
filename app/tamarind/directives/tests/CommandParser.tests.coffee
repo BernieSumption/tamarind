@@ -1,4 +1,4 @@
-Commands = require '../Commands.coffee'
+CommandParser = require '../CommandParser.coffee'
 InputCommandType = require '../InputCommandType.coffee'
 StandaloneCommandType = require '../StandaloneCommandType.coffee'
 {expectProperties} = require '../../tests/testutils.coffee'
@@ -8,7 +8,8 @@ myInput = new InputCommandType(
   [
     ['in0', 10]
     ['in1', 11]
-  ]
+  ],
+  3
 )
 myStandalone = new StandaloneCommandType(
   'myStandalone',
@@ -17,17 +18,20 @@ myStandalone = new StandaloneCommandType(
     ['cmd1', 21]
   ]
 )
-dirs = new Commands [myInput, myStandalone]
+parser = new CommandParser [myInput, myStandalone]
 
 
-describe 'Commands.parseCommandComment', ->
+describe 'CommandParser.parseCommandComment', ->
 
 
   expectError = (command, message, start, end) ->
-    parsed = dirs.parseCommandComment command
+    parsed = parser.parseCommandComment command, 2, 1000 # add 1000 char offset so we can check that it's being correctly added to each error
     expect(parsed).not.toBeNull()
     unless parsed
       return
+    expect(parsed.line).toEqual 2
+    parsed.start -= 1000
+    parsed.end -= 1000
     expect(parsed.message).toEqual message
     expect(parsed.start).toEqual start
     expect(parsed.end).toEqual end
@@ -48,17 +52,17 @@ describe 'Commands.parseCommandComment', ->
     }
 
     # plain
-    expectProperties dirs.parseCommandComment('//! myStandalone: cmd0 -5, cmd1 6.5'), fiveSix
+    expectProperties parser.parseCommandComment('//! myStandalone: cmd0 -5, cmd1 6.5'), fiveSix
     # one or both names ommitted and inferred from order
-    expectProperties dirs.parseCommandComment('//! myStandalone: -5 6.5'), fiveSix
-    expectProperties dirs.parseCommandComment('//! myStandalone: cmd0 -5 6.5'), fiveSix
-    expectProperties dirs.parseCommandComment('//! myStandalone: -5 cmd1 6.5'), fiveSix
+    expectProperties parser.parseCommandComment('//! myStandalone: -5 6.5'), fiveSix
+    expectProperties parser.parseCommandComment('//! myStandalone: cmd0 -5 6.5'), fiveSix
+    expectProperties parser.parseCommandComment('//! myStandalone: -5 cmd1 6.5'), fiveSix
     # whitespace at start and end
-    expectProperties dirs.parseCommandComment(' \t   //!   myStandalone: -5 cmd1 6.5    '), fiveSix
+    expectProperties parser.parseCommandComment(' \t   //!   myStandalone: -5 cmd1 6.5    '), fiveSix
 
 
     # order of args swapped
-    expectProperties dirs.parseCommandComment('//! myStandalone: cmd1 6.5, cmd0 -5'), {
+    expectProperties parser.parseCommandComment('//! myStandalone: cmd1 6.5, cmd0 -5'), {
       type: myStandalone
       args: [
         ['cmd1', 6.5]
@@ -76,7 +80,7 @@ describe 'Commands.parseCommandComment', ->
 
   it 'should fill in missing parameters with default values', ->
 
-    expectProperties dirs.parseCommandComment('//! myStandalone: cmd0 5'), {
+    expectProperties parser.parseCommandComment('//! myStandalone: cmd0 5'), {
       type: myStandalone
       args: [
         ['cmd0', 5]
@@ -86,7 +90,7 @@ describe 'Commands.parseCommandComment', ->
         cmd1: 21
     }
 
-    expectProperties dirs.parseCommandComment('//! myStandalone'), {
+    expectProperties parser.parseCommandComment('//! myStandalone'), {
       type: myStandalone
       args: [
       ]
@@ -107,19 +111,19 @@ describe 'Commands.parseCommandComment', ->
     return
 
   it 'should return an error if there is an argument name with no value', ->
-    expectError '//! myStandalone: cmd0 cmd1', "invalid value for 'cmd0', expected a number", 15, 24
-    expectError '//! myStandalone: cmd0 xyz', "invalid value for 'cmd0', expected a number", 15, 23
-    expectError '//! myStandalone: cmd0', "missing value for 'cmd0'", 15, 19
-    expectError '//! myStandalone: cmd0 ', "missing value for 'cmd0'", 15, 20
+    expectError '//! myStandalone: cmd0 cmd1', "invalid value for 'cmd0', expected a number", 18, 27
+    expectError '//! myStandalone: cmd0 xyz', "invalid value for 'cmd0', expected a number", 18, 26
+    expectError '//! myStandalone: cmd0', "missing value for 'cmd0'", 18, 22
+    expectError '//! myStandalone: cmd0 ', "missing value for 'cmd0'", 18, 23
     return
 
   it 'should return an error if there are too many number arguments', ->
     # error should extend from first addition argument to end of line
-    expectError '//! myStandalone: 1, 1, 1, 1, 1  ', "too many arguments, expected at most 2 ('cmd0', 'cmd1')", 21, 30
+    expectError '//! myStandalone: 1, 1, 1, 1, 1  ', "too many arguments, expected at most 2 ('cmd0', 'cmd1')", 24, 33
     return
 
   it 'should return an error if there are too many number arguments', ->
-    expectError '//! myStandalone: lala', "invalid property 'lala', expected one of 'cmd0', 'cmd1'", 15, 19
+    expectError '//! myStandalone: lala', "invalid property 'lala', expected one of 'cmd0', 'cmd1'", 18, 22
     return
 
 
@@ -129,13 +133,13 @@ describe 'Commands.parseCommandComment', ->
 
 
 
-describe 'Commands.parseGLSL', ->
+describe 'CommandParser.parseGLSL', ->
 
   it 'should handle source code with no commands in it', ->
 
-    expect(dirs.parseGLSL '').toEqual []
+    expect(parser.parseGLSL '').toEqual []
 
-    expect(dirs.parseGLSL '\nfloat foo = 1.0;\n').toEqual []
+    expect(parser.parseGLSL '\nfloat foo = 1.0;\n').toEqual []
 
 
     return
@@ -147,7 +151,7 @@ describe 'Commands.parseGLSL', ->
       uniform vec3 foo; //! myInput: in0 5
       void main() {} // bumpf after
     '''
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       {
         type: myInput
         uniform: {
@@ -174,7 +178,7 @@ describe 'Commands.parseGLSL', ->
       // lala!
       void main() {} // bumpf after
     '''
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       {
         type: myInput
       }
@@ -186,34 +190,32 @@ describe 'Commands.parseGLSL', ->
 
 # other code between uniform and command is not OK
     source = '\n\nuniform vec3 foo; float bar; //! myInput '
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       message: "'myInput' command must appear directly after a uniform declaration"
-      start: 0
-      end: 12
+      start: 29
+      end: 41
     ]
 
     # uniform on previous line is not OK
     source = '\n\nuniform vec3 foo; \n //! myInput '
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       message: "'myInput' command must appear directly after a uniform declaration"
     ]
 
     return
 
-  it 'should have correct line and lineOffset properties on all errors', ->
+  it 'should have correct line property on all errors', ->
 
     # error picked up by parseGLSL
     source = '\n\nuniform vec3 foo; float bar; //! myInput '
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       line: 2
-      lineOffset: 29
     ]
 
     # error picked up by parseCommandComment
     source = '\nuniform vec3 foo; //! myInput: badArg'
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       line: 1
-      lineOffset: 18
     ]
 
     return
@@ -238,10 +240,10 @@ describe 'Commands.parseGLSL', ->
       //! myStandalone: cmd1 -11.4
       void main() {} // bumpf after
     '''
-    expectProperties dirs.parseGLSL(source), expected
+    expectProperties parser.parseGLSL(source), expected
 
     source = '//! myStandalone: cmd1 -11.4'
-    expectProperties dirs.parseGLSL(source), expected
+    expectProperties parser.parseGLSL(source), expected
     return
 
   it 'should parse multiple commands in one shader program', ->
@@ -253,7 +255,7 @@ describe 'Commands.parseGLSL', ->
     '''
 
     # order of args swapped
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       {
         type: myInput
         uniform:
@@ -277,7 +279,7 @@ describe 'Commands.parseGLSL', ->
 
     # whitespace is OK
     source = '\n  //! myStandalone: cmd1 -11.4'
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       isError: false
     ]
 
@@ -286,22 +288,49 @@ describe 'Commands.parseGLSL', ->
       uniform vec2 foo;
       //! myStandalone: cmd1 -11.4
     '''
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       isError: false
     ]
 
     source = '''
       uniform vec2 foo; //! myStandalone: cmd1 -11.4
     '''
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       message: "'myStandalone' command must appear on its own line"
     ]
 
     source = '''
       /*  */ //! myStandalone: cmd1 -11.4
     '''
-    expectProperties dirs.parseGLSL(source), [
+    expectProperties parser.parseGLSL(source), [
       message: "'myStandalone' command must appear on its own line"
+    ]
+    return
+
+  it 'should return an error if a uniform command appears after the wrong type of uniform', ->
+
+    source = '''
+      uniform vec2 foo; //! myInput
+    '''
+    expectProperties parser.parseGLSL(source), [
+      message: "'myInput' command can only be applied to a uniform vec3"
+    ]
+    return
+
+  it 'should return an error a stnadalone command appears multiple times', ->
+
+    source = '''
+      //! myStandalone
+      //! myStandalone: cmd0 2
+    '''
+    expectProperties parser.parseGLSL(source), [
+      {
+        isError: false
+        type: myStandalone
+      },
+      {
+        message: "there is already a 'myStandalone' command in the this shader"
+      }
     ]
     return
 
