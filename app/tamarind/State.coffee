@@ -157,7 +157,7 @@ class State extends EventEmitter
     inputsByName = {}
     sanitised = []
     for input in inputs
-      input = Inputs.validate(input, @)
+      input = Inputs.validate(input)
       if input
         if preserveValues and @hasInput(input.name)
           input.value = @getInputValue(input.name)

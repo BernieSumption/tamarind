@@ -31,10 +31,7 @@ class Inputs
 
   # given an input object, return a valid version of it (e.g. filling in missing properties with defaults)
   # or throw an exception if it's broken beyond repair
-  @validate = (input, state) ->
-
-    unless state
-      throw new Error 'Missing state argument'
+  @validate = (input) ->
 
     inputClass = @inputClasses[input.type]
 

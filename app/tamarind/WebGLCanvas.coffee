@@ -48,7 +48,7 @@ class WebGLCanvas
     unless utils.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
 
-    @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
+    @canvasElement.addEventListener 'webglcontextcreationerror', (event) ->
       utils.logInfo event.statusMessage
       return
 
