@@ -132,3 +132,5 @@ class Tamarind extends UIComponent
 
 
 module.exports = Tamarind
+
+utils.setTamarindGlobal(Tamarind)

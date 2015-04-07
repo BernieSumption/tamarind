@@ -82,9 +82,8 @@ compareAgainstReferenceImage = (webglCanvas, referenceImageUrl, done) ->
 
 describe 'WebGLCanvas', ->
 
-  createCanvasAndState = (debugMode = true) ->
+  createCanvasAndState = ->
     state = new State()
-    state.debugMode = debugMode
     canvas = new WebGLCanvas(document.createElement('canvas'), state)
     return [canvas, state]
 
@@ -101,7 +100,7 @@ describe 'WebGLCanvas', ->
 
   it 'should handle the loss and restoration of the webgl context gracefully', (done) ->
 
-    [canvas, state] = createCanvasAndState(false)
+    [canvas, state] = createCanvasAndState()
 
     # browsers don't like losing and restoring the context on the same frame, so we do this as a series of 4 frames
 
@@ -158,7 +157,7 @@ describe 'WebGLCanvas', ->
 
   expectErrorsFromSource = (done, expectedErrorLines, fragmentShaderSource) ->
 
-    [canvas, state] = createCanvasAndState(false)
+    [canvas, state] = createCanvasAndState()
 
     state.setShaderSource constants.FRAGMENT_SHADER, fragmentShaderSource
 

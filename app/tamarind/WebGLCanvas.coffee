@@ -1,7 +1,8 @@
-utils = require('./utils.coffee')
-constants = require('./constants.coffee')
-WebGLDebugUtils = require('./WebGLDebugUtils.js')
-ShaderCompileError = require('./ShaderCompileError.coffee')
+utils               = require './utils.coffee'
+constants           = require './constants.coffee'
+WebGLDebugUtils     = require './WebGLDebugUtils.js'
+ShaderCompileError  = require  './ShaderCompileError.coffee'
+Tamarind            = require './Tamarind.coffee'
 
 ###
   An object associated with a canvas element that manages the WebGL context
@@ -48,7 +49,7 @@ class WebGLCanvas
       throw new Error 'This browser does not support WebGL'
 
     @canvasElement.addEventListener 'webglcontextcreationerror', (event) =>
-      @_state.logInfo event.statusMessage
+      utils.logInfo event.statusMessage
       return
 
     @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
@@ -58,7 +59,6 @@ class WebGLCanvas
 
     @_state.on @_state.CHANGE, @_doFrame
 
-    @_state.onPropertyChange 'debugMode', @_updateContextForDebugMode
     @_state.onPropertyChange 'inputs', @_setAllUniformsFromState
     @_state.on @_state.INPUT_VALUE_CHANGE, @_setUniformFromState
 
@@ -122,6 +122,7 @@ class WebGLCanvas
     if @_contextLost
       return false
 
+    @_updateContextForDebugMode()
 
     if @_contextRequiresSetup
       unless @_setupContext()
@@ -182,7 +183,7 @@ class WebGLCanvas
     return
 
   _updateContextForDebugMode: =>
-    if @_state.debugMode
+    if Tamarind.debugMode
       @gl = @debugContext
     else
       @gl = @nativeContext
@@ -361,7 +362,7 @@ class WebGLCanvas
 
   # @private
   _handleContextLost: (e) =>
-    @_state.logInfo 'WebGL context lost, suspending all GL calls'
+    utils.logInfo 'WebGL context lost, suspending all GL calls'
     @_contextLost = true
     (e or window.event).preventDefault()
 
@@ -370,7 +371,7 @@ class WebGLCanvas
 
   # @private
   _handleContextRestored: =>
-    @_state.logInfo 'WebGL context restored, resuming rendering'
+    utils.logInfo 'WebGL context restored, resuming rendering'
     @_contextLost = false
     @_contextRequiresSetup = true
     @_doFrame()

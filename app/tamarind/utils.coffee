@@ -1,7 +1,10 @@
 browserSupportsRequiredFeaturesCache = null
 
+_tamarindGlobal = null
 
 module.exports =
+
+
 
   ###
     Define a property on a class.
@@ -70,3 +73,24 @@ module.exports =
     el = tmp.childNodes[0]
     tmp.removeChild el
     return el
+
+
+  # Record an error. This will results in a thrown exception in debugMode or a console error in normal mode
+  logError: (message) ->
+    if _tamarindGlobal?.debugMode
+      throw new Error('debugMode: ' + message)
+    else
+      console.error message
+    return
+
+
+  # Record an event. This will results in a console log in debugMode or nothing in normal mode
+  logInfo: (message) ->
+    if _tamarindGlobal?.debugMode
+      console.log message
+    return
+
+  # used to wire up the Tamarind class without creating a circular dependency by require'ing it at the top of the file
+  setTamarindGlobal: (tg) ->
+    _tamarindGlobal = tg
+    return

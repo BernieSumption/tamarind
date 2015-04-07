@@ -1,6 +1,9 @@
-State = require('../State.coffee')
-constants = require('../constants.coffee')
-ShaderCompileError = require('../ShaderCompileError.coffee')
+State              = require '../State.coffee'
+Tamarind           = require '../Tamarind.coffee'
+utils              = require '../utils.coffee'
+constants          = require '../constants.coffee'
+ShaderCompileError = require '../ShaderCompileError.coffee'
+
 {mockInput, interestingInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
 
 describe 'State', ->
@@ -14,7 +17,7 @@ describe 'State', ->
       spyOn(listener, prop)
       state.on state[prop], listener[prop]
 
-    for prop in ['vertexCount', 'debugMode', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
+    for prop in ['vertexCount', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
       listener[prop] = ->
       spyOn(listener, prop)
       state.onPropertyChange prop, listener[prop]
@@ -30,15 +33,12 @@ describe 'State', ->
     state.vertexCount = 111
     state.vertexCount = 222
     state.vertexCount = 222 # no change
-    state.debugMode = true
 
     # expect one general PROPERTY_CHANGE event per change with property name as argument
     expect(state.vertexCount).toEqual 222
-    expect(state.debugMode).toEqual true
 
     # expect one specific change event per change, with new value as argument
     expectCallHistory listener.vertexCount, [111, 222]
-    expectCallHistory listener.debugMode, [true]
 
     # expect a single CHANGE, dispatched asynchronously
     pollUntil (-> listener.CHANGE.calls.count() > 0), ->
@@ -108,8 +108,12 @@ describe 'State', ->
   it 'should log an error if invalid properties given to restore', ->
 
     state = new State()
-    state.debugMode = true
-    expect(-> state.restore '{"blarty": "shiz"}').toThrow(new Error('debugMode: restore() ignoring unrecognised key blarty'))
+
+    spyOn(console, 'error')
+
+    state.restore '{"blarty": "shiz"}'
+
+    expectCallHistory console.error, ['restore() ignoring unrecognised key blarty']
 
     return
 
@@ -130,20 +134,22 @@ describe 'State', ->
 
 
   it 'should handle log and error messages', ->
-    state = new State()
 
     spyOn(console, 'log')
     spyOn(console, 'error')
 
-    state.logError('err1') # should console error
-    state.logInfo('info1') # should be ignored
+    utils.logError('err1') # should console error
+    utils.logInfo('info1') # should be ignored
 
-    state.debugMode = true
-    expect(-> state.logError('err2')).toThrow new Error('debugMode: err2') # should throw exception
-    state.logInfo('info2') # should console log
+    Tamarind.debugMode = true
+
+    expect(-> utils.logError('err2')).toThrow new Error('debugMode: err2') # should throw exception
+    utils.logInfo('info2') # should console log
 
     expectCallHistory console.error, ['err1']
     expectCallHistory console.log, ['info2']
+
+    Tamarind.debugMode = false
 
     return
 

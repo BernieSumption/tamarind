@@ -1,5 +1,6 @@
+utils        = require './utils.coffee'
 EventEmitter = require './EventEmitter.coffee'
-Inputs = require('./Inputs.coffee')
+Inputs       = require('./Inputs.coffee')
 constants    = require './constants.coffee'
 
 
@@ -21,11 +22,6 @@ class State extends EventEmitter
   # @property [String] A string mode name as used by WebGL's drawArrays method
   # i.e. one of: POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
   drawingMode: 'TRIANGLE_FAN'
-
-  # @property [boolean] Whether to log more data, including all WebGL errors. This
-  # requires checking with WebGL for an error after each operation, which is very
-  # slow. Don't use this in production
-  debugMode: false
 
   # @property [Number] the x position of the mouse, 0 at centre, -1 at left, 1 at right
   mouseX: 0
@@ -61,7 +57,6 @@ class State extends EventEmitter
 
     # state that lasts the lifetime of this State object
     @_lifetime = {
-      debugMode: PROPERTY_DEFAULTS.debugMode
       mouseX: PROPERTY_DEFAULTS.mouseX
       mouseY: PROPERTY_DEFAULTS.mouseY
     }
@@ -190,7 +185,7 @@ class State extends EventEmitter
   setInputValue: (inputName, value) ->
     input = @_getInputByName(inputName)
     unless Array.isArray(value) and value.length is input.value.length
-      @logError "invalid value for #{inputName}: " + JSON.stringify(value)
+      utils.logError "invalid value for #{inputName}: " + JSON.stringify(value)
       return
     changed = false
     for item, i in value
@@ -227,23 +222,7 @@ class State extends EventEmitter
         @[key] = value
         @emit PROPERTY_CHANGE_EVENTS[key], value
       else
-        @logError 'restore() ignoring unrecognised key ' + key
-    return
-
-
-  # Record an error. This will results in a thrown exception in debugMode or a console error in normal mode
-  logError: (message) ->
-    if @debugMode
-      throw new Error('debugMode: ' + message)
-    else
-      console.error message
-    return
-
-
-  # Record an event. This will results in a console log in debugMode or nothing in normal mode
-  logInfo: (message) ->
-    if @debugMode
-      console.log message
+        utils.logError 'restore() ignoring unrecognised key ' + key
     return
 
 
@@ -308,7 +287,6 @@ class State extends EventEmitter
   _defineProperty 'drawingMode', '_persistent'
   _defineProperty 'controlsExpanded', '_persistent'
   _defineProperty 'inputs', '_persistent', true
-  _defineProperty 'debugMode', '_lifetime'
   _defineProperty 'mouseX', '_lifetime'
   _defineProperty 'mouseY', '_lifetime'
   _defineProperty 'selectedTab', '_transient'

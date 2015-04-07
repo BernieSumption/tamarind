@@ -1,4 +1,5 @@
 InputDefinitionError = require './InputDefinitionError.coffee'
+utils               = require('./utils.coffee')
 
 ###
   Manager for inputs.
@@ -38,12 +39,12 @@ class Inputs
     inputClass = @inputClasses[input.type]
 
     unless inputClass and typeof input.name is 'string'
-      state.logError "bad input name=#{JSON.stringify(input.name)} type=#{JSON.stringify(input.type)}"
+      utils.logError "bad input name=#{JSON.stringify(input.name)} type=#{JSON.stringify(input.type)}"
       return null
 
     for key, value of input
       if inputClass.defaults[key] is undefined and key isnt 'type' and key isnt 'name'
-        state.logError "ignoring unrecognised property '#{key}': #{JSON.stringify(value)}"
+        utils.logError "ignoring unrecognised property '#{key}': #{JSON.stringify(value)}"
 
 
     validName = @_validateName input.name, 'unnamed'
@@ -70,7 +71,7 @@ class Inputs
           error = 'expected array, got'
 
       if error
-        state.logError "bad value for #{key} (#{error} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
+        utils.logError "bad value for #{key} (#{error} #{JSON.stringify(value)}), using default of #{JSON.stringify(defaultValue)}"
         value = defaultValue
 
       sanitised[key] = value
