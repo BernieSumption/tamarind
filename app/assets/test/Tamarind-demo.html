@@ -24,15 +24,17 @@
 
 <script>
   (function() {
-    Tamarind.debugMode = true
-    var state = new Tamarind.State()
-    state.controlsExpanded = true
-    state.setInputs([
-      {
-        type: 'color',
-        name: 'color'
-      }
-    ]);
+    Tamarind.debugMode = true;
+    var state = new Tamarind.State();
+    state.controlsExpanded = true;
+    state.setShaderSource('FRAGMENT_SHADER', ""
+        + "precision mediump float;\n"
+        + "uniform float sl; //! slider\n"
+        + "varying vec2 v_position;\n"
+        + "\n"
+        + "void main() {\n"
+        + "  gl_FragColor = vec4(v_position, 1, 1);\n"
+        + "}\n");
     var editor = new Tamarind(state);
     editor.overwrite(document.getElementById('editor-location'));
 

@@ -80,10 +80,18 @@ class CodeEditor extends UIComponent
 
   _handleShaderErrorsChange: (shaderType) =>
     if shaderType is @_activeCodeEditor
-      errors = for err in @_state.getShaderErrors(shaderType)
-        message: err.message
-        from: {line: Math.max(err.line, 0)}
-        to: {line: Math.max(err.line, 0)}
+      errors = []
+      for err in @_state.getShaderErrors(shaderType)
+        line = Math.max(err.line, 0)
+        errors.push(
+          message: err.message
+          from:
+            line: line
+            ch: err.start
+          to:
+            line: line
+            ch: err.end
+        )
 
       @_lintingCallback @_codemirror, errors
     return

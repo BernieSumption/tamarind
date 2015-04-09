@@ -1,15 +1,8 @@
-InputBase = require './InputBase.coffee'
+InputControlBase = require './InputControlBase.coffee'
 
 
-class SliderInput extends InputBase
+class SliderInput extends InputControlBase
 
-  @defaults:
-    min: 0
-    max: 1
-    step: 0.01
-    value: [0]
-
-  @fieldOrder: ['min', 'max', 'step']
 
   _getDisplayDP: ->
     # minimum decimal places to show full precision of step

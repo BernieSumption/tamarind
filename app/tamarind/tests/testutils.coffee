@@ -1,4 +1,4 @@
-Inputs = require('../Inputs.coffee')
+std_command_parser = require '../commands/std_command_parser.coffee'
 
 module.exports =
 
@@ -27,30 +27,18 @@ module.exports =
     return
 
 
-  # return a slider input with default values, unless overridden
-  mockInput: (overrides = {}) ->
-    input = {
-      type: 'slider'
-      name: 'my_slider'
-    }
-    for k, v of Inputs.inputClasses.slider.defaults
-      input[k] = v
-    for k, v of overrides
-      input[k] = v
-    return input
-
-
   # return a slider input with non-default values
   interestingInput: (overrides = {}) ->
-    input = module.exports.mockInput(
-      min: -10
-      max: 10
-      step: 1
-      value: [5]
-    )
-    for k, v of overrides
-      input[k] = v
-    return input
+
+    if overrides.value
+      throw new Error("Value isn't set as psrt of the input any mode, update this test")
+
+    name = overrides.name or 'my_slider'
+    min  = overrides.min or -10
+    max  = overrides.max or 10
+    step = overrides.step or 1
+
+    return std_command_parser.parseGLSL("uniform float #{name}; //! slider min #{min} max #{max} step #{step}")[0]
 
 
   # similar to expect(test).toEqual(jasmine.objectContaining(properties)) but with more

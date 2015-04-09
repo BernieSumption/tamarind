@@ -2,7 +2,6 @@ constants    = require './constants.coffee'
 UIComponent   = require './UIComponent.coffee'
 State         = require './State.coffee'
 utils         = require './utils.coffee'
-ConfigEditor  = require './ConfigEditor.coffee'
 CodeEditor    = require './CodeEditor.coffee'
 ControlDrawer = require './ControlDrawer.coffee'
 WebGLCanvas   = require './WebGLCanvas.coffee'
@@ -19,7 +18,6 @@ class Tamarind extends UIComponent
   # Various aliases that define the public API
   @FRAGMENT_SHADER = constants.FRAGMENT_SHADER
   @VERTEX_SHADER = constants.VERTEX_SHADER
-  @CONFIG = constants.CONFIG
   @State = State
   @WebGLCanvas = WebGLCanvas
 
@@ -37,7 +35,6 @@ class Tamarind extends UIComponent
         <a href="javascript:void(0)" name="#{constants.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader">
           <span class="tamarind-menu-icon-overlay" title="Vertex shader has errors"></span>
         </a>
-        <a href="javascript:void(0)" name="#{constants.CONFIG}" class="tamarind-menu-button tamarind-icon-config" title="Scene setup"></a>
       </div>
       <div class="tamarind-editor-panel">
       </div>
@@ -74,14 +71,11 @@ class Tamarind extends UIComponent
     controlDrawer = new ControlDrawer(@_state)
     controlDrawer.overwrite(@css('.tamarind-controls-marker'))
 
-    @_configEditor = new ConfigEditor(@_state)
-    @_configEditor.appendTo editorPanel
-
     @_codeEditor = new CodeEditor(@_state)
     @_codeEditor.appendTo editorPanel
 
 
-    @_links = @csss '.tamarind-menu a', 3
+    @_links = @csss '.tamarind-menu a', 2
     @_element.addEventListener 'click', @_handleMenuLinkClick
 
 
@@ -97,13 +91,7 @@ class Tamarind extends UIComponent
   _handleMenuItemSelect: =>
     item = @_state.selectedTab
 
-    if item is constants.CONFIG
-      @_codeEditor.setVisible false
-      @_configEditor.setVisible true
-    else
-      @_codeEditor.setVisible true
-      @_configEditor.setVisible false
-      @_codeEditor.swapShaderType item
+    @_codeEditor.swapShaderType item
 
     for link in @_links
       if link.name is item

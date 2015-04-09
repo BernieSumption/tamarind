@@ -1,10 +1,10 @@
-UIComponent = require './UIComponent.coffee'
+UIComponent = require '../UIComponent.coffee'
 
 ###
   Base class for input editors. Instances of these classes encapsulate the controls used
   to edit the values of inputs, and the classes themselves contain metadata e.g. default values
 ###
-class InputBase extends UIComponent
+class InputControlBase extends UIComponent
 
   TEMPLATE = '''
     <div class="tamarind-controls-control">
@@ -16,12 +16,6 @@ class InputBase extends UIComponent
       </div>
     </div>
   '''
-
-
-  @defaults:
-    value: [0]
-
-  @fieldOrder: []
 
   ##
   ## NOTE!
@@ -38,10 +32,12 @@ class InputBase extends UIComponent
     @_inputElement = @_makeInputElement()
     if @_inputElement
       @css('.tamarind-controls-control-ui').appendChild @_inputElement
-    @setInnerText '.tamarind-controls-control-name', @_data.name.replace(/^u_/, '').replace('_', ' ')
+    @setInnerText '.tamarind-controls-control-name', @_data.uniform.name.replace(/^u_/, '').replace('_', ' ')
     @_valueDisplay = @css '.tamarind-controls-control-value'
     @_displayDP = @_getDisplayDP()
-    @setValue(@_data.value)
+    @setValue(_state.getInputValue(@_data.uniform.name))
+
+
 
 
   # Called by the ControlDrawer when this input's value in the state has been changed
@@ -77,7 +73,7 @@ class InputBase extends UIComponent
 
   # Subclasses just arrange for this to be called when the input value changes
   _notifyOfValueChange: =>
-    @_state.setInputValue(@_data.name, @_getValue())
+    @_state.setInputValue(@_data.uniform.name, @_getValue())
     return
 
 
@@ -93,4 +89,4 @@ class InputBase extends UIComponent
     return String(@_getValue())
 
 
-module.exports = InputBase
+module.exports = InputControlBase

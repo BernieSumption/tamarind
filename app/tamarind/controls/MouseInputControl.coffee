@@ -1,13 +1,7 @@
-InputBase = require './InputBase.coffee'
+InputControlBase = require './InputControlBase.coffee'
 
 
-class MouseInput extends InputBase
-
-  @defaults:
-    damping: 0
-    value: [0, 0]
-
-  @fieldOrder: ['damping']
+class MouseInput extends InputControlBase
 
   _getValue: ->
     return [@_mouseX, @_mouseY]

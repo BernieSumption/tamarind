@@ -73,7 +73,7 @@ gulp.task 'beefy', ->
     if err
       throw err
   beefy_cli(
-    ["#{APP_ENTRY_POINT}:#{APP_SCRIPT_NAME}", '--live', '--index', 'app/assets/test/Tamarind-demo.html', '--', '--standalone', 'Tamarind']
+    ["#{APP_ENTRY_POINT}:#{APP_SCRIPT_NAME}", '--live', '--index', 'app/assets/test/Tamarind-demo.html', '--watchify', '', '--', '--standalone', 'Tamarind']
     process.cwd()
     process.stdout
     process.stderr

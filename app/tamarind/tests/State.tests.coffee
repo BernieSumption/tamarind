@@ -4,7 +4,7 @@ utils              = require '../utils.coffee'
 constants          = require '../constants.coffee'
 ShaderCompileError = require '../ShaderCompileError.coffee'
 
-{mockInput, interestingInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
+{interestingInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
 
 describe 'State', ->
 
@@ -77,7 +77,6 @@ describe 'State', ->
     state.setShaderSource constants.FRAGMENT_SHADER, 'frag'
     state.setShaderSource constants.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
-    state.setInputs [ interestingInput(name: 'my_input', value: [2]) ]
 
     serialized = state.save()
 
@@ -94,12 +93,10 @@ describe 'State', ->
     expect(state.vertexCount).toEqual(12345)
     expect(state.getShaderSource constants.FRAGMENT_SHADER).toEqual('frag')
     expect(state.getShaderSource constants.VERTEX_SHADER).toEqual('vert')
-    expect(state.inputs).toEqual [ interestingInput(name: 'my_input', value: [2]) ]
 
 
     expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER, constants.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
-    expectCallHistory listener.inputs, [ [ interestingInput(name: 'my_input', value: [2]) ] ]
     expectCallHistory listener.controlsExpanded, [false]
 
     return
@@ -122,11 +119,12 @@ describe 'State', ->
     state = new State()
     saved = state.save()
     state.setShaderErrors constants.VERTEX_SHADER, '', [new ShaderCompileError('', 1)]
-    state.selectedTab = 'CONFIG'
+    state.selectedTab = constants.VERTEX_SHADER
+    expect(state.selectedTab).toEqual(constants.VERTEX_SHADER)
 
     state.restore(saved)
 
-    expect(state.selectedTab).not.toEqual('config')
+    expect(state.selectedTab).not.toEqual(constants.VERTEX_SHADER)
     expect(state.getShaderErrors constants.VERTEX_SHADER).toEqual([])
 
     return
@@ -153,7 +151,7 @@ describe 'State', ->
 
     return
 
-  it 'should allow setting of inputs through setInputs', ->
+  it 'should allow setting of inputs through _setInputs', ->
 
     state = new State()
     listener = stateListener(state)
@@ -162,44 +160,49 @@ describe 'State', ->
 
     evts = [ interestingInput(name: 'in', value: [4]) ]
 
-    state.setInputs evts
-    #    state.setInputs evts.slice() # no change
+    state._setInputs evts
 
     expect(state.getInputValue('in')).toEqual [4]
     expect(state.inputs).toEqual(evts)
     expectCallHistory listener.inputs, [evts]
 
-    state.setInputs [interestingInput(name: 'in', value: [7])]
+    state._setInputs [interestingInput(name: 'in', value: [7])]
     expect(state.getInputValue('in')).toEqual [7]
 
     return
 
-  it 'should preserve the existing values of inputs through setInputs when asked', ->
+  it 'should preserve the existing values of inputs through _setInputs when asked', ->
 
     state = new State()
     listener = stateListener(state)
 
-    state.setInputs [
-      interestingInput(name: 'a', value: [1])
-      interestingInput(name: 'b', value: [2])
+    state._setInputs [
+      interestingInput(name: 'a')
+      interestingInput(name: 'b')
     ]
+
+    state.setInputValue('a', [1])
+    state.setInputValue('b', [2])
 
     expect(state.inputs).toEqual [
-      interestingInput(name: 'a', value: [1])
-      interestingInput(name: 'b', value: [2])
+      interestingInput(name: 'a')
+      interestingInput(name: 'b')
     ]
 
-    state.setInputs [
-      interestingInput(name: 'a', value: [3])
-      interestingInput(name: 'b', value: [4])
+    expect(state.getInputValue 'a').toEqual [1]
+    expect(state.getInputValue 'b').toEqual [2]
+
+    state._setInputs [
+      interestingInput(name: 'a')
+      interestingInput(name: 'b')
       interestingInput(name: 'c', value: [5])
     ], true
 
-    expect(state.inputs).toEqual [
-      interestingInput(name: 'a', value: [1])
-      interestingInput(name: 'b', value: [2])
-      interestingInput(name: 'c', value: [5])
-    ]
+    state.setInputValue('c', [5])
+
+    expect(state.getInputValue 'a').toEqual [1]
+    expect(state.getInputValue 'b').toEqual [2]
+    expect(state.getInputValue 'c').toEqual [5]
 
     return
 
@@ -211,7 +214,7 @@ describe 'State', ->
 
     spyOn(console, 'error')
 
-    state.setInputs [ interestingInput(name: 'my_slider', value: [5]) ]
+    state._setInputs [ interestingInput(name: 'my_slider', value: [5]) ]
 
     expect(state.getInputValue 'my_slider').toEqual [5]
 

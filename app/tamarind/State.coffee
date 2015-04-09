@@ -1,7 +1,9 @@
-utils        = require './utils.coffee'
-EventEmitter = require './EventEmitter.coffee'
-Inputs       = require('./Inputs.coffee')
-constants    = require './constants.coffee'
+utils              = require './utils.coffee'
+EventEmitter       = require './EventEmitter.coffee'
+ProgramAnalyser    = require './commands/ProgramAnalyser.coffee'
+std_command_parser = require './commands/std_command_parser.coffee'
+constants          = require './constants.coffee'
+indexBy            = require 'lodash/collection/indexBy'
 
 
 ###
@@ -32,7 +34,7 @@ class State extends EventEmitter
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
-  # @property [Array] An array of objects representing inputs, see the Inputs class for object structure.
+  # @property [Array] A read-only array of Input objects
   inputs: []
 
   # @property [String] the name of the currently selected UI tab. Not saved and restored.
@@ -68,11 +70,12 @@ class State extends EventEmitter
     @_persistent = {
       FRAGMENT_SHADER: constants.DEFAULT_FSHADER_SOURCE
       VERTEX_SHADER: constants.DEFAULT_VSHADER_SOURCE
-      inputs: []
       vertexCount: PROPERTY_DEFAULTS.vertexCount
       drawingMode: PROPERTY_DEFAULTS.drawingMode
       controlsExpanded: PROPERTY_DEFAULTS.controlsExpanded
     }
+
+    @_analyser = new ProgramAnalyser(std_command_parser)
 
     # state that is reset each time we restore()
     @_transient = {
@@ -83,6 +86,7 @@ class State extends EventEmitter
         VERTEX_SHADER:
           errors: []
           errorText: []
+      inputs: []
       propertyJSON: {}
       selectedTab: PROPERTY_DEFAULTS.selectedTab
       inputsByName: {}
@@ -107,6 +111,8 @@ class State extends EventEmitter
     @_validateType(source, 'string', 'shaderType')
     if @_persistent[shaderType] isnt source
       @_persistent[shaderType] = source
+      @_analyser.setShaderSource(shaderType, source)
+      @_setInputs(@_analyser.getCommands())
       @emit @SHADER_CHANGE, shaderType
       @_scheduleChangeEvent()
     return
@@ -124,7 +130,9 @@ class State extends EventEmitter
   # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   getShaderErrors: (shaderType) ->
     @_validateShaderType(shaderType)
-    return @_transient.shaders[shaderType].errors.slice()
+    sourceErrors = @_transient.shaders[shaderType].errors
+    commandErrors = @_analyser.getCommandErrors(shaderType)
+    return sourceErrors.concat(commandErrors)
 
 
   # Set the list of errors for a shader
@@ -152,25 +160,23 @@ class State extends EventEmitter
 
   # Overwrite the existing inputs array with a new one.
   # @param inputs an array of objects representing inputs, see the Inputs class for details.
-  # @param preserveValues if true, inputs
-  setInputs: (inputs, preserveValues = false) ->
-    inputsByName = {}
+  # @param preserveValues if true, inputs with the same name will keep their existing values, if false the value will be set to the default.
+  _setInputs: (inputs, preserveValues = false) ->
     sanitised = []
-    for input in inputs
-      input = Inputs.validate(input)
-      if input
-        if preserveValues and @hasInput(input.name)
-          input.value = @getInputValue(input.name)
-        sanitised.push(input)
-        inputsByName[input.name] = input
+    @_transient.inputs = inputs
+    @_transient.inputsByName = indexBy inputs, (i) -> i.uniform.name
 
-    @_persistent.inputs = sanitised
-    @_transient.inputsByName = inputsByName
-
-    @emit PROPERTY_CHANGE_EVENTS.inputs, @_persistent.inputs
+    @emit PROPERTY_CHANGE_EVENTS.inputs, @_transient.inputs
     @_scheduleChangeEvent()
 
+    if @_analyser.getCommandErrors(constants.FRAGMENT_SHADER).length > 0
+      @emit @SHADER_ERRORS_CHANGE, constants.FRAGMENT_SHADER
+
+    if @_analyser.getCommandErrors(constants.VERTEX_SHADER).length > 0
+      @emit @SHADER_ERRORS_CHANGE, constants.VERTEX_SHADER
+
     return sanitised
+
 
 
   # get the value of a specific input
@@ -184,7 +190,7 @@ class State extends EventEmitter
   # set the value of a specific input
   setInputValue: (inputName, value) ->
     input = @_getInputByName(inputName)
-    unless Array.isArray(value) and value.length is input.value.length
+    unless Array.isArray(value) and value.length is input.type.dataLength
       utils.logError "invalid value for #{inputName}: " + JSON.stringify(value)
       return
     changed = false
@@ -216,9 +222,7 @@ class State extends EventEmitter
     for key, value of JSON.parse(saved)
       if key is constants.FRAGMENT_SHADER or key is constants.VERTEX_SHADER
         @setShaderSource key, value
-      else if key is 'inputs'
-        @setInputs value
-      else if PROPERTY_DEFAULTS[key] isnt undefined
+      else if WRITABLE_PROPERTIES[key]
         @[key] = value
         @emit PROPERTY_CHANGE_EVENTS[key], value
       else
@@ -248,6 +252,7 @@ class State extends EventEmitter
 
 
   PROPERTY_DEFAULTS = {}
+  WRITABLE_PROPERTIES = {}
   PROPERTY_CHANGE_EVENTS = {}
 
   # define a read/write property that maps to getProperty and setProperty
@@ -261,6 +266,9 @@ class State extends EventEmitter
 
     PROPERTY_DEFAULTS[propertyName] = defaultValue
     PROPERTY_CHANGE_EVENTS[propertyName] = propertyName + 'Changed'
+
+    unless readOnly
+      WRITABLE_PROPERTIES[propertyName] = true
 
 
     config =
@@ -286,9 +294,9 @@ class State extends EventEmitter
   _defineProperty 'vertexCount', '_persistent'
   _defineProperty 'drawingMode', '_persistent'
   _defineProperty 'controlsExpanded', '_persistent'
-  _defineProperty 'inputs', '_persistent', true
   _defineProperty 'mouseX', '_lifetime'
   _defineProperty 'mouseY', '_lifetime'
+  _defineProperty 'inputs', '_transient', true
   _defineProperty 'selectedTab', '_transient'
 
 module.exports = State

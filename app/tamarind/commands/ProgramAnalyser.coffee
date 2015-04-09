@@ -6,22 +6,17 @@ CommandError = require('./CommandError.coffee')
   Parses a GLSL program consisting of vertex and fragment shader, and provides
   information on the commands and command errors contained within.
 ###
-class ProgramCommands
+class ProgramAnalyser
 
   # @param @_directives [CommandParser]
   constructor: (parser) ->
-    @_shaders = {}
-    @_shaders[constants.FRAGMENT_SHADER] = new ShaderCommands(parser, constants.FRAGMENT_SHADER)
-    @_shaders[constants.VERTEX_SHADER] = new ShaderCommands(parser, constants.VERTEX_SHADER)
-    @_combinedErrors = []
-    @_combinedCommands = []
+    @_shaders =
+      FRAGMENT_SHADER: new ShaderAnalyser(parser, constants.FRAGMENT_SHADER)
+      VERTEX_SHADER:   new ShaderAnalyser(parser, constants.VERTEX_SHADER)
 
   setShaderSource: (shaderType, source) ->
     thisType = @_shaders[shaderType]
     otherType = @_shaders[otherShaderType shaderType]
-
-    if thisType.source is source
-      return
 
     thisType.setSource source
 
@@ -36,17 +31,20 @@ class ProgramCommands
     return @_shaders[shaderType].errors
 
 
+  hasErrors: ->
+    return @_shaders.VERTEX_SHADER.errors.length > 0 or @_shaders.FRAGMENT_SHADER.errors.length > 0
+
+
   getCommands: ->
     return @_shaders.VERTEX_SHADER.commands.concat(@_shaders.FRAGMENT_SHADER.commands)
 
 
-
-class ShaderCommands
+class ShaderAnalyser
 
   constructor: (@_parser, @_shaderType) ->
-    @_reset ''
+    @_reset()
 
-  _reset: (@source) ->
+  _reset: ->
     @unvalidatedErrors = []
     @unvalidatedCommands = []
     @errors = []
@@ -58,7 +56,7 @@ class ShaderCommands
 
   setSource: (source) ->
 
-    @_reset source
+    @_reset()
 
     for command in @_parser.parseGLSL source
       if command.isError
@@ -105,4 +103,4 @@ otherShaderType = (shaderType) ->
     return constants.FRAGMENT_SHADER
   throw new Error("invalid shader type '#{shaderType}'")
 
-module.exports = ProgramCommands
+module.exports = ProgramAnalyser

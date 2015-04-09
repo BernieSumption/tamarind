@@ -1,4 +1,4 @@
-ProgramCommands = require '../ProgramCommands.coffee'
+ProgramAnalyser = require '../ProgramAnalyser.coffee'
 constants = require '../../constants.coffee'
 InputCommandType = require '../InputCommandType.coffee'
 StandaloneCommandType = require '../StandaloneCommandType.coffee'
@@ -28,12 +28,12 @@ myStandalone = new StandaloneCommandType(
 )
 parser = new CommandParser [myInput, myStandalone, otherInput]
 
-describe 'ProgramCommands', ->
+describe 'ProgramAnalyser', ->
 
   it 'should detect directive errors in shaders', ->
 
     test = (shaderType, otherType) ->
-      pc = new ProgramCommands(parser)
+      pc = new ProgramAnalyser(parser)
 
       pc.setShaderSource shaderType, '''
         uniform vec3 foo; //! myStandalone
@@ -68,7 +68,7 @@ describe 'ProgramCommands', ->
 
     # set up with no errors
 
-    pc = new ProgramCommands(parser)
+    pc = new ProgramAnalyser(parser)
     pc.setShaderSource constants.VERTEX_SHADER, 'uniform float foo; //! myInput'
     pc.setShaderSource constants.FRAGMENT_SHADER, 'uniform float bar; //! otherInput'
 
@@ -106,7 +106,7 @@ describe 'ProgramCommands', ->
 
   it 'should produce an error if the same standalone command exists multiple times between shaders', ->
 
-    pc = new ProgramCommands(parser)
+    pc = new ProgramAnalyser(parser)
 
     pc.setShaderSource constants.FRAGMENT_SHADER, '\n\n//! myStandalone: cmd0 1'
     pc.setShaderSource constants.VERTEX_SHADER, '\n  //! myStandalone: cmd1 2'

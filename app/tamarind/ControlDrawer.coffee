@@ -1,5 +1,4 @@
 UIComponent = require './UIComponent.coffee'
-Inputs      = require './Inputs.coffee'
 
 
 ###
@@ -56,8 +55,9 @@ class ControlDrawer extends UIComponent
     wrapper = @css '.tamarind-controls-ui'
     wrapper.innerHTML = ''
 
+    #TODO create editor here
     for input in inputs
-      editor = Inputs.makeEditor(input, @_state)
+      editor = input.type.makeEditor(input, @_state)
       editor.appendTo wrapper
       @_editorsByName[input.name] = editor
 

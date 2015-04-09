@@ -1,10 +1,7 @@
-InputBase = require './InputBase.coffee'
+InputControlBase = require './InputControlBase.coffee'
 
 
-class ColorInput extends InputBase
-
-  @defaults:
-    value: [0, 0, 0]
+class ColorInput extends InputControlBase
 
   _getDisplayDP: ->
     # minimum decimal places to show full precision of step
