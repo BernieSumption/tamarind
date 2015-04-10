@@ -33,6 +33,14 @@ class State extends EventEmitter
   # @property [Number] the y position of the mouse, 0 at centre, -1 at top, 1 at bottom
   mouseY: 0
 
+  # @property [Number] the width of the HTML canvas element in device pixels. This property is updated to match the
+  # current canvas size - setting it doesn't control the canvas!
+  canvasWidth: 0
+
+  # @property [Number] the height of the HTML canvas element in device pixels. This property is updated to match the
+  # current canvas size - setting it doesn't control the canvas!
+  canvasHeight: 0
+
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
@@ -63,6 +71,8 @@ class State extends EventEmitter
     @_lifetime = {
       mouseX: PROPERTY_DEFAULTS.mouseX
       mouseY: PROPERTY_DEFAULTS.mouseY
+      canvasWidth: PROPERTY_DEFAULTS.canvasWidth
+      canvasHeight: PROPERTY_DEFAULTS.canvasHeight
     }
 
 
@@ -300,6 +310,8 @@ class State extends EventEmitter
   _defineProperty 'controlsExpanded', '_persistent'
   _defineProperty 'mouseX', '_lifetime'
   _defineProperty 'mouseY', '_lifetime'
+  _defineProperty 'canvasWidth', '_lifetime'
+  _defineProperty 'canvasHeight', '_lifetime'
   _defineProperty 'inputs', '_transient', true
   _defineProperty 'selectedTab', '_transient'
 

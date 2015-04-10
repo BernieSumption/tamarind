@@ -29,7 +29,6 @@ module.exports =
 
   DEFAULT_FSHADER_SOURCE: '''
     precision mediump float;
-    uniform vec2 u_CanvasSize;
     varying vec2 v_position;
 
     void main() {

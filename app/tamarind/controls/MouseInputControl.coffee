@@ -1,7 +1,7 @@
 InputControlBase = require './InputControlBase.coffee'
 
 
-class MouseInput extends InputControlBase
+class MouseInputControl extends InputControlBase
 
   _getValue: ->
     return [@_mouseX, @_mouseY]
@@ -19,4 +19,4 @@ class MouseInput extends InputControlBase
 
 
 
-module.exports = MouseInput
+module.exports = MouseInputControl

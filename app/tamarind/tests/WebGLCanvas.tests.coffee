@@ -7,32 +7,36 @@ datauri             = require 'datauri'
 
 VSHADER_HEADER = '''
 attribute float a_VertexIndex;
+varying vec2 v_position;
 '''
 
 VSHADER_REFERENCE = VSHADER_HEADER + '''
-  void main() {
-    // 4 points, one in each corner, clockwise from top left
-    if (a_VertexIndex == 0.0) {
-      gl_Position.xy = vec2(-1, -1);
-    } else if (a_VertexIndex == 1.0) {
-      gl_Position.xy = vec2(1, -1);
-    } else if (a_VertexIndex == 2.0) {
-      gl_Position.xy = vec2(1, 1);
-    } else if (a_VertexIndex == 3.0) {
-      gl_Position.xy = vec2(-1, 1);
-    }
+
+void main() {
+  if (a_VertexIndex == 0.0) {
+    v_position = vec2(-1, -1);
+  } else if (a_VertexIndex == 1.0) {
+    v_position = vec2(1, -1);
+  } else if (a_VertexIndex == 2.0) {
+    v_position = vec2(1, 1);
+  } else if (a_VertexIndex == 3.0) {
+    v_position = vec2(-1, 1);
+  } else {
+    v_position = vec2(0);
   }
+  gl_Position.xy = v_position;
+}
 '''
 
 FSHADER_HEADER = '''
 precision mediump float;
-uniform vec2 u_CanvasSize;
+varying vec2 v_position;
 '''
 
 FSHADER_REFERENCE = FSHADER_HEADER + '''
-  void main() {
-    gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
-  }
+void main() {
+  gl_FragColor = vec4(v_position * 0.5 + 0.5, 1, 1);
+}
 '''
 
 referenceImageUri = datauri(__dirname + '/reference-images/plain-shader.png')
@@ -175,7 +179,7 @@ describe 'WebGLCanvas', ->
 
     expectErrorsFromSource done, [], FSHADER_HEADER + '''
       void main() {
-        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+        gl_FragColor = vec4(v_position, 1, 1);
       }
     '''
 
@@ -196,7 +200,7 @@ describe 'WebGLCanvas', ->
     expectErrorsFromSource done, [2, 4],  FSHADER_HEADER + '''
       void main() {
         foo = 1.0; // first error
-        gl_FragColor = vec4(gl_FragCoord.xy / u_CanvasSize, 1, 1);
+        gl_FragColor = vec4(v_position, 1, 1);
         bar = 2.0; // second error
       }
     '''

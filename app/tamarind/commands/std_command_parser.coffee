@@ -27,6 +27,13 @@ module.exports = new CommandParser([
     require('../controls/MouseInputControl.coffee')
   ),
   new InputCommandType(
+    'canvasSize',
+    [
+    ],
+    2,
+    require('../controls/CanvasSizeInputControl.coffee')
+  ),
+  new InputCommandType(
     'color',
     [],
     3,

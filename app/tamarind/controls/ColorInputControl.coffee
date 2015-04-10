@@ -1,7 +1,7 @@
 InputControlBase = require './InputControlBase.coffee'
 
 
-class ColorInput extends InputControlBase
+class ColorInputControl extends InputControlBase
 
   _getDisplayDP: ->
     # minimum decimal places to show full precision of step
@@ -60,4 +60,4 @@ class ColorInput extends InputControlBase
     return color
 
 
-module.exports = ColorInput
+module.exports = ColorInputControl

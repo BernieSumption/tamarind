@@ -1,7 +1,7 @@
 InputControlBase = require './InputControlBase.coffee'
 
 
-class SliderInput extends InputControlBase
+class SliderInputControl extends InputControlBase
 
 
   _getDisplayDP: ->
@@ -18,4 +18,4 @@ class SliderInput extends InputControlBase
     return el
 
 
-module.exports = SliderInput
+module.exports = SliderInputControl
