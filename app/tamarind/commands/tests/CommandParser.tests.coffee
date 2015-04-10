@@ -338,3 +338,27 @@ describe 'CommandParser.parseGLSL', ->
 
   return
 
+
+
+describe 'CommandParser.reformatCommandComment', ->
+
+  it 'should ignore an error comment', ->
+
+    errorComment = '//! myStandalone: cmd0 lala'
+    result = parser.parseCommandComment(errorComment)
+    expect(result.isError).toBeTruthy()
+
+    expect(parser.reformatCommandComment errorComment).toEqual null
+    return
+
+  it 'should reformat a valid command with any nunber of args', ->
+
+    expect(parser.reformatCommandComment '//! myStandalone:::').toEqual '//! myStandalone'
+    expect(parser.reformatCommandComment '//! myStandalone cmd0  -10.0').toEqual '//! myStandalone: cmd0 -10'
+    expect(parser.reformatCommandComment '//! myStandalone cmd0  -10.0     cmd1=1.5 ').toEqual '//! myStandalone: cmd0 -10, cmd1 1.5'
+
+    return
+
+
+  return
+

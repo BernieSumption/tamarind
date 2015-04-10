@@ -1,6 +1,8 @@
 UIComponent = require './UIComponent.coffee'
-constants    = require './constants.coffee'
+constants   = require './constants.coffee'
 CodeMirror  = require 'codemirror'
+isEqual     = require 'lodash/lang/isEqual'
+parser      = require './commands/std_command_parser.coffee'
 
 
 # NOTE: if you remove addons from here, also remove the CSS imports from all.less
@@ -46,6 +48,7 @@ class CodeEditor extends UIComponent
     )
 
     @_codemirror.on 'renderLine', @_addLineWrapIndent
+    @_codemirror.on 'cursorActivity', @_handleCursorActivity
 
     # we're not attached to the window's DOM at time of creation, so we need to
     # re-measure the editor when we are
@@ -108,6 +111,29 @@ class CodeEditor extends UIComponent
     offset = CodeMirror.countColumn(line.text, null, cm.getOption('tabSize')) * @_codeCharWidth
     elt.style.textIndent = '-' + (offset + @_codeCharWidth * indentChars) + 'px'
     elt.style.paddingLeft = (basePadding + offset + @_codeCharWidth * indentChars) + 'px'
+    return
+
+  _handleCursorActivity: =>
+
+    currentCursor = @_codemirror.getCursor()
+
+    if @_prevCursor
+      currentToken = @_codemirror.getTokenAt(currentCursor)
+      prevToken = @_codemirror.getTokenAt(@_prevCursor)
+      tokenHasChanged = not isEqual(prevToken, currentToken)
+      prevTokenIsDirective = prevToken.string.indexOf('//!') is 0
+
+      if prevTokenIsDirective and tokenHasChanged
+        replaced = parser.reformatCommandComment(prevToken.string)
+        if replaced
+          @_codemirror.replaceRange(
+            replaced
+            {line: @_prevCursor.line, ch: prevToken.start},
+            {line: @_prevCursor.line, ch: prevToken.end}
+          )
+
+    @_prevCursor = currentCursor
+
     return
 
 

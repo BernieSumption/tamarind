@@ -67,10 +67,10 @@ class CommandParser
     argName = null
     argNameTokenStart = null
     # state machine parser. Expects a command name then a sequence of `argumentName number` arguments
-    for part in text.match /([,:!\/\s]+|[^,:!\/\s]+)/g
+    for part in text.match /([,:!\/=\s]+|[^,:!\/=\s]+)/g
       tokenStart = tokenEnd
       tokenEnd += part.length
-      if /[,:!\/\s]/.test part
+      if /[,:!\/=\s]/.test part
         continue
 
       if dType is null
@@ -104,6 +104,23 @@ class CommandParser
       return new CommandError("missing value for '#{argName}'", line, argNameTokenStart, lineEnd)
 
     return new Command(dType, dArgs, line, lineOffset, lineEnd)
+
+
+  reformatCommandComment: (comment) ->
+    parsed = @parseCommandComment(comment)
+    if parsed.isError
+      return null
+
+    result = '//! ' + parsed.type.name
+    if parsed.args.length > 0
+      result += ': '
+      for [argName, argValue], i in parsed.args
+        if i > 0
+          result += ', '
+        result += argName + ' ' + argValue
+
+    return result
+
 
 
 # scan backwards in the tokens array from tokens[i] to find the preceding uniform on
