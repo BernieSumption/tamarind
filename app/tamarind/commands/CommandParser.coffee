@@ -1,7 +1,8 @@
-indexBy = require 'lodash/collection/indexBy'
-zipObject = require 'lodash/array/zipObject'
-tokenize = require 'glsl-tokenizer/string'
-CommandError = require('./CommandError.coffee')
+CommandError = require './CommandError.coffee'
+Command      = require './Command.coffee'
+
+indexBy      = require 'lodash/collection/indexBy'
+tokenize     = require 'glsl-tokenizer/string'
 
 class CommandParser
 
@@ -23,11 +24,13 @@ class CommandParser
 
         unless command.isError
           errorMessage = false
-          command.uniform = findUniform(tokens, i)
+          uniform = findUniform(tokens, i)
+          if uniform
+            command.setUniform(uniform.type, uniform.name)
           if command.type.isUniformSuffix is true
-            if isOnNewLine or not command.uniform
+            if isOnNewLine or not uniform
               errorMessage = "'#{command.type.name}' command must appear directly after a uniform declaration"
-            else unless command.uniform.type is command.type.uniformType
+            else unless uniform.type is command.type.uniformType
               errorMessage = "'#{command.type.name}' command can only be applied to a uniform #{command.type.uniformType}"
 
 
@@ -61,7 +64,6 @@ class CommandParser
     lineEnd = lineOffset + text.length
     dType = null
     dArgs = []
-    dData = {}
     argName = null
     argNameTokenStart = null
     # state machine parser. Expects a command name then a sequence of `argumentName number` arguments
@@ -75,9 +77,6 @@ class CommandParser
         dType = @_typesByName[part]
         unless dType
           return new CommandError("invalid command '#{part}'", line, tokenStart, tokenEnd)
-        dData = zipObject dType.params
-        for key, value of dType.defaults
-          result[key] = value
         continue
 
       if dArgs.length >= dType.params.length
@@ -96,7 +95,6 @@ class CommandParser
           # if no explicit name, infer name from argument position
           argName = dType.params[dArgs.length][0]
         dArgs.push [argName, number]
-        dData[argName] = number
         argName = null
 
     unless dType
@@ -105,29 +103,23 @@ class CommandParser
     if argName
       return new CommandError("missing value for '#{argName}'", line, argNameTokenStart, lineEnd)
 
-    return {
-      isError: false
-      type: dType
-      args: dArgs
-      data: dData
-      line: line
-      start: lineOffset
-      end: lineEnd
-    }
+    return new Command(dType, dArgs, line, lineOffset, lineEnd)
 
 
-# scan backwards in the tokens array from tokens[start] to find the preceding uniform
-# e.g. `uniform vec2 u_name;`
-# return e.g. {name: 'u_name', type: 'vec2'} if the previous statement was a uniform,
-# null otherwise
+# scan backwards in the tokens array from tokens[i] to find the preceding uniform on
+# the same line e.g. `uniform vec2 u_name;`
+# return e.g. {name: 'u_name', type: 'vec2'} if the previous statement on the same line
+# was a uniform, null otherwise
 findUniform = (tokens, i) ->
   prev3 = []
   while i >= 0 and prev3.length < 3
     token = tokens[i--]
+    unless token.data.indexOf('\n') is -1
+      break
     if token.type is 'line-comment' or token.type is 'block-comment' or token.type is 'whitespace' or token.data is ';'
       continue
     unless token.type is 'ident' or token.type is 'keyword'
-      return null
+      break
     prev3.unshift token.data
 
   unless prev3.length is 3

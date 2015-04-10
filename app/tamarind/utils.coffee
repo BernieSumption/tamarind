@@ -94,3 +94,18 @@ module.exports =
   setTamarindGlobal: (tg) ->
     _tamarindGlobal = tg
     return
+
+
+  # check whether a value is the correct type
+  # @param expectedType either a string, in which case it must equal `typeof actualValue`, or
+  #                     a function, in which case `actualValue instanceof expectedType` must be true
+  validateType: (actualValue, expectedType, propertyName) ->
+    if typeof expectedType is 'string'
+      correct = typeof actualValue is expectedType
+    else if typeof expectedType is 'function'
+      correct = actualValue instanceof expectedType
+    else
+      throw new Error("expectedType must be a string or class, not '#{expectedType}'")
+
+    unless correct
+      throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")

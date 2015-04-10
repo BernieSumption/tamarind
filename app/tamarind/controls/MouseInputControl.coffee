@@ -8,7 +8,7 @@ class MouseInput extends InputControlBase
 
 
   onEachFrame: ->
-    d = +@_data.damping
+    d = +@_command.getArg('damping')
     mouseX = (1 - d) * @_state.mouseX + d * (@_mouseX or 0)
     mouseY = (1 - d) * @_state.mouseY + d * (@_mouseY or 0)
     unless @_mouseX is mouseX and @_mouseY is mouseY

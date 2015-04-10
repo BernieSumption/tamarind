@@ -5,7 +5,7 @@ class ColorInput extends InputControlBase
 
   _getDisplayDP: ->
     # minimum decimal places to show full precision of step
-    return ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @_data.step))))
+    return ~~Math.max(0, Math.min(18, Math.ceil(Math.log10(1 / @_command.step))))
 
 
   # Return the current value of the input

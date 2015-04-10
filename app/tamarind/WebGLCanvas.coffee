@@ -328,7 +328,7 @@ class WebGLCanvas
   # @private
   _setAllUniformsFromState: =>
     for input in @_state.inputs
-      @_setUniform(input.name, input.value)
+      @_setUniformFromState(input.uniformName)
 
   # @private
   _setUniformFromState: (propertyName) =>

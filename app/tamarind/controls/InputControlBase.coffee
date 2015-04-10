@@ -27,15 +27,15 @@ class InputControlBase extends UIComponent
 
 
 
-  constructor: (@_data, _state) ->
+  constructor: (@_command, _state) ->
     super(_state, TEMPLATE)
     @_inputElement = @_makeInputElement()
     if @_inputElement
       @css('.tamarind-controls-control-ui').appendChild @_inputElement
-    @setInnerText '.tamarind-controls-control-name', @_data.uniform.name.replace(/^u_/, '').replace('_', ' ')
+    @setInnerText '.tamarind-controls-control-name', @_command.uniformName.replace(/^u_/, '').replace('_', ' ')
     @_valueDisplay = @css '.tamarind-controls-control-value'
     @_displayDP = @_getDisplayDP()
-    @setValue(_state.getInputValue(@_data.uniform.name))
+    @setValue(_state.getInputValue(@_command.uniformName))
 
 
 
@@ -73,7 +73,7 @@ class InputControlBase extends UIComponent
 
   # Subclasses just arrange for this to be called when the input value changes
   _notifyOfValueChange: =>
-    @_state.setInputValue(@_data.uniform.name, @_getValue())
+    @_state.setInputValue(@_command.uniformName, @_getValue())
     return
 
 

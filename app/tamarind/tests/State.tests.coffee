@@ -4,7 +4,7 @@ utils              = require '../utils.coffee'
 constants          = require '../constants.coffee'
 ShaderCompileError = require '../ShaderCompileError.coffee'
 
-{interestingInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
+{mockSliderInput, mockColorInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
 
 describe 'State', ->
 
@@ -74,29 +74,34 @@ describe 'State', ->
 
     state = new State()
 
-    state.setShaderSource constants.FRAGMENT_SHADER, 'frag'
+    state.setShaderSource constants.FRAGMENT_SHADER, 'uniform float foo; //! slider'
     state.setShaderSource constants.VERTEX_SHADER, 'vert'
     state.vertexCount = 12345
+    state.setInputValue('foo', [6])
+
 
     serialized = state.save()
 
     state = new State()
 
     expect(state.vertexCount).not.toEqual(12345)
-    expect(state.getShaderSource constants.FRAGMENT_SHADER).not.toEqual('frag')
+    expect(state.getShaderSource constants.FRAGMENT_SHADER).not.toEqual('uniform float foo; //! slider')
     expect(state.getShaderSource constants.VERTEX_SHADER).not.toEqual('vert')
+    expect(-> state.getInputValue('foo')).toThrowError()
 
     listener = stateListener(state)
 
     state.restore(serialized)
 
     expect(state.vertexCount).toEqual(12345)
-    expect(state.getShaderSource constants.FRAGMENT_SHADER).toEqual('frag')
+    expect(state.getShaderSource constants.FRAGMENT_SHADER).toEqual('uniform float foo; //! slider')
     expect(state.getShaderSource constants.VERTEX_SHADER).toEqual('vert')
+    expect(state.getInputValue 'foo').toEqual [6]
 
 
+    expect(listener.inputs.calls.count()).toEqual 1
     expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER, constants.VERTEX_SHADER]
-    expectCallHistory listener.INPUT_VALUE_CHANGE, [] # setting inputs doesn't fire INPUT_VALUE_CHANGE
+    expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'foo' ]
     expectCallHistory listener.controlsExpanded, [false]
 
     return
@@ -158,67 +163,128 @@ describe 'State', ->
 
     expect(state.inputs).toEqual []
 
-    evts = [ interestingInput(name: 'in', value: [4]) ]
+    inputs = [ mockSliderInput(name: 'in' ) ]
 
-    state._setInputs evts
+    state._setInputs inputs
 
-    expect(state.getInputValue('in')).toEqual [4]
-    expect(state.inputs).toEqual(evts)
-    expectCallHistory listener.inputs, [evts]
-
-    state._setInputs [interestingInput(name: 'in', value: [7])]
-    expect(state.getInputValue('in')).toEqual [7]
+    expect(state.inputs).toEqual(inputs)
+    expectCallHistory listener.inputs, [inputs]
 
     return
 
-  it 'should preserve the existing values of inputs through _setInputs when asked', ->
+  it 'should allow setting of input values through get/setInputValue', ->
+
+    state = new State()
+
+    state._setInputs [ mockSliderInput(name: 'in' ) ]
+
+    state.setInputValue('in', [5])
+
+    expect(state.getInputValue('in')).toEqual [5]
+
+    return
+
+  it 'should only dispatch inputsChange events when the inputs actually change', ->
 
     state = new State()
     listener = stateListener(state)
 
+    expect(state.inputs).toEqual []
+
+    inputs = [ mockSliderInput(name: 'in' ) ]
+
+    state._setInputs inputs
+    state._setInputs [ mockSliderInput(name: 'in' ) ] # equivalent but different objects
+
+    expectCallHistory listener.inputs, [inputs]
+
+    return
+
+  it 'should throw an error when asked for the value of a non-existent input', ->
+
+    state = new State()
+
+    expect(-> state.getInputValue('blarty')).toThrow(new Error("no input 'blarty'"))
+
+
+    return
+
+  it 'should default the value of a new input to an array of zeroes of the correct length', ->
+
+    state = new State()
+
     state._setInputs [
-      interestingInput(name: 'a')
-      interestingInput(name: 'b')
+      mockSliderInput(name: 'slider'),
+      mockColorInput(name: 'color'),
+    ]
+
+    expect(state.getInputValue('slider')).toEqual [0]
+    expect(state.getInputValue('color')).toEqual [0, 0, 0]
+
+    return
+
+  it 'should preserve the existing values of inputs when the input is re-set to an input of the same type using _setInputs', ->
+
+    state = new State()
+
+    state._setInputs [
+      mockSliderInput(name: 'a')
     ]
 
     state.setInputValue('a', [1])
-    state.setInputValue('b', [2])
 
-    expect(state.inputs).toEqual [
-      interestingInput(name: 'a')
-      interestingInput(name: 'b')
+    expect(state.getInputValue 'a').toEqual [1]
+
+    state._setInputs [
+      mockSliderInput(name: 'a', min: -20)
     ]
 
     expect(state.getInputValue 'a').toEqual [1]
-    expect(state.getInputValue 'b').toEqual [2]
 
     state._setInputs [
-      interestingInput(name: 'a')
-      interestingInput(name: 'b')
-      interestingInput(name: 'c', value: [5])
-    ], true
+      mockColorInput(name: 'a')
+    ]
 
-    state.setInputValue('c', [5])
+    expect(state.getInputValue 'a').toEqual [0, 0, 0]
 
-    expect(state.getInputValue 'a').toEqual [1]
-    expect(state.getInputValue 'b').toEqual [2]
-    expect(state.getInputValue 'c').toEqual [5]
+    return
+
+  it 'should remove an input value from the persisted value map when the corresponding input is removed', ->
+
+    state = new State()
+
+    state._setInputs [
+      mockSliderInput(name: 'a')
+    ]
+
+    state.setInputValue('a', [1])
+
+    expect(state._persistent.inputValues.a).toEqual [1]
+
+    state._setInputs [
+      mockSliderInput(name: 'b')
+    ]
+
+    expect(state._persistent.inputValues.a).toBeUndefined()
 
     return
 
 
-  it 'should allow the access to input values through (get/set)InputValue', ->
+
+  it 'should dispatch INPUT_VALUE_CHANGE events when... well, when an input value changes I suppose', ->
 
     state = new State()
     listener = stateListener(state)
 
     spyOn(console, 'error')
 
-    state._setInputs [ interestingInput(name: 'my_slider', value: [5]) ]
+    state._setInputs [ mockSliderInput(name: 'my_slider') ]
 
-    expect(state.getInputValue 'my_slider').toEqual [5]
+    state.setInputValue('my_slider', [0]) # same as default value, no change event
 
-    state.setInputValue 'my_slider', null # error message, no event, no effect
+    state.setInputValue('my_slider', [5]) # new value, change event
+
+    state.setInputValue 'my_slider', null # error message, no change event, no effect
 
     expect(state.getInputValue 'my_slider').toEqual [5]
 
@@ -228,9 +294,7 @@ describe 'State', ->
 
     expectCallHistory console.error, ['invalid value for my_slider: null']
 
-
-
-    expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'my_slider' ]
+    expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'my_slider', 'my_slider' ]
 
     return
 

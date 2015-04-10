@@ -40,7 +40,7 @@
     "coffee-script": "^1.9.1",
     "coffeeify": "^1.0.0",
     "coffeelint": "^1.9.3",
-    "coffeelint-no-implicit-returns": "0.0.4",
+    "coffeelint-no-implicit-returns": "BernieSumption/coffeelint-no-implicit-returns#9c8f4dfc16",
     "del": "^1.1.1",
     "exorcist": "^0.1.6",
     "glob": "^5.0.3",

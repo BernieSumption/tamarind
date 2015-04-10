@@ -84,27 +84,26 @@
 
 
     function bindInputToProperty(propertyName, type) {
-      var input = document.getElementById(propertyName);
-      input.value = state[propertyName];
+      var inputElement = document.getElementById(propertyName);
+      inputElement.value = state[propertyName];
       var update = function() {
-        state[propertyName] = type ? type(input.value) : input.value;
+        state[propertyName] = type ? type(inputElement.value) : inputElement.value;
       }
-      input.addEventListener("input", update);
+      inputElement.addEventListener("input", update);
     }
 
     function bindInputToShader(shaderType) {
-      var input = document.getElementById(shaderType);
-      input.value = state.getShaderSource(shaderType);
+      var inputElement = document.getElementById(shaderType);
+      inputElement.value = state.getShaderSource(shaderType);
       var update = function() {
-        state.setShaderSource(shaderType, input.value);
+        state.setShaderSource(shaderType, inputElement.value);
       }
-      input.addEventListener("input", update);
+      inputElement.addEventListener("input", update);
     }
 
-    function bindInput(input, initialValue, oninput) {
-
-      input.value = initialValue;
-      input.addEventListener("input", oninput);
+    function bindInput(inputElement, initialValue, oninput) {
+      inputElement.value = initialValue;
+      inputElement.addEventListener("input", oninput);
     }
 
     function generateImage() {

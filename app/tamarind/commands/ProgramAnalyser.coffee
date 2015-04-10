@@ -49,7 +49,7 @@ class ShaderAnalyser
     @unvalidatedCommands = []
     @errors = []
     @commands = []
-    @commandsByUniformName = {}
+    @inputCommandsByUniformName = {}
     @standaloneCommandsByTypeName = {}
     return
 
@@ -63,9 +63,9 @@ class ShaderAnalyser
         @unvalidatedErrors.push(command)
       else
         @unvalidatedCommands.push(command)
-        if command.uniform
-          @commandsByUniformName[command.uniform.name] = command
-        else
+        if command.isInput()
+          @inputCommandsByUniformName[command.uniformName] = command
+        else if command.isStandalone()
           @standaloneCommandsByTypeName[command.type.name] = command
 
 
@@ -76,12 +76,12 @@ class ShaderAnalyser
     @commands = []
 
     for command in @unvalidatedCommands
-      if command.uniform
-        otherCommand = other.commandsByUniformName[command.uniform.name]
+      if command.isInput()
+        otherCommand = other.inputCommandsByUniformName[command.uniformName]
         if otherCommand
           prettyOtherType = otherShaderType(@_shaderType).toLowerCase().replace('_', ' ')
           @errors.push new CommandError(
-            "uniform '#{otherCommand.uniform.name}' already has a '#{otherCommand.type.name}' command in the #{prettyOtherType}",
+            "uniform '#{otherCommand.uniformName}' already has a '#{otherCommand.type.name}' command in the #{prettyOtherType}",
             command.line, command.start, command.end)
         else
           @commands.push command

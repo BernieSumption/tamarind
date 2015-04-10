@@ -4,6 +4,8 @@ ProgramAnalyser    = require './commands/ProgramAnalyser.coffee'
 std_command_parser = require './commands/std_command_parser.coffee'
 constants          = require './constants.coffee'
 indexBy            = require 'lodash/collection/indexBy'
+isEqual            = require 'lodash/lang/isEqual'
+fill               = require 'lodash/array/fill'
 
 
 ###
@@ -73,6 +75,7 @@ class State extends EventEmitter
       vertexCount: PROPERTY_DEFAULTS.vertexCount
       drawingMode: PROPERTY_DEFAULTS.drawingMode
       controlsExpanded: PROPERTY_DEFAULTS.controlsExpanded
+      inputValues: {}
     }
 
     @_analyser = new ProgramAnalyser(std_command_parser)
@@ -108,12 +111,13 @@ class State extends EventEmitter
   # @param value GLSL source code for the shader
   setShaderSource: (shaderType, source) ->
     @_validateShaderType(shaderType)
-    @_validateType(source, 'string', 'shaderType')
+    utils.validateType(source, 'string', 'shaderType')
     if @_persistent[shaderType] isnt source
       @_persistent[shaderType] = source
       @_analyser.setShaderSource(shaderType, source)
       @_setInputs(@_analyser.getCommands())
       @emit @SHADER_CHANGE, shaderType
+      @emit @SHADER_ERRORS_CHANGE, shaderType
       @_scheduleChangeEvent()
     return
 
@@ -160,11 +164,21 @@ class State extends EventEmitter
 
   # Overwrite the existing inputs array with a new one.
   # @param inputs an array of objects representing inputs, see the Inputs class for details.
-  # @param preserveValues if true, inputs with the same name will keep their existing values, if false the value will be set to the default.
-  _setInputs: (inputs, preserveValues = false) ->
-    sanitised = []
+  _setInputs: (inputs) ->
+
+    if isEqual(@_transient.inputs, inputs)
+      return
+
     @_transient.inputs = inputs
-    @_transient.inputsByName = indexBy inputs, (i) -> i.uniform.name
+    @_transient.inputsByName = indexBy inputs, 'uniformName'
+
+    newInputValues = {}
+    for input in inputs
+      value = @_persistent.inputValues[input.uniformName]
+      unless value and value.length is input.type.dataLength
+        value = fill(Array(input.type.dataLength), 0)
+      newInputValues[input.uniformName] = value
+    @_persistent.inputValues = newInputValues
 
     @emit PROPERTY_CHANGE_EVENTS.inputs, @_transient.inputs
     @_scheduleChangeEvent()
@@ -175,17 +189,16 @@ class State extends EventEmitter
     if @_analyser.getCommandErrors(constants.VERTEX_SHADER).length > 0
       @emit @SHADER_ERRORS_CHANGE, constants.VERTEX_SHADER
 
-    return sanitised
+    return
 
 
-
-  # get the value of a specific input
-  hasInput: (inputName) ->
-    return @_transient.inputsByName[inputName] isnt undefined
 
   # get the value of a specific input
   getInputValue: (inputName) ->
-    return @_getInputByName(inputName).value
+    value = @_persistent.inputValues[inputName]
+    if value is undefined
+      throw new Error("no input '#{inputName}'")
+    return value
 
   # set the value of a specific input
   setInputValue: (inputName, value) ->
@@ -193,21 +206,14 @@ class State extends EventEmitter
     unless Array.isArray(value) and value.length is input.type.dataLength
       utils.logError "invalid value for #{inputName}: " + JSON.stringify(value)
       return
-    changed = false
-    for item, i in value
-      unless item is input.value[i]
-        changed = true
-        break
-    if changed
-      input.value = value
+    unless isEqual(@_persistent.inputValues[inputName], value)
+      @_persistent.inputValues[inputName] = value
       @emit @INPUT_VALUE_CHANGE, inputName
       @_scheduleChangeEvent()
     return
 
   _getInputByName: (inputName) ->
     input = @_transient.inputsByName[inputName]
-    unless input
-      throw new Error("no input '#{inputName}'")
     return input
 
 
@@ -225,6 +231,9 @@ class State extends EventEmitter
       else if WRITABLE_PROPERTIES[key]
         @[key] = value
         @emit PROPERTY_CHANGE_EVENTS[key], value
+      else if key is 'inputValues'
+        for k, v of value
+          @setInputValue(k, v)
       else
         utils.logError 'restore() ignoring unrecognised key ' + key
     return
@@ -244,11 +253,6 @@ class State extends EventEmitter
   _validateShaderType: (shaderType) ->
     if @_persistent[shaderType] is undefined
       throw new Error("Invalid shader type: #{shaderType}")
-
-  # @private
-  _validateType: (actualValue, expectedType, propertyName) ->
-    unless typeof actualValue is expectedType
-      throw new Error("Can't set '#{propertyName}' to '#{actualValue}': expected a '#{expectedType}'")
 
 
   PROPERTY_DEFAULTS = {}
@@ -279,7 +283,7 @@ class State extends EventEmitter
       set: (newValue) ->
         if readOnly
           throw new Error("#{propertyName} is read only")
-        @_validateType(newValue, valueType, propertyName)
+        utils.validateType(newValue, valueType, propertyName)
         unless @[storage][propertyName] is newValue
           @[storage][propertyName] = newValue
           @emit PROPERTY_CHANGE_EVENTS[propertyName], newValue

@@ -154,10 +154,8 @@ describe 'CommandParser.parseGLSL', ->
     expectProperties parser.parseGLSL(source), [
       {
         type: myInput
-        uniform: {
-          name: 'foo',
-          type: 'vec3'
-        }
+        uniformType: 'vec3',
+        uniformName: 'foo',
         args: [
           ['in0', 5]
         ]
@@ -173,8 +171,7 @@ describe 'CommandParser.parseGLSL', ->
 
     source = '''
       // foo
-      uniform /* */ vec3 // blarty
-         foo ; ; //! myInput
+      uniform /* */ vec3 /* blarty */ foo ; ; //! myInput
       // lala!
       void main() {} // bumpf after
     '''
@@ -188,7 +185,7 @@ describe 'CommandParser.parseGLSL', ->
 
   it 'should return an error when an input command does not appear directly after a uniform', ->
 
-# other code between uniform and command is not OK
+    # other code between uniform and command is not OK
     source = '\n\nuniform vec3 foo; float bar; //! myInput '
     expectProperties parser.parseGLSL(source), [
       message: "'myInput' command must appear directly after a uniform declaration"
@@ -198,6 +195,12 @@ describe 'CommandParser.parseGLSL', ->
 
     # uniform on previous line is not OK
     source = '\n\nuniform vec3 foo; \n //! myInput '
+    expectProperties parser.parseGLSL(source), [
+      message: "'myInput' command must appear directly after a uniform declaration"
+    ]
+
+    # line break inside comment is still not OK
+    source = '\n\nuniform /* \n */ vec3 foo; //! myInput '
     expectProperties parser.parseGLSL(source), [
       message: "'myInput' command must appear directly after a uniform declaration"
     ]
@@ -225,7 +228,6 @@ describe 'CommandParser.parseGLSL', ->
     expected = [
       {
         type: myStandalone
-        uniform: null
         args: [
           ['cmd1', -11.4]
         ]
@@ -258,18 +260,18 @@ describe 'CommandParser.parseGLSL', ->
     expectProperties parser.parseGLSL(source), [
       {
         type: myInput
-        uniform:
-          type: 'vec3'
-          name: 'foo'
+        uniformType: 'vec3',
+        uniformName: 'foo',
       },
       {
         type: myInput
-        uniform:
-          type: 'vec3'
-          name: 'bar'
+        uniformType: 'vec3',
+        uniformName: 'bar',
       },
       {
         type: myStandalone
+        uniformType: undefined,
+        uniformName: undefined,
       }
     ]
 

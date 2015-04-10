@@ -59,7 +59,7 @@ class ControlDrawer extends UIComponent
     for input in inputs
       editor = input.type.makeEditor(input, @_state)
       editor.appendTo wrapper
-      @_editorsByName[input.name] = editor
+      @_editorsByName[input.uniformName] = editor
 
     return
 

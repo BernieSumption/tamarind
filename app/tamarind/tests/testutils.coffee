@@ -28,10 +28,7 @@ module.exports =
 
 
   # return a slider input with non-default values
-  interestingInput: (overrides = {}) ->
-
-    if overrides.value
-      throw new Error("Value isn't set as psrt of the input any mode, update this test")
+  mockSliderInput: (overrides = {}) ->
 
     name = overrides.name or 'my_slider'
     min  = overrides.min or -10
@@ -39,6 +36,12 @@ module.exports =
     step = overrides.step or 1
 
     return std_command_parser.parseGLSL("uniform float #{name}; //! slider min #{min} max #{max} step #{step}")[0]
+
+  mockColorInput: (overrides = {}) ->
+
+    name = overrides.name or 'my_color'
+
+    return std_command_parser.parseGLSL("uniform vec3 #{name}; //! color")[0]
 
 
   # similar to expect(test).toEqual(jasmine.objectContaining(properties)) but with more
