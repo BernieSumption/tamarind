@@ -155,6 +155,7 @@ class State extends EventEmitter
   # @param errors [number] an array of ShaderCompileError objects
   setShaderErrors: (shaderType, errorText, errors) ->
     @_validateShaderType(shaderType)
+    utils.validateType(errors, Array, 'errors')
     if @_transient.shaders[shaderType].errorText isnt errorText
       @_transient.shaders[shaderType].errorText = errorText
       @_transient.shaders[shaderType].errors = errors

@@ -3,6 +3,7 @@ Tamarind           = require '../Tamarind.coffee'
 utils              = require '../utils.coffee'
 constants          = require '../constants.coffee'
 ShaderCompileError = require '../ShaderCompileError.coffee'
+{expectProperties} = require '../tests/testutils.coffee'
 
 {mockSliderInput, mockColorInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
 
@@ -135,7 +136,6 @@ describe 'State', ->
     return
 
 
-
   it 'should handle log and error messages', ->
 
     spyOn(console, 'log')
@@ -156,6 +156,7 @@ describe 'State', ->
 
     return
 
+
   it 'should allow setting of inputs through _setInputs', ->
 
     state = new State()
@@ -172,6 +173,7 @@ describe 'State', ->
 
     return
 
+
   it 'should allow setting of input values through get/setInputValue', ->
 
     state = new State()
@@ -183,6 +185,7 @@ describe 'State', ->
     expect(state.getInputValue('in')).toEqual [5]
 
     return
+
 
   it 'should only dispatch inputsChange events when the inputs actually change', ->
 
@@ -200,6 +203,7 @@ describe 'State', ->
 
     return
 
+
   it 'should throw an error when asked for the value of a non-existent input', ->
 
     state = new State()
@@ -208,6 +212,7 @@ describe 'State', ->
 
 
     return
+
 
   it 'should default the value of a new input to an array of zeroes of the correct length', ->
 
@@ -222,6 +227,7 @@ describe 'State', ->
     expect(state.getInputValue('color')).toEqual [0, 0, 0]
 
     return
+
 
   it 'should preserve the existing values of inputs when the input is re-set to an input of the same type using _setInputs', ->
 
@@ -249,6 +255,7 @@ describe 'State', ->
 
     return
 
+
   it 'should remove an input value from the persisted value map when the corresponding input is removed', ->
 
     state = new State()
@@ -259,13 +266,13 @@ describe 'State', ->
 
     state.setInputValue('a', [1])
 
-    expect(state._persistent.inputValues.a).toEqual [1]
+    expect(state._persistent.inputValues).toEqual {a: [1]}
 
     state._setInputs [
       mockSliderInput(name: 'b')
     ]
 
-    expect(state._persistent.inputValues.a).toBeUndefined()
+    expect(state._persistent.inputValues).toEqual {b: [0]}
 
     return
 
@@ -295,6 +302,26 @@ describe 'State', ->
     expectCallHistory console.error, ['invalid value for my_slider: null']
 
     expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'my_slider', 'my_slider' ]
+
+    return
+
+
+  it 'should return a combination of shader and command errors from getShaderErrors', ->
+
+    state = new State()
+
+    source = '''
+      uniform vec4 mouse; //! mouse
+    ''' # error - mouse requires vec2
+
+    state.setShaderSource(constants.FRAGMENT_SHADER, source)
+
+    state.setShaderErrors(constants.FRAGMENT_SHADER, null, [new ShaderCompileError('hello world')])
+
+    expectProperties state.getShaderErrors(constants.FRAGMENT_SHADER), [
+      {message: 'hello world'},
+      {message: "'mouse' command can only be applied to a uniform vec2"}
+    ]
 
     return
 
