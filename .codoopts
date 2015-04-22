@@ -2,5 +2,5 @@
 --readme     README.md
 --title      "Tamarind Documentation"
 --extension  coffee
---output     ./docs
+--output     ./build/docs
 ./app

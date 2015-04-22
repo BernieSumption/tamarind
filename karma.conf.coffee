@@ -6,12 +6,19 @@ module.exports = (config) -> config.set
   preprocessors:
     '**/*.js': ['sourcemap']
 
-  frameworks: ['jasmine']
+  frameworks: ['browserify', 'jasmine']
 
   # list of files / patterns to load in the browser
   files: [
-    'build/tamarind.tests.js'
+    './app/**/*.tests.coffee'
   ]
+
+  preprocessors: {
+    './app/**/*.tests.coffee': [ 'browserify' ]
+  },
+
+  browserify:
+    debug: true
 
   # list of files to exclude
   exclude: []
