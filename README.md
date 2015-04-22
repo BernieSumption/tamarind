@@ -9,7 +9,8 @@ Tamarind is named after the [tamarind](http://en.wikipedia.org/wiki/Tamarind) fr
 You can run demos and tests from the HTML files in the dist folder. For development, including live reloading of code changes, use:
 
 ```
-npm install gulp-cli
-npm install
-gulp live
+git clone https://github.com/BernieSumption/tamarind.git
+cd tamarind
+npm start
+# this will start a local development server and print out the URL
 ```
