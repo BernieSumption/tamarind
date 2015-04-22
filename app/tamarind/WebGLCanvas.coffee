@@ -1,8 +1,9 @@
 utils               = require './utils.coffee'
 constants           = require './constants.coffee'
 WebGLDebugUtils     = require './WebGLDebugUtils.js'
-ShaderCompileError  = require  './ShaderCompileError.coffee'
+ShaderCompileError  = require './ShaderCompileError.coffee'
 Tamarind            = require './Tamarind.coffee'
+UIComponent         = require './UIComponent.coffee'
 
 ###
   An object associated with a canvas element that manages the WebGL context
@@ -30,7 +31,11 @@ Tamarind            = require './Tamarind.coffee'
   are cleaned up and done again. For example, changing vertexCount will invalidate the GEOM step which
   requires uniforms to be set again.
 ###
-class WebGLCanvas
+class WebGLCanvas extends UIComponent
+  
+  TEMPLATE = '''
+    <canvas class="tamarind-render-canvas"></canvas>
+  '''
 
   VERTEX_INDEX_ATTRIBUTE_LOCATION = 0
 
@@ -41,21 +46,22 @@ class WebGLCanvas
   ## PUBLIC API METHODS
   ##
 
-  # @param [HTMLCanvasElement] @canvasElement the canvas element to render onto
+  # @param [HTMLCanvasElement] @_element the canvas element to render onto
   # @param [State] @state the state object for this canvas, or null to create one
-  constructor: (@canvasElement, @_state) ->
+  constructor: (state) ->
+    super(state, TEMPLATE)
 
     unless utils.browserSupportsRequiredFeatures()
       throw new Error 'This browser does not support WebGL'
 
-    @canvasElement.addEventListener 'webglcontextcreationerror', (event) ->
+    @_element.addEventListener 'webglcontextcreationerror', (event) ->
       utils.logInfo event.statusMessage
       return
 
-    @canvasElement.addEventListener 'webglcontextlost', @_handleContextLost
-    @canvasElement.addEventListener 'webglcontextrestored', @_handleContextRestored
+    @_element.addEventListener 'webglcontextlost', @_handleContextLost
+    @_element.addEventListener 'webglcontextrestored', @_handleContextRestored
 
-    @canvasElement.addEventListener 'mousemove', @_handleMouseMove
+    @_element.addEventListener 'mousemove', @_handleMouseMove
 
     @_state.on @_state.CHANGE, @_doFrame
 
@@ -72,7 +78,7 @@ class WebGLCanvas
     return
 
   _handleMouseMove: (event) =>
-    pos = @canvasElement.getBoundingClientRect()
+    pos = @_element.getBoundingClientRect()
     centreX = pos.left + pos.width / 2
     centreY = pos.top + pos.height / 2
     mouseRelX = event.clientX - centreX
@@ -104,7 +110,7 @@ class WebGLCanvas
     valid = @_doFrame()
     if valid
       @_render(width, height)
-    image = @canvasElement.toDataURL 'image/png'
+    image = @_element.toDataURL 'image/png'
     if valid
       @_render() # restore previous size
 
@@ -163,7 +169,7 @@ class WebGLCanvas
   # @private
   _createContext: ->
     opts = {premultipliedAlpha: false}
-    @nativeContext = @canvasElement.getContext('webgl', opts) or @canvasElement.getContext('experimental-webgl', opts)
+    @nativeContext = @_element.getContext('webgl', opts) or @_element.getContext('experimental-webgl', opts)
 
     # passing undefined as an argument to any WebGL function is an
     # error, so throw an exception to catch it early
@@ -305,13 +311,13 @@ class WebGLCanvas
     gl = @gl
 
 
-    width = explicitWidth or Math.round(@canvasElement.offsetWidth * (window.devicePixelRatio or 1))
-    height = explicitHeight or Math.round(@canvasElement.offsetHeight * (window.devicePixelRatio or 1))
+    width = explicitWidth or Math.round(@_element.offsetWidth * (window.devicePixelRatio or 1))
+    height = explicitHeight or Math.round(@_element.offsetHeight * (window.devicePixelRatio or 1))
 
     unless width is @_state.canvasWidth and height is @_state.canvasHeight
 
-      @_state.canvasWidth  = @canvasElement.width = width
-      @_state.canvasHeight = @canvasElement.height = height
+      @_state.canvasWidth  = @_element.width = width
+      @_state.canvasHeight = @_element.height = height
 
       gl.viewport 0, 0, width, height
 

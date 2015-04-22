@@ -39,8 +39,6 @@ class Tamarind extends UIComponent
       <div class="tamarind-editor-panel">
       </div>
       <div class="tamarind-render-panel">
-        <canvas class="tamarind-render-canvas"></canvas>
-        <div class="tamarind-controls-marker"></div>
       </div>
     </div>
   """
@@ -66,10 +64,11 @@ class Tamarind extends UIComponent
 
     editorPanel = @css '.tamarind-editor-panel'
 
-    new WebGLCanvas(@css('.tamarind-render-canvas'), @_state)
+    webGLCanvas = new WebGLCanvas(@_state)
+    webGLCanvas.appendTo(@css '.tamarind-render-panel')
 
     controlDrawer = new ControlDrawer(@_state)
-    controlDrawer.overwrite(@css('.tamarind-controls-marker'))
+    controlDrawer.appendTo(@css('.tamarind-render-panel'))
 
     @_codeEditor = new CodeEditor(@_state)
     @_codeEditor.appendTo editorPanel
