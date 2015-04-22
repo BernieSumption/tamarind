@@ -88,7 +88,7 @@ describe 'WebGLCanvas', ->
 
   createCanvasAndState = ->
     state = new State()
-    canvas = new WebGLCanvas(document.createElement('canvas'), state)
+    canvas = new WebGLCanvas(state)
     return [canvas, state]
 
   it 'should render a test image', (done) ->
