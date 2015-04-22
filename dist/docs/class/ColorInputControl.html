@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>Tamarind Documentation</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/README.md.html' title='Tamarind'>
+      Tamarind
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>ColorInputControl</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        ColorInputControl
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>app&#47;tamarind&#47;controls&#47;ColorInputControl.coffee</td>
+        </tr>
+        <tr>
+          <td>Inherits:</td>
+          <td>
+            <a href='../class/InputControlBase.html'>InputControlBase</a>
+          </td>
+        </tr>
+      </table>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#_getDisplayDP-dynamic'>
+        #
+(void)
+<b>_getDisplayDP</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_getValue-dynamic'>
+        #
+(void)
+<b>_getValue</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Return the current value of the input 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_parseValue-dynamic'>
+        #
+(void)
+<b>_parseValue</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_updateInputElement-dynamic'>
+        #
+(void)
+<b>_updateInputElement</b><span>(value)</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_formatValueForUser-dynamic'>
+        #
+(void)
+<b>_formatValueForUser</b><span>(value)</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_makeInputElement-dynamic'>
+        #
+(void)
+<b>_makeInputElement</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_valueToHex-dynamic'>
+        #
+(void)
+<b>_valueToHex</b><span>(value)</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+</ul>
+      <h2>
+        <small>Inherited Method Summary</small>
+        <h3 class='inherited'>
+          Methods inherited from
+          <a href='../class/InputControlBase.html'>InputControlBase</a>
+        </h3>
+        <p class='inherited'>
+          <a href='../class/InputControlBase.html#setValue-dynamic'>#setValue</a>
+          <a href='../class/InputControlBase.html#onEachFrame-dynamic'>#onEachFrame</a>
+          <a href='../class/InputControlBase.html#_makeInputElement-dynamic'>#_makeInputElement</a>
+          <a href='../class/InputControlBase.html#_updateInputElement-dynamic'>#_updateInputElement</a>
+          <a href='../class/InputControlBase.html#_formatValueForUser-dynamic'>#_formatValueForUser</a>
+          <a href='../class/InputControlBase.html#_getDisplayDP-dynamic'>#_getDisplayDP</a>
+          <a href='../class/InputControlBase.html#_notifyOfValueChange-dynamic'>#_notifyOfValueChange</a>
+          <a href='../class/InputControlBase.html#_getValue-dynamic'>#_getValue</a>
+          <a href='../class/InputControlBase.html#_getPrettyValue-dynamic'>#_getPrettyValue</a>
+          <a href='../class/UIComponent.html#overwrite-dynamic'>#overwrite</a>
+          <a href='../class/UIComponent.html#appendTo-dynamic'>#appendTo</a>
+          <a href='../class/UIComponent.html#setVisible-dynamic'>#setVisible</a>
+          <a href='../class/UIComponent.html#setInnerText-dynamic'>#setInnerText</a>
+          <a href='../class/UIComponent.html#css-dynamic'>#css</a>
+          <a href='../class/UIComponent.html#csss-dynamic'>#csss</a>
+          <a href='../class/UIComponent.html#bindInputToState-dynamic'>#bindInputToState</a>
+          <a href='../class/UIComponent.html#setClassIf-dynamic'>#setClassIf</a>
+          <a href='../class/EventEmitter.html#on-dynamic'>#on</a>
+          <a href='../class/EventEmitter.html#off-dynamic'>#off</a>
+          <a href='../class/EventEmitter.html#emit-dynamic'>#emit</a>
+          <a href='../class/EventEmitter.html#_getEventList-dynamic'>#_getEventList</a>
+          <a href='../class/EventEmitter.html#_validateEventArgs-dynamic'>#_validateEventArgs</a>
+        </p>
+      </h2>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='_getDisplayDP-dynamic'>
+      #
+(void)
+<b>_getDisplayDP</b><span>()</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_getValue-dynamic'>
+      #
+(void)
+<b>_getValue</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Return the current value of the input</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_parseValue-dynamic'>
+      #
+(void)
+<b>_parseValue</b><span>()</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_updateInputElement-dynamic'>
+      #
+(void)
+<b>_updateInputElement</b><span>(value)</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_formatValueForUser-dynamic'>
+      #
+(void)
+<b>_formatValueForUser</b><span>(value)</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_makeInputElement-dynamic'>
+      #
+(void)
+<b>_makeInputElement</b><span>()</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_valueToHex-dynamic'>
+      #
+(void)
+<b>_valueToHex</b><span>(value)</span>
+      <br>
+    </p>
+    
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  April 22, 15 15:37:45 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.11
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>

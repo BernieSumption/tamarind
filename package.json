@@ -19,7 +19,7 @@
     "minify": "echo 'cd build && ../node_modules/.bin/uglifyjs tamarind-debug.js --compress --source-map tamarind.js.map --output tamarind.js' | sh",
     "doc": "node_modules/codo/bin/codo app/**/*.coffee",
     "copy-assets": "cp -r app/assets/* ./build/",
-    "dist:noclean": "npm run build && npm run minify && npm run doc && npm run copy-assets && rm -r dist && cp -r build dist",
+    "dist:noclean": "npm run build && npm run minify && npm run doc && npm run copy-assets && rm -rf dist && cp -r build dist",
     "dist": "npm run clean && npm run dist:noclean",
     "start": "./node_modules/.bin/beefy app/tamarind/Tamarind.coffee:tamarind.js --live --index app/assets/test/Tamarind-demo.html -- --standalone Tamarind",
     "test": "echo 'NOTE! FOR LIVE TESTS, RUN `npm install -g karma-cli` THEN `karma start`'; node_modules/.bin/karma start --single-run"

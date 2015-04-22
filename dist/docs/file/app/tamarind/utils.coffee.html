@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>Tamarind Documentation</title>
+  <script src='../../../javascript/application.js'></script>
+  <script src='../../../javascript/search.js'></script>
+  <link rel='stylesheet' href='../../../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../../../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../../../extra/README.md.html' title='Tamarind'>
+      Tamarind
+    </a>
+    &raquo;
+    <a href='../../../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>app</span>
+    &raquo;
+    <span class='title'>tamarind</span>
+    &raquo;
+    <span class='title'>utils.coffee</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        utils.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>app&#47;tamarind</td>
+        </tr>
+      </table>
+      <h2>Variables Summary</h2>
+      <dl class='constants'>
+  <dt id='browserSupportsRequiredFeaturesCache-variable'>
+    browserSupportsRequiredFeaturesCache
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>null</code></pre>
+    
+  </dd>
+  <dt id='_tamarindGlobal-variable'>
+    _tamarindGlobal
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>null</code></pre>
+    
+  </dd>
+  <dt id='module.exports-variable'>
+    module.exports
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>{
+
+  &#47;*
+    Define a property on a class.
+  
+    If the property is `&quot;fooBar&quot;` then this method will require one or both of
+    `_getFooBar()` or `_setFooBar(value)` to exist on the class and create a
+    read-write, read-only or write-only property as appropriate.
+  
+    Additionally, a default value for the property can be provided in the class
+    definition alongside the method declarations.
+  
+    @example
+      class Foo
+        prop: 4 # default value, will be set as prototype._prop = 4
+        _getProp: -&gt; @_prop
+        _setProp: (val) -&gt; @_prop = val
+  
+      defineClassProperty Foo, &quot;prop&quot;
+   *&#47;
+  defineClassProperty: function(cls, propertyName) {
+    var PropertyName, config, getter, initialValue, setter;
+    PropertyName = propertyName[0].toUpperCase() + propertyName.slice(1);
+    getter = cls.prototype[&#39;_get&#39; + PropertyName];
+    setter = cls.prototype[&#39;_set&#39; + PropertyName];
+    if (!(getter || setter)) {
+      throw new Error(propertyName + &#39; must name a getter or a setter&#39;);
+    }
+    initialValue = cls.prototype[propertyName];
+    if (initialValue !== void 0) {
+      cls.prototype[&#39;_&#39; + propertyName] = initialValue;
+    }
+    config = {
+      enumerable: true,
+      get: getter || function() {
+        throw new Error(propertyName + &#39; is write-only&#39;);
+      },
+      set: setter || function() {
+        throw new Error(propertyName + &#39; is read-only&#39;);
+      }
+    };
+    Object.defineProperty(cls.prototype, propertyName, config);
+  },
+
+  &#47;*
+    Return false if the browser can&#39;t handle the awesome.
+   *&#47;
+  browserSupportsRequiredFeatures: function() {
+    var browserSupportsRequiredFeaturesCache, canvas, ctx;
+    if (browserSupportsRequiredFeaturesCache === null) {
+      try {
+        canvas = document.createElement(&#39;canvas&#39;);
+        ctx = canvas.getContext(&#39;webgl&#39;) || canvas.getContext(&#39;experimental-webgl&#39;);
+      } catch (_error) {}
+      browserSupportsRequiredFeaturesCache = !!(ctx &amp;&amp; Object.defineProperty);
+    }
+    return browserSupportsRequiredFeaturesCache;
+  },
+
+  &#47;*
+    Convert an HTML string representing a single element into a DOM node.
+   *&#47;
+  parseHTML: function(html) {
+    var el, tmp;
+    tmp = document.createElement(&#39;div&#39;);
+    tmp.innerHTML = html.trim();
+    if (tmp.childNodes.length &gt; 1) {
+      throw new Error(&#39;html must represent single element&#39;);
+    }
+    el = tmp.childNodes[0];
+    tmp.removeChild(el);
+    return el;
+  },
+
+  &#47;*
+  Record an error. This will results in a thrown exception in debugMode or a console error in normal mode
+   *&#47;
+  logError: function(message) {
+    if (typeof _tamarindGlobal !== &quot;undefined&quot; &amp;&amp; _tamarindGlobal !== null ? _tamarindGlobal.debugMode : void 0) {
+      throw new Error(&#39;debugMode: &#39; + message);
+    } else {
+      console.error(message);
+    }
+  },
+
+  &#47;*
+  Record an event. This will results in a console log in debugMode or nothing in normal mode
+   *&#47;
+  logInfo: function(message) {
+    if (typeof _tamarindGlobal !== &quot;undefined&quot; &amp;&amp; _tamarindGlobal !== null ? _tamarindGlobal.debugMode : void 0) {
+      console.log(message);
+    }
+  },
+
+  &#47;*
+  used to wire up the Tamarind class without creating a circular dependency by require&#39;ing it at the top of the file
+   *&#47;
+  setTamarindGlobal: function(tg) {
+    var _tamarindGlobal;
+    _tamarindGlobal = tg;
+  },
+
+  &#47;*
+  check whether a value is the correct type
+  @param expectedType either a string, in which case it must equal `typeof actualValue`, or
+                      a function, in which case `actualValue instanceof expectedType` must be true
+   *&#47;
+  validateType: function(actualValue, expectedType, propertyName) {
+    var correct;
+    if (typeof expectedType === &#39;string&#39;) {
+      correct = typeof actualValue === expectedType;
+    } else if (typeof expectedType === &#39;function&#39;) {
+      correct = actualValue instanceof expectedType;
+    } else {
+      throw new Error(&quot;expectedType must be a string or class, not &#39;&quot; + expectedType + &quot;&#39;&quot;);
+    }
+    if (!correct) {
+      throw new Error(&quot;Can&#39;t set &#39;&quot; + propertyName + &quot;&#39; to &#39;&quot; + actualValue + &quot;&#39;: expected a &#39;&quot; + expectedType + &quot;&#39;&quot;);
+    }
+  }
+}</code></pre>
+    
+  </dd>
+</dl>
+    </div>
+    <div id='footer'>
+  April 22, 15 15:37:45 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.11
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>
