@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>Tamarind Documentation</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/README.md.html' title='Tamarind'>
+      Tamarind
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>Command</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        Command
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>app&#47;tamarind&#47;commands&#47;Command.coffee</td>
+        </tr>
+      </table>
+      <h2>Overview</h2>
+      <div class='docstring'>
+  <p>Represents a command directive parsed from GLSL source code, e.g.
+<code>uniform float foo; //! slider</code></p>
+</div>
+<div class='tags'>
+</div>
+      <h2>Property Summary</h2>
+      <dl class='properties'>
+        <dt id='type-property'>
+          <span class='signature'>
+            (CommandType)
+            <b>
+              type
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          
+        </dd>
+        <dt id='line-property'>
+          <span class='signature'>
+            (int)
+            <b>
+              line
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          the source code line on which this command was found 
+        </dd>
+        <dt id='start-property'>
+          <span class='signature'>
+            (int)
+            <b>
+              start
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          the column index of the command comment (<code>//!</code>) start 
+        </dd>
+        <dt id='end-property'>
+          <span class='signature'>
+            (int)
+            <b>
+              end
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          the column index of the command comment (<code>//!</code>) end 
+        </dd>
+      </dl>
+      <h2>Variables Summary</h2>
+      <dl class='constants'>
+  <dt id='isError-variable'>
+    isError
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>false</code></pre>
+    
+  </dd>
+  <dt id='args-variable'>
+    args
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>[]</code></pre>
+    <div class='docstring'>
+  <p>an array of [name, value] pairs representing arguments supplied in source code,
+before application of default values</p>
+</div>
+<div class='tags'>
+</div>
+  </dd>
+</dl>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#setUniform-dynamic'>
+        #
+(void)
+<b>setUniform</b><span>(uniformType, uniformName)</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#isInput-dynamic'>
+        #
+(void)
+<b>isInput</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#isStandalone-dynamic'>
+        #
+(void)
+<b>isStandalone</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#getArg-dynamic'>
+        #
+(void)
+<b>getArg</b><span>(name)</span>
+      </a>
+    </span>
+    <span class='desc'>
+    </span>
+  </li>
+</ul>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-dynamic'>
+      #
+(void)
+<b>constructor</b><span>(type, args, line, start, end)</span>
+      <br>
+    </p>
+    
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='setUniform-dynamic'>
+      #
+(void)
+<b>setUniform</b><span>(uniformType, uniformName)</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='isInput-dynamic'>
+      #
+(void)
+<b>isInput</b><span>()</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='isStandalone-dynamic'>
+      #
+(void)
+<b>isStandalone</b><span>()</span>
+      <br>
+    </p>
+    
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='getArg-dynamic'>
+      #
+(void)
+<b>getArg</b><span>(name)</span>
+      <br>
+    </p>
+    
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  April 22, 15 15:37:45 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.11
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>

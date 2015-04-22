@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Main demo</title>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
+</head>
+<body style="background: #EEE">
+
+<div id="insertEditorHere"></div>
+
+<script src="/tamarind.js"></script>
+
+<div id="editor-location"></div>
+
+<input type="button" value="save 1" onclick="state1 = state.save()">
+<input type="button" value="load 1" onclick="state.restore(state1)">
+<input type="button" value="save 2" onclick="state2 = state.save()">
+<input type="button" value="load 2" onclick="state.restore(state2)">
+
+
+<input type="button" value="lose context" onclick="loseContext.loseContext()">
+<input type="button" value="restore context" onclick="loseContext.restoreContext()">
+
+
+<script>
+  (function() {
+    Tamarind.debugMode = true;
+    var state = new Tamarind.State();
+    state.controlsExpanded = true;
+    state.setShaderSource('FRAGMENT_SHADER', ""
+        + "precision mediump float;\n"
+        + "uniform float u_brightness; //! slider\n"
+        + "uniform vec2 u_mouse; //! mouse: damping 0.9\n"
+        + "varying vec2 v_position;\n"
+        + "\n"
+        + "void main() {\n"
+        + "  gl_FragColor = vec4(v_position * 0.5 + 0.5, u_brightness, 1);\n"
+        + "  gl_FragColor.rgb += max(0.0, 1.0 - distance(v_position, u_mouse) * 4.0);\n"
+        + "}\n");
+    var editor = new Tamarind(state);
+    editor.overwrite(document.getElementById('editor-location'));
+
+    window.loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
+  })()
+</script>
+<noscript>JavaScript is disabled, so this demo won't work.</noscript>
+
+</body>
+</html>
