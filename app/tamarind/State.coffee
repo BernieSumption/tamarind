@@ -123,12 +123,14 @@ class State extends EventEmitter
     @_validateShaderType(shaderType)
     utils.validateType(source, 'string', 'shaderType')
     if @_persistent[shaderType] isnt source
+      hadErrorsBefore = @_analyser.hasErrors shaderType
       @_persistent[shaderType] = source
       @_analyser.setShaderSource(shaderType, source)
       @_setInputs(@_analyser.getCommands())
       @emit @SHADER_CHANGE, shaderType
-      @emit @SHADER_ERRORS_CHANGE, shaderType
-      @_scheduleChangeEvent()
+      if hadErrorsBefore or @_analyser.hasErrors(shaderType)
+        @emit @SHADER_ERRORS_CHANGE, shaderType
+      @scheduleChangeEvent()
     return
 
 
@@ -192,7 +194,7 @@ class State extends EventEmitter
     @_persistent.inputValues = newInputValues
 
     @emit PROPERTY_CHANGE_EVENTS.inputs, @_transient.inputs
-    @_scheduleChangeEvent()
+    @scheduleChangeEvent()
 
     if @_analyser.getCommandErrors(constants.FRAGMENT_SHADER).length > 0
       @emit @SHADER_ERRORS_CHANGE, constants.FRAGMENT_SHADER
@@ -220,7 +222,7 @@ class State extends EventEmitter
     unless isEqual(@_persistent.inputValues[inputName], value)
       @_persistent.inputValues[inputName] = value
       @emit @INPUT_VALUE_CHANGE, inputName
-      @_scheduleChangeEvent()
+      @scheduleChangeEvent()
     return
 
   _getInputByName: (inputName) ->
@@ -251,7 +253,7 @@ class State extends EventEmitter
 
 
   # @private
-  _scheduleChangeEvent: ->
+  scheduleChangeEvent: ->
     unless @_changeEventScheduled
       @_changeEventScheduled = true
       requestAnimationFrame =>
@@ -298,7 +300,7 @@ class State extends EventEmitter
         unless @[storage][propertyName] is newValue
           @[storage][propertyName] = newValue
           @emit PROPERTY_CHANGE_EVENTS[propertyName], newValue
-          @_scheduleChangeEvent()
+          @scheduleChangeEvent()
         return
 
     Object.defineProperty @.prototype, propertyName, config

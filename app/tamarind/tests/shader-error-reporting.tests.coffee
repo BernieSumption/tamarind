@@ -72,12 +72,12 @@ describe 'the WebGL error reporting system', ->
     return
 
 
-  expectClearingOfErrors = (done, nextCode, nextErrorCount) ->
+  expectClearingOfErrors = (done, firstCode, firstErrorCount, nextCode, nextErrorCount, expectChange) ->
     state = createState()
     listener = null
 
 
-    state.setShaderSource(constants.FRAGMENT_SHADER, TWO_ERROR_SOURCE)
+    state.setShaderSource(constants.FRAGMENT_SHADER, firstCode)
 
     callCount = 0
 
@@ -86,7 +86,7 @@ describe 'the WebGL error reporting system', ->
 
       if callCount is 1
 
-        expect(state.getShaderErrors(constants.FRAGMENT_SHADER).length).toEqual 2
+        expect(state.getShaderErrors(constants.FRAGMENT_SHADER).length).toEqual firstErrorCount
 
         listener = stateListener(state)
 
@@ -96,7 +96,12 @@ describe 'the WebGL error reporting system', ->
       else if callCount is 2
 
         expect(state.getShaderErrors(constants.FRAGMENT_SHADER).length).toEqual nextErrorCount
-        expect(listener.SHADER_ERRORS_CHANGE.calls.count()).toBeGreaterThan 0
+        unless state.getShaderErrors(constants.FRAGMENT_SHADER).length is nextErrorCount
+          console.log 'Errors:', state.getShaderErrors(constants.FRAGMENT_SHADER)
+        if expectChange
+          expect(listener.SHADER_ERRORS_CHANGE.calls.count()).toBeGreaterThan 0
+        else
+          expectCallHistory listener.SHADER_ERRORS_CHANGE, []
 
         done()
 
@@ -106,17 +111,23 @@ describe 'the WebGL error reporting system', ->
 
   it 'should dispatch a SHADER_ERRORS_CHANGE event when all errors are cleared from the program', (done) ->
 
-    expectClearingOfErrors(done, NO_ERROR_SOURCE, 0)
+    expectClearingOfErrors(done, TWO_ERROR_SOURCE, 2, NO_ERROR_SOURCE, 0, true)
     return
 
   it 'should dispatch a SHADER_ERRORS_CHANGE event when GL errors are cleared from the program', (done) ->
 
-    expectClearingOfErrors(done, INPUT_ERROR_SOURCE, 1)
+    expectClearingOfErrors(done, TWO_ERROR_SOURCE, 2, INPUT_ERROR_SOURCE, 1, true)
     return
 
   it 'should dispatch a SHADER_ERRORS_CHANGE event when validation errors are cleared from the program', (done) ->
 
-    expectClearingOfErrors(done, GL_ERROR_SOURCE, 1)
+    expectClearingOfErrors(done, TWO_ERROR_SOURCE, 2, GL_ERROR_SOURCE, 1, true)
+    return
+
+  it 'should not dispatch a SHADER_ERRORS_CHANGE event when going from one valid program to another', (done) ->
+
+    debugger
+    expectClearingOfErrors(done, NO_ERROR_SOURCE, 0, NO_ERROR_SOURCE + ' ', 0, false)
     return
 
 
