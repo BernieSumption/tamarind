@@ -344,6 +344,9 @@ class WebGLCanvas extends UIComponent
   _setUniform: (name, values) ->
     gl = @gl
 
+    unless @_uniformInfoByName
+      return
+
     uniformInfo = @_uniformInfoByName[name]
 
     unless uniformInfo

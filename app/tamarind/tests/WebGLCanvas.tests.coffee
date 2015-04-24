@@ -224,7 +224,7 @@ describe 'WebGLCanvas', ->
     '''
 
     eventCount = 0
-    state.on state.SHADER_ERRORS_CHANGE, (error) ->
+    state.on state.SHADER_ERRORS_CHANGE, ->
 
       ++eventCount
 

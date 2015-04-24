@@ -3,28 +3,11 @@ Tamarind           = require '../Tamarind.coffee'
 utils              = require '../utils.coffee'
 constants          = require '../constants.coffee'
 ShaderCompileError = require '../ShaderCompileError.coffee'
-{expectProperties} = require '../tests/testutils.coffee'
 
-{mockSliderInput, mockColorInput, expectCallHistory, pollUntil} = require('./testutils.coffee')
+{mockSliderInput, mockColorInput, expectCallHistory, pollUntil, stateListener, expectProperties} = require('./testutils.coffee')
 
 describe 'State', ->
 
-  stateListener = (state) ->
-
-    listener = {}
-
-    for prop in ['SHADER_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
-      listener[prop] = ->
-      spyOn(listener, prop)
-      state.on state[prop], listener[prop]
-
-    for prop in ['vertexCount', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
-      listener[prop] = ->
-      spyOn(listener, prop)
-      state.onPropertyChange prop, listener[prop]
-
-
-    return listener
 
   it 'should dispatch events when properties change', (done) ->
 
@@ -324,5 +307,6 @@ describe 'State', ->
     ]
 
     return
+
 
   return

@@ -57,5 +57,26 @@ module.exports =
           expect(test).toEqual properties
       else
         for k, v of properties
-          expect(test[k]).toEqual v
+          if v instanceof RegExp
+            expect(test[k]).toMatch(v)
+          else
+            expect(test[k]).toEqual v
+
+
+  stateListener: (state) ->
+
+    listener = {}
+
+    for prop in ['SHADER_CHANGE', 'SHADER_ERRORS_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
+      listener[prop] = ->
+      spyOn(listener, prop)
+      state.on state[prop], listener[prop]
+
+    for prop in ['vertexCount', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
+      listener[prop] = ->
+      spyOn(listener, prop)
+      state.onPropertyChange prop, listener[prop]
+
+
+    return listener
 
