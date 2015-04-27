@@ -75,6 +75,8 @@ class WebGLCanvas extends UIComponent
     unless @gl
       throw new Error('Could not create WebGL context for canvas')
 
+    @_doFrame()
+
     return
 
   _handleMouseMove: (event) =>
