@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Main demo</title>
+  <title>Tamarind demo</title>
   <meta http-equiv="X-UA-Compatible" content="chrome=1, IE=edge">
 </head>
 <body style="background: #EEE">
@@ -26,17 +26,18 @@
   (function() {
     Tamarind.debugMode = true;
     var state = new Tamarind.State();
+    if (window.localStorage && window.localStorage['demoSave']) {
+      try {
+        state.restore(window.localStorage['demoSave'])
+      } catch (e) {
+        alert('Error restoring save! ' + e);
+        console.error(e);
+      }
+    }
+    state.on(state.SHADER_CHANGE, function() {
+      window.localStorage['demoSave'] = state.save();
+    });
     state.controlsExpanded = true;
-    state.setShaderSource('FRAGMENT_SHADER', ""
-        + "precision mediump float;\n"
-        + "uniform float u_brightness; //! slider\n"
-        + "uniform vec2 u_mouse; //! mouse: damping 0.9\n"
-        + "varying vec2 v_position;\n"
-        + "\n"
-        + "void main() {\n"
-        + "  gl_FragColor = vec4(v_position * 0.5 + 0.5, u_brightness, 1);\n"
-        + "  gl_FragColor.rgb += max(0.0, 1.0 - distance(v_position, u_mouse) * 4.0);\n"
-        + "}\n");
     var editor = new Tamarind(state);
     editor.overwrite(document.getElementById('editor-location'));
 
