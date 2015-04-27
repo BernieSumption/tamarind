@@ -16,6 +16,9 @@ class CommandType
   toString: ->
     return "{CommandType #{@name}}"
 
+  isStringArgument: (name) ->
+    return typeof @paramsByName[name]?[1] is 'string'
+
 
 
 

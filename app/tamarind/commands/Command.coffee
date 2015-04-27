@@ -33,7 +33,9 @@ class Command
     @data = zipObject @type.params
     for [name, value] in @args
       utils.validateType(name, 'string', 'arg name')
-      utils.validateType(value, 'number', 'arg value')
+      valueType = typeof value
+      unless valueType is 'number' or valueType is 'string'
+        throw new Error('Expected arg value to be a string or number')
       @data[name] = value
 
 

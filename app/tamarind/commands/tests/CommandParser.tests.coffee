@@ -18,10 +18,17 @@ myStandalone = new StandaloneCommandType(
     ['cmd1', 21]
   ]
 )
-parser = new CommandParser [myInput, myStandalone]
+myStringInput = new InputCommandType(
+  'myStringInput',
+  [
+    ['str0', 'default0']
+    ['str1', 'default1']
+  ]
+)
+parser = new CommandParser [myInput, myStandalone, myStringInput]
 
 
-describe 'CommandParser.parseCommandComment', ->
+fdescribe 'CommandParser.parseCommandComment', ->
 
 
   expectError = (command, message, start, end) ->
@@ -36,6 +43,8 @@ describe 'CommandParser.parseCommandComment', ->
     expect(parsed.start).toEqual start
     expect(parsed.end).toEqual end
     return
+
+    #'//! foo: a 1, bee "la, bs: \\, quo: \\" //!, , a\\\\", c -2.2, d ""'.match()
 
 
   it 'should parse a standalone command comment', ->
@@ -71,6 +80,28 @@ describe 'CommandParser.parseCommandComment', ->
       data:
         cmd0: -5
         cmd1: 6.5
+    }
+
+    return
+
+  it 'should parse string values', ->
+
+    # plain
+    expectProperties parser.parseCommandComment('//! myStringInput: str0 "foo"'), {
+      type: myStringInput
+      args: [
+        ['str0', 'foo']
+      ]
+      data:
+        str0: 'foo'
+        str1: 'default1'
+    }
+
+    # escaped characters
+    expectProperties parser.parseCommandComment('//! myStringInput: "f\\"oo\\\\" str1 ""'), {
+      data:
+        str0: 'f"oo\\'
+        str1: ''
     }
 
     return
@@ -112,6 +143,7 @@ describe 'CommandParser.parseCommandComment', ->
 
   it 'should return an error if there is an argument name with no value', ->
     expectError '//! myStandalone: cmd0 cmd1', "invalid value for 'cmd0', expected a number", 18, 27
+    expectError '//! myStringInput: str0 str1', "invalid value for 'str0', expected a string", 19, 28
     expectError '//! myStandalone: cmd0 xyz', "invalid value for 'cmd0', expected a number", 18, 26
     expectError '//! myStandalone: cmd0', "missing value for 'cmd0'", 18, 22
     expectError '//! myStandalone: cmd0 ', "missing value for 'cmd0'", 18, 23
@@ -124,6 +156,11 @@ describe 'CommandParser.parseCommandComment', ->
 
   it 'should return an error if there are too many number arguments', ->
     expectError '//! myStandalone: lala', "invalid property 'lala', expected one of 'cmd0', 'cmd1'", 18, 22
+    return
+
+  it 'should return an error if the arguments are the wrong type', ->
+    expectError '//! myStandalone: cmd0 "foo"', "invalid value for 'cmd0', expected a number", 18, 28
+    expectError '//! myStringInput: str0 3.5', "invalid value for 'str0', expected a string", 19, 27
     return
 
 

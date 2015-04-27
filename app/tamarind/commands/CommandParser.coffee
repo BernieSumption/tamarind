@@ -59,19 +59,21 @@ class CommandParser
   # - `data`: argument map after applying default values for missing arguments
   #
   parseCommandComment: (text, line = 0, lineOffset = 0) ->
-    tokenEnd = lineOffset
-    tokenStart = lineOffset
     lineEnd = lineOffset + text.length
     dType = null
     dArgs = []
     argName = null
     argNameTokenStart = null
+    # This RE matches:
+    #     words: foo123
+    #     numbers: 4, -6.6
+    #     quoted strings: "foo \" bar"
+    re = /[a-z]\w*|-?[0-9.]+|"(\\\\|\\"|[^"])*"/gi
     # state machine parser. Expects a command name then a sequence of `argumentName number` arguments
-    for part in text.match /([,:!\/=\s]+|[^,:!\/=\s]+)/g
-      tokenStart = tokenEnd
-      tokenEnd += part.length
-      if /[,:!\/=\s]/.test part
-        continue
+    while match = re.exec(text)
+      part = match[0]
+      tokenEnd = lineOffset + re.lastIndex
+      tokenStart = tokenEnd - part.length
 
       if dType is null
         dType = @_typesByName[part]
@@ -82,20 +84,44 @@ class CommandParser
       if dArgs.length >= dType.params.length
         return new CommandError("too many arguments, expected at most #{dType.params.length} ('#{dType.paramNames.join('\', \'')}')", line, tokenStart, lineEnd)
 
-      number = parseFloat part
-      if isNaN number
+      if /[a-z]/i.test(part[0])
+        # this is a word
         if argName
-          return new CommandError("invalid value for '#{argName}', expected a number", line, argNameTokenStart, tokenEnd)
+          return new CommandError("invalid value for '#{argName}', expected a #{expectedArgType}", line, argNameTokenStart, tokenEnd)
         argName = part
-        argNameTokenStart = tokenStart
         unless dType.paramsByName[part]
           return new CommandError("invalid property '#{part}', expected one of '#{dType.paramNames.join('\', \'')}'", line, tokenStart, tokenEnd)
+        argNameTokenStart = tokenStart
+        expectedArgType = if dType.isStringArgument(argName) then 'string' else 'number'
+        continue
+
+      if /[-.\d]/.test(part[0])
+        # this is a number
+        argValue = parseFloat(part)
+        if isNaN(argValue)
+          return new CommandError("invalid number '#{part}'", line, tokenStart, tokenEnd)
+
+      else if part[0] is '"'
+        # this is a quoted string
+        try
+          argValue = JSON.parse(part)
+        catch error
+          return new CommandError("invalid string: '#{error.message}'", line, argNameTokenStart, tokenEnd)
+
       else
-        unless argName
-          # if no explicit name, infer name from argument position
-          argName = dType.params[dArgs.length][0]
-        dArgs.push [argName, number]
-        argName = null
+        Tamarind.logError 'State machine error - token is not name, number or string'
+        continue
+
+
+      unless argName
+        # if no explicit name, infer name from argument position
+        argName = dType.params[dArgs.length][0]
+
+      expectedArgType = if dType.isStringArgument(argName) then 'string' else 'number'
+      unless expectedArgType is typeof argValue
+        return new CommandError("invalid value for '#{argName}', expected a #{expectedArgType}", line, argNameTokenStart, tokenEnd)
+      dArgs.push [argName, argValue]
+      argName = null
 
     unless dType
       return new CommandError('expected command', line, lineOffset, lineEnd)
