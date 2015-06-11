@@ -175,16 +175,6 @@ describe 'WebGLCanvas', ->
 
     return
 
-  it 'should dispatch CompileStatus events on sucessful compilation', (done) ->
-
-    expectErrorsFromSource done, [], FSHADER_HEADER + '''
-      void main() {
-        gl_FragColor = vec4(v_position, 1, 1);
-      }
-    '''
-
-    return
-
   it 'should have one error if there is a syntax problem', (done) ->
 
     expectErrorsFromSource done, [2],  FSHADER_HEADER + '''
@@ -228,7 +218,7 @@ describe 'WebGLCanvas', ->
 
       ++eventCount
 
-      if eventCount is 4 # two successful compiles, two failures during link
+      if eventCount is 2 # two successful compiles, two failures during link
         fragErrors = state.getShaderErrors(constants.FRAGMENT_SHADER)
         expect(fragErrors.length).toEqual 1
         expect(fragErrors[0].line).toEqual -1
