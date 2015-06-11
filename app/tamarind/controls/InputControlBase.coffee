@@ -29,6 +29,7 @@ class InputControlBase extends UIComponent
 
   constructor: (@_command, _state) ->
     super(_state, TEMPLATE)
+    @_element.classList.add("tamarind-control-#{@_command.uniformName}")
     @_inputElement = @_makeInputElement()
     if @_inputElement
       @css('.tamarind-controls-control-ui').appendChild @_inputElement

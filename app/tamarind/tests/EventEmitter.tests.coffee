@@ -12,6 +12,23 @@ class Call
 
 describe 'EventEmitter', ->
 
+  it 'listeners should fire on the correct event emitter', ->
+    ee1 = new EventEmitter()
+    call1 = Call.spy()
+    ee1.on 'foo', call1.back
+
+    ee2 = new EventEmitter()
+    call2 = Call.spy()
+    ee2.on 'foo', call2.back
+
+    ee2.emit 'foo', 'lala'
+
+
+    expectCallHistory call1.back, []
+    expectCallHistory call2.back, ['lala']
+
+    return
+
   it 'should register callbacks with the off() method', ->
     ee = new EventEmitter()
     call1 = Call.spy()

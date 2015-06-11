@@ -80,3 +80,13 @@ module.exports =
 
     return listener
 
+  eventHandlerChain: (emitter, eventName, handlers) ->
+    handlerIndex = 0
+    emitter.on eventName, (arg) ->
+      handler = handlers[handlerIndex++]
+      if handler
+        handler(arg)
+      return
+
+    return
+

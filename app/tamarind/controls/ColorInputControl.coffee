@@ -18,18 +18,16 @@ class ColorInputControl extends InputControlBase
     @_lastValidValue = parts.map((v) -> parseInt(v, 16) / 255 or 0)
     return @_lastValidValue
 
-  _parseValue: ->
-
 
   _updateInputElement: (value) ->
-    hexValue = @_valueToHex value
+    hexValue = valueToHex value
     unless @_inputElement.value.toLowerCase() is hexValue.toLowerCase()
       @_inputElement.value = hexValue
     return
 
   _formatValueForUser: (value) ->
     if @_colorInputSupported
-      return @_valueToHex value
+      return valueToHex value
     else
       return '#RRGGBB'
 
@@ -50,14 +48,16 @@ class ColorInputControl extends InputControlBase
 
     return el
 
-  _valueToHex: (value) ->
-    color = '#'
-    for part in value
-      hex = Math.round(part * 255).toString(16)
-      if hex.length is 1
-        hex = '0' + hex
-      color += hex
-    return color
+
+
+valueToHex = (value) ->
+  color = '#'
+  for part in value
+    hex = Math.round(part * 255).toString(16)
+    if hex.length is 1
+      hex = '0' + hex
+    color += hex
+  return color
 
 
 module.exports = ColorInputControl

@@ -126,7 +126,6 @@ describe 'the WebGL error reporting system', ->
 
   it 'should not dispatch a SHADER_ERRORS_CHANGE event when going from one valid program to another', (done) ->
 
-    debugger
     expectClearingOfErrors(done, NO_ERROR_SOURCE, 0, NO_ERROR_SOURCE + ' ', 0, false)
     return
 

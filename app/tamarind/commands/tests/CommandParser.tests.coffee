@@ -9,7 +9,7 @@ myInput = new InputCommandType(
     ['in0', 10]
     ['in1', 11]
   ],
-  3
+  'vec3'
 )
 myStandalone = new StandaloneCommandType(
   'myStandalone',
@@ -28,7 +28,7 @@ myStringInput = new InputCommandType(
 parser = new CommandParser [myInput, myStandalone, myStringInput]
 
 
-fdescribe 'CommandParser.parseCommandComment', ->
+describe 'CommandParser.parseCommandComment', ->
 
 
   expectError = (command, message, start, end) ->

@@ -15,7 +15,7 @@ module.exports = new CommandParser([
       ['max', 1]
       ['step', 0.01]
     ],
-    1,
+    'float',
     require('../controls/SliderInputControl.coffee')
   ),
   new InputCommandType(
@@ -23,20 +23,27 @@ module.exports = new CommandParser([
     [
       ['damping', 0]
     ],
-    2,
+    'vec2',
     require('../controls/MouseInputControl.coffee')
   ),
   new InputCommandType(
     'canvasSize',
-    [
-    ],
-    2,
+    [],
+    'vec2',
     require('../controls/CanvasSizeInputControl.coffee')
   ),
   new InputCommandType(
     'color',
     [],
-    3,
+    'vec3',
     require('../controls/ColorInputControl.coffee')
+  ),
+  new InputCommandType(
+    'image',
+    [
+      ['src', '']
+    ],
+    'sampler2D',
+    require('../controls/ImageInputControl.coffee')
   ),
 ])

@@ -1,24 +1,25 @@
 CommandType = require('./CommandType.coffee')
 
-UNIFORM_TYPE_SIZES = [
-  undefined
-  'float'
-  'vec2'
-  'vec3'
-  'vec4'
-]
+UNIFORM_TYPE_SIZES =
+  float: 1
+  vec2: 2
+  vec3: 3
+  vec4: 4
+  sampler2D: 1
+
 
 class InputCommandType extends CommandType
 
   isUniformSuffix: true
 
-  # @param dataLength [Number] 1 for float, 2 for vec2 etc
+  # @param dataLength [Number] 1, 2, 3 or 4 for float, vec2 etc, or 'sampler2D' for textures
   # @param uiClass [Class] a subclass of InputControlBase
-  constructor: (name, params, @dataLength = 1, @uiClass) ->
+  constructor: (name, params, @uniformType = 'float', @uiClass) ->
     super(name, params)
-    @uniformType = UNIFORM_TYPE_SIZES[@dataLength]
-    unless @uniformType
-      throw new Error("Invalid dataLength '#{@dataLength}'")
+
+    @dataLength = UNIFORM_TYPE_SIZES[@uniformType]
+    unless @dataLength
+      throw new Error("Invalid uniform type '#{@uniformType}'")
 
 
 
