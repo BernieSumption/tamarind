@@ -215,7 +215,9 @@ class State extends EventEmitter
 
   # set the value of a specific input
   setInputValue: (inputName, value) ->
-    input = @_getInputByName(inputName)
+    input = @getInputByName(inputName)
+    unless input
+      utils.logError("No input called #{inputName}")
     unless Array.isArray(value) and value.length is input.type.dataLength
       utils.logError "invalid value for #{inputName}: " + JSON.stringify(value)
       return
@@ -225,10 +227,9 @@ class State extends EventEmitter
       @scheduleChangeEvent()
     return
 
-  _getInputByName: (inputName) ->
+  getInputByName: (inputName) ->
     input = @_transient.inputsByName[inputName]
     return input
-
 
 
   # Serialise this object as a JSON string

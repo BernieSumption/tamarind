@@ -64,8 +64,8 @@ class Tamarind extends UIComponent
 
     editorPanel = @css '.tamarind-editor-panel'
 
-    webGLCanvas = new WebGLCanvas(@_state)
-    webGLCanvas.appendTo(@css '.tamarind-render-panel')
+    @_webGLCanvas = new WebGLCanvas(@_state)
+    @_webGLCanvas.appendTo(@css '.tamarind-render-panel')
 
     controlDrawer = new ControlDrawer(@_state)
     controlDrawer.appendTo(@css('.tamarind-render-panel'))

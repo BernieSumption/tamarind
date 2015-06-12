@@ -396,6 +396,12 @@ describe 'CommandParser.reformatCommandComment', ->
 
     return
 
+  it 'should wrap strings in quotes', ->
+
+    expect(parser.reformatCommandComment '//! myStringInput  str0 "f\\\"oo"').toEqual '//! myStringInput: str0 "f\\\"oo"'
+
+    return
+
 
   return
 

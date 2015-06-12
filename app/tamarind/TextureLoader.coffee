@@ -2,6 +2,8 @@ EventEmitter = require './EventEmitter.coffee'
 
 utils = require './utils.coffee'
 
+X_ORIGIN_PROXY_PREFIX = 'http://crossorigin.me/'
+
 
 # A class that manages the loading an unloading of textures on demand
 class TextureLoader extends EventEmitter
@@ -17,18 +19,24 @@ class TextureLoader extends EventEmitter
     @_current = {}
     @_factory = new NullFactory()
 
+
   # Set the current list of textures. Any new textures not in the previous list will
   # be loaded and created. Any previously loaded textures not in the new list will
   # be destroyed. An ALL_TEXTURES_LOADED event will be dispatched when all activity
   # is complete.
-  setTextureUrls: (urls) ->
+  setTextureUrls: (urls, xOriginProxy = true) ->
     newUrls = []
     for url in urls
       newUrls[url] = url
       unless @_current[url]
         img = document.createElement('img')
-        img.src = url
+        if xOriginProxy
+          img.setAttribute('crossorigin', 'anonymous')
+          img.src = TextureLoader.wrapInXOriginProxy(url)
+        else
+          img.src = url
         img.addEventListener 'load', @_handleImageLoad
+        img.originalUrl = url
         @_current[url] = {
           img: img,
           handle: null
@@ -45,17 +53,34 @@ class TextureLoader extends EventEmitter
     @_scheduleLoadCheck()
     return
 
-  # return the handle associated with a specific texture
+
+  # return the handle associated with a specific texture URL
   getTexture: (url) ->
     return @_current[url]?.handle or null
 
-  # provide a TextureFactory to
+
+  # Set the WebGL context on which this TextureLoader will create textures
+  # Any existing textures will be recreated on this context
+  setWebGLContext: (gl) ->
+    @_setFactory new WebGLContextTextureFactory(gl)
+    return
+
+  # Given a URL, return a version safe to load in a CORS request
+  @wrapInXOriginProxy: (url) ->
+    if /^https?:/.test(url) and url.indexOf(X_ORIGIN_PROXY_PREFIX) is -1
+      return X_ORIGIN_PROXY_PREFIX + url
+    return url
+
+
+  ##
+  ## PRIVATE IMPLEMENTATION DETAILS
+  ##
 
 
   _handleImageLoad: (event) =>
-    url = event.target.src
+    url = event.target.originalUrl
     unless @_isLoading(url)
-      utils.logError('Expected url to be in loading state')
+      utils.logError("Expected url to be in loading state: #{url}")
     @_createTexture(url, event.target)
     @emit @TEXTURE_LOADED, url
     @_scheduleLoadCheck()
@@ -86,12 +111,6 @@ class TextureLoader extends EventEmitter
     return @_current[url]?.handle is null
 
 
-
-  # Set the WebGL context on which this TextureLoader will create textures
-  # Any existing textures will be recreated on this context
-  setWebGLContext: (gl) ->
-    @_setFactory new WebGLContextTextureFactory(gl)
-    return
 
   _setFactory: (factory) ->
     @_factory = factory
@@ -127,6 +146,7 @@ class WebGLContextTextureFactory
     gl = @gl
     texture = gl.createTexture()
     gl.bindTexture gl.TEXTURE_2D, texture
+    gl.pixelStorei gl.UNPACK_FLIP_Y_WEBGL, true
     gl.texImage2D gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image
     gl.texParameteri gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR
     gl.texParameteri gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR

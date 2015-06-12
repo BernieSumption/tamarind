@@ -4,6 +4,7 @@ WebGLDebugUtils     = require './WebGLDebugUtils.js'
 ShaderCompileError  = require './ShaderCompileError.coffee'
 Tamarind            = require './Tamarind.coffee'
 UIComponent         = require './UIComponent.coffee'
+TextureLoader       = require './TextureLoader.coffee'
 
 ###
   An object associated with a canvas element that manages the WebGL context
@@ -65,10 +66,13 @@ class WebGLCanvas extends UIComponent
 
     @_state.on @_state.CHANGE, @_doFrame
 
-    @_state.onPropertyChange 'inputs', @_setAllUniformsFromState
-    @_state.on @_state.INPUT_VALUE_CHANGE, @_setUniformFromState
+    @_state.onPropertyChange 'inputs', @_handleInputsChange
+    @_state.on @_state.INPUT_VALUE_CHANGE, @_handleInputValueChange
 
     @_shaders = {} # OpenGL shader object references
+
+    @_textureLoader = new TextureLoader()
+    @_textureLoader.on @_textureLoader.ALL_TEXTURES_LOADED, @_handleTexturesLoaded
 
     @_createContext()
 
@@ -137,8 +141,6 @@ class WebGLCanvas extends UIComponent
         return false
       @_contextRequiresSetup = false
       isNewContext = true
-    else
-      isNewContext = false
 
 
     if isNewContext or @_vertexCount isnt @_state.vertexCount
@@ -187,6 +189,8 @@ class WebGLCanvas extends UIComponent
     @_contextRequiresSetup = true
 
     @_updateContextForDebugMode()
+
+    @_textureLoader.setWebGLContext @gl
 
     return
 
@@ -285,6 +289,7 @@ class WebGLCanvas extends UIComponent
         type: uniform.type
 
     @_setAllUniformsFromState()
+    @_updateTextures()
 
     return true
 
@@ -330,17 +335,44 @@ class WebGLCanvas extends UIComponent
 
     return true
 
+  _handleInputsChange: =>
+    @_setAllUniformsFromState()
+    @_updateTextures()
+    return
+
+  _handleInputValueChange: (propertyName) =>
+    @_setUniformFromState(propertyName)
+    input = @_state.getInputByName(propertyName)
+    if input.uniformType is 'sampler2D'
+      @_updateTextures()
+    return
 
   # @private
   _setAllUniformsFromState: =>
     for input in @_state.inputs
       @_setUniformFromState(input.uniformName)
+    return
 
   # @private
   _setUniformFromState: (propertyName) =>
     @_setUniform(propertyName, @_state.getInputValue(propertyName))
     return
 
+  # @private
+  _updateTextures: =>
+    urls = []
+    for input in @_state.inputs
+      if input.uniformType is 'sampler2D'
+        urls.push(@_state.getInputValue(input.uniformName)[0])
+    @_textureLoader.setTextureUrls urls
+    return
+
+  _handleTexturesLoaded: =>
+    for input in @_state.inputs
+      if input.uniformType is 'sampler2D'
+        @_setUniformFromState(input.uniformName)
+    @_doFrame()
+    return
 
   # @private
   _setUniform: (name, values) ->
@@ -354,17 +386,23 @@ class WebGLCanvas extends UIComponent
     unless uniformInfo
       return
 
-    switch values.length
-      when 1
-        gl.uniform1f(uniformInfo.location, values[0])
-      when 2
-        gl.uniform2f(uniformInfo.location, values[0], values[1])
-      when 3
-        gl.uniform3f(uniformInfo.location, values[0], values[1], values[2])
-      when 4
-        gl.uniform4f(uniformInfo.location, values[0], values[1], values[2], values[3])
+    switch uniformInfo.type
+      when gl.FLOAT
+        gl.uniform1fv(uniformInfo.location, values)
+      when gl.FLOAT_VEC2
+        gl.uniform2fv(uniformInfo.location, values)
+      when gl.FLOAT_VEC3
+        gl.uniform3fv(uniformInfo.location, values)
+      when gl.FLOAT_VEC4
+        gl.uniform4fv(uniformInfo.location, values)
+      when gl.SAMPLER_2D
+        handle = @_textureLoader.getTexture values[0]
+        if handle
+          gl.activeTexture(gl.TEXTURE0)
+          gl.bindTexture(gl.TEXTURE_2D, handle)
+          gl.uniform1i(uniformInfo.location, 0)
       else
-        throw new Error("Can't set uniform with #{values.length} values")
+        throw new Error("Can't set uniform of type #{uniformInfo.type}")
 
     return true
 
@@ -386,6 +424,7 @@ class WebGLCanvas extends UIComponent
     @_doFrame()
 
     return
+
 
 
 

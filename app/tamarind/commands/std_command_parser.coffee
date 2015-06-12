@@ -40,9 +40,7 @@ module.exports = new CommandParser([
   ),
   new InputCommandType(
     'image',
-    [
-      ['src', '']
-    ],
+    [],
     'sampler2D',
     require('../controls/ImageInputControl.coffee')
   ),

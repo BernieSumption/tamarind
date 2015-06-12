@@ -143,7 +143,7 @@ class CommandParser
       for [argName, argValue], i in parsed.args
         if i > 0
           result += ', '
-        result += argName + ' ' + argValue
+        result += argName + ' ' + JSON.stringify(argValue)
 
     return result
 

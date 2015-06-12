@@ -27,18 +27,18 @@
     Tamarind.debugMode = true;
     var state = new Tamarind.State();
     if (window.localStorage && window.localStorage['demoSave']) {
-      try {
+//      try {
         state.restore(window.localStorage['demoSave'])
-      } catch (e) {
-        alert('Error restoring save! ' + e);
-        console.error(e);
-      }
+//      } catch (e) {
+//        alert('Error restoring save! ' + e);
+//        console.error(e);
+//      }
     }
-    state.on(state.SHADER_CHANGE, function() {
+    state.on(state.CHANGE, function() {
       window.localStorage['demoSave'] = state.save();
     });
     state.controlsExpanded = true;
-    var editor = new Tamarind(state);
+    editor = new Tamarind(state);
     editor.overwrite(document.getElementById('editor-location'));
 
     window.loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
