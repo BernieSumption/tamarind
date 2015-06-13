@@ -55,7 +55,6 @@ class ControlDrawer extends UIComponent
     wrapper = @css '.tamarind-controls-ui'
     wrapper.innerHTML = ''
 
-    #TODO create editor here
     for input in inputs
       editor = input.type.makeEditor(input, @_state)
       editor.appendTo wrapper
@@ -68,10 +67,10 @@ class ControlDrawer extends UIComponent
     @_editorsByName[inputName].setValue @_state.getInputValue(inputName)
     return
 
-  _handleAnimationFrame: =>
+  _handleAnimationFrame: (timer) =>
     requestAnimationFrame @_handleAnimationFrame
     for name, editor of @_editorsByName
-      editor.onEachFrame()
+      editor.onEachFrame(timer)
 
 
 module.exports = ControlDrawer

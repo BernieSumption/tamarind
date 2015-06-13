@@ -22,11 +22,11 @@ class ImageInputControl extends InputControlBase
 
   # Return the current value of the input
   _getValue: ->
-    return [@_src || ""]
+    return [@_src or '']
 
   _promptImageChange: =>
     oldSrc = @_src
-    newSrc = prompt('Enter an image URL', @_src || "")
+    newSrc = prompt('Enter an image URL', @_src or '')
     if newSrc and newSrc isnt oldSrc
       @_src = newSrc
       @_notifyOfValueChange()

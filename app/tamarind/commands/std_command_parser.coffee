@@ -44,4 +44,10 @@ module.exports = new CommandParser([
     'sampler2D',
     require('../controls/ImageInputControl.coffee')
   ),
+  new InputCommandType(
+    'time',
+    [],
+    'float',
+    require('../controls/TimeInputControl.coffee')
+  ),
 ])
