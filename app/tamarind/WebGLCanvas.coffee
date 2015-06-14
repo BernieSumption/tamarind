@@ -190,8 +190,6 @@ class WebGLCanvas extends UIComponent
 
     @_updateContextForDebugMode()
 
-    @_textureLoader.setWebGLContext @gl
-
     return
 
   _updateContextForDebugMode: =>
@@ -207,6 +205,8 @@ class WebGLCanvas extends UIComponent
 
     unless @_program = gl.createProgram()
       return false
+
+    @_textureLoader.setWebGLContext gl
 
     @_shaders = {}
 
