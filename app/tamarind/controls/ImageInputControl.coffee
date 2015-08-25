@@ -15,7 +15,6 @@ class ImageInputControl extends InputControlBase
 
   _updateInputElement: (value) ->
     @_src = value[0]
-    console.log 'setting', value
     if @_inputElement
       @_inputElement.src = TextureLoader.wrapInXOriginProxy(value[0])
     return

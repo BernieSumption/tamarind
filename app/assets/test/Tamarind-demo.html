@@ -12,10 +12,10 @@
 
 <div id="editor-location"></div>
 
-<input type="button" value="save 1" onclick="state1 = state.save()">
-<input type="button" value="load 1" onclick="state.restore(state1)">
-<input type="button" value="save 2" onclick="state2 = state.save()">
-<input type="button" value="load 2" onclick="state.restore(state2)">
+<input type="button" value="save 1" onclick="save('state1')">
+<input type="button" value="load 1" onclick="restore('state1')">
+<input type="button" value="save 2" onclick="save('state2')">
+<input type="button" value="load 2" onclick="restore('state2')">
 
 
 <input type="button" value="lose context" onclick="loseContext.loseContext()">
@@ -42,6 +42,18 @@
     editor.overwrite(document.getElementById('editor-location'));
 
     window.loseContext = document.getElementsByTagName('canvas')[0].getContext('webgl').getExtension('WEBGL_lose_context');
+
+    var saves = {};
+
+    window.save = function(file) {
+      saves[file] = content = state.save();
+      console.log("SAVING to " + file, JSON.parse(saves[file]));
+    };
+
+    window.restore = function(file) {
+      console.log("RESTORING from " + file, JSON.parse(saves[file]));
+      state.restore(saves[file]);
+    };
   })()
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>

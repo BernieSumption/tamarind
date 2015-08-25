@@ -3,6 +3,9 @@ EventEmitter = require './EventEmitter.coffee'
 utils = require './utils.coffee'
 
 X_ORIGIN_PROXY_PREFIX = 'http://crossorigin.me/'
+#X_ORIGIN_PROXY_PREFIX = 'http://localhost:8080/'
+
+
 
 
 # A class that manages the loading an unloading of textures on demand
