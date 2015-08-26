@@ -161,5 +161,5 @@ class WebGLContextTextureFactory
 # Destroy a previously created texture
 # @param texture [object] a texture as returned by
   destroyTexture: (handle) ->
-    @gl.deleteTexture(handle);
+    @gl.deleteTexture(handle)
     return

@@ -1,3 +1,5 @@
+
+
 module.exports = (config) -> config.set
   # base path, that will be used to resolve files and exclude
   basePath: ''
@@ -15,7 +17,12 @@ module.exports = (config) -> config.set
 
   preprocessors: {
     './app/**/*.tests.coffee': [ 'browserify' ]
+    '**/*.js': ['env']
   },
+
+  envPreprocessor: [
+    'OFFLINE_TESTS'
+  ]
 
   browserify:
     debug: true

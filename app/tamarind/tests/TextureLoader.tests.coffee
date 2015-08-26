@@ -8,6 +8,8 @@ GREEN_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+
 BLUE_IMAGE  = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGElEQVQYV2NkYPj/n4EIwDiqEF8oUT94AFIQE/cCn90IAAAAAElFTkSuQmCC'
 INTERNET_IMAGE_50x60 = 'http://placehold.it/50x60'
 
+requires_network = if window.__env__.OFFLINE_TESTS then xit else it
+
 describe 'TextureLoader', ->
 
   makeTextureLoader = ->
@@ -159,7 +161,7 @@ describe 'TextureLoader', ->
     return
 
 
-  it 'should silently reject images that fail due to X-Origin limitations', (done) ->
+  requires_network 'should silently reject images that fail due to X-Origin limitations', (done) ->
 
     [tl, factory] = makeTextureLoader()
 
@@ -173,7 +175,7 @@ describe 'TextureLoader', ->
     return
 
 
-  it 'should load arbitrary images, even across X-Origin boundaries', (done) ->
+  requires_network 'should load arbitrary images, even across X-Origin boundaries', (done) ->
 
     [tl, factory] = makeTextureLoader()
 
