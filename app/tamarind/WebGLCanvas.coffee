@@ -74,6 +74,8 @@ class WebGLCanvas extends UIComponent
     @_textureLoader = new TextureLoader()
     @_textureLoader.on @_textureLoader.ALL_TEXTURES_LOADED, @_handleTexturesLoaded
 
+    @_currentShaderSource = state.shaderSource
+
     @_createContext()
 
     unless @gl
@@ -136,6 +138,8 @@ class WebGLCanvas extends UIComponent
 
     @_updateContextForDebugMode()
 
+    isNewContext = false
+
     if @_contextRequiresSetup
       unless @_setupContext()
         return false
@@ -148,17 +152,13 @@ class WebGLCanvas extends UIComponent
       unless @_updateGeometry(@_vertexCount)
         return false
 
+    if isNewContext or @_currentShaderSource isnt @_state.shaderSource or not (@_shaders.VERTEX_SHADER and @_shaders.FRAGMENT_SHADER)
+      @_currentShaderSource isnt @_state.shaderSource
 
-    shadersCompiled = true
-    for shaderType in [constants.VERTEX_SHADER, constants.FRAGMENT_SHADER]
-      if isNewContext or @_shaders[shaderType] is undefined or @gl.getShaderSource(@_shaders[shaderType]) isnt @_state.getShaderSource(shaderType)
-        unless @_compileShader(shaderType)
-          shadersCompiled = false
-        requiresLink = true
-    unless shadersCompiled
-      return false
+      @_state.setShaderErrors null, []
+      unless @_compileShader("VERTEX_SHADER") and @_compileShader("FRAGMENT_SHADER")
+        return false
 
-    if requiresLink
       unless @_linkProgram()
         return false
 
@@ -221,7 +221,11 @@ class WebGLCanvas extends UIComponent
 
     gl = @gl
 
-    source = @_state.getShaderSource(shaderType)
+    source = @_state.shaderSource
+    if shaderType is 'FRAGMENT_SHADER'
+      source = '#define FRAGMENT\n' + source
+    else if shaderType is 'VERTEX_SHADER'
+      source = '#define VERTEX\n' + source
 
     oldShader = @_shaders[shaderType]
 
@@ -244,12 +248,10 @@ class WebGLCanvas extends UIComponent
     gl.compileShader shader
     compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
 
-    if compiled
-      @_state.setShaderErrors shaderType, null, []
-    else
+    unless compiled
       errorText = gl.getShaderInfoLog(shader)
       errors = ShaderCompileError.fromErrorMessage(errorText)
-      @_state.setShaderErrors shaderType, errorText, errors
+      @_state.setShaderErrors errorText, errors
       gl.detachShader(@_program, shader)
       gl.deleteShader(shader)
       delete @_shaders[shaderType]
@@ -270,12 +272,10 @@ class WebGLCanvas extends UIComponent
     unless linked
       errorText = gl.getProgramInfoLog(@_program).trim()
       error = new ShaderCompileError(errorText, -1)
-      @_state.setShaderErrors constants.FRAGMENT_SHADER, errorText, [error]
-      @_state.setShaderErrors constants.VERTEX_SHADER, errorText, [error]
+      @_state.setShaderErrors errorText, [error]
       return false
 
-    @_state.setShaderErrors constants.FRAGMENT_SHADER, null, []
-    @_state.setShaderErrors constants.VERTEX_SHADER, null, []
+    @_state.setShaderErrors null, []
 
     gl.useProgram @_program
 

@@ -1,14 +1,19 @@
 
 
 module.exports =
-  FRAGMENT_SHADER: 'FRAGMENT_SHADER'
-  VERTEX_SHADER:   'VERTEX_SHADER'
 
-
-  DEFAULT_VSHADER_SOURCE: '''
-    attribute float a_VertexIndex;
+  DEFAULT_SOURCE: '''
+    precision mediump float;
     varying vec2 v_position;
 
+    #ifdef FRAGMENT
+    void main() {
+      gl_FragColor = vec4(v_position, 1, 1);
+    }
+    #endif
+
+    #ifdef VERTEX
+    attribute float a_VertexIndex;
     void main() {
       // this is the default vertex shader. It positions 4 points, one in each corner clockwise from top left, creating a rectangle that fills the whole canvas.
       if (a_VertexIndex == 0.0) {
@@ -24,16 +29,7 @@ module.exports =
       }
       gl_Position.xy = v_position;
     }
-  '''
-
-
-  DEFAULT_FSHADER_SOURCE: '''
-    precision mediump float;
-    varying vec2 v_position;
-
-    void main() {
-      gl_FragColor = vec4(v_position, 1, 1);
-    }
+    #endif
   '''
 
 

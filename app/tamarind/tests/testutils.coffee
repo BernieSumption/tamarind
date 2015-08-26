@@ -67,12 +67,12 @@ module.exports =
 
     listener = {}
 
-    for prop in ['SHADER_CHANGE', 'SHADER_ERRORS_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
+    for prop in ['SHADER_SOURCE_CHANGE', 'SHADER_ERRORS_CHANGE', 'CHANGE', 'INPUT_VALUE_CHANGE']
       listener[prop] = ->
       spyOn(listener, prop)
       state.on state[prop], listener[prop]
 
-    for prop in ['vertexCount', 'drawingMode', 'selectedTab', 'controlsExpanded', 'inputs']
+    for prop in ['vertexCount', 'drawingMode', 'controlsExpanded', 'inputs']
       listener[prop] = ->
       spyOn(listener, prop)
       state.onPropertyChange prop, listener[prop]

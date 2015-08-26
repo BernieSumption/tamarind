@@ -25,19 +25,12 @@ class CodeEditor extends UIComponent
     super(state, TEMPLATE)
 
     @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
-    @_state.on @_state.SHADER_CHANGE, @_handleShanderChange
+    @_state.on @_state.SHADER_SOURCE_CHANGE, @_handleShanderSourceChange
 
-    @_shaderDocs = {}
-    createDoc = (shaderType) =>
-      doc = CodeMirror.Doc(@_state.getShaderSource(shaderType), 'x-shader/x-fragment')
-      doc.shaderType = shaderType
-      @_shaderDocs[shaderType] = doc
-      return
-    createDoc constants.FRAGMENT_SHADER
-    createDoc constants.VERTEX_SHADER
+    @_doc = CodeMirror.Doc(@_state.shaderSource, 'x-shader/x-fragment')
 
     @_codemirror = CodeMirror(@_element,
-      value: @_shaderDocs[constants.FRAGMENT_SHADER]
+      value: @_doc
       lineNumbers: true
       lineWrapping: true
       gutters: ['CodeMirror-lint-markers']
@@ -55,48 +48,40 @@ class CodeEditor extends UIComponent
     requestAnimationFrame => @_codemirror.refresh()
 
 
-
-  swapShaderType: (shaderType) ->
-    @_activeCodeEditor = shaderType
-    @_codemirror.swapDoc(@_shaderDocs[shaderType])
-    @_handleShaderErrorsChange(shaderType)
-    return
-
   # @private
   # Handle CodeMirror lint events. These are fired a few hundred milliseconds after the user
   # has finished typing in an editor window, and we use them to update the shader source
   _handleCodeMirrorLint: (value, callback, options, cm) =>
     if @_codemirror
-      @_state.setShaderSource(@_codemirror.getDoc().shaderType,  value)
+      @_state.shaderSource = value
     @_lintingCallback = callback
     return
 
   # @private
   # Update the UI when the shader is changed form the model
-  _handleShanderChange: (shaderType) =>
-    newSource = @_state.getShaderSource(shaderType)
-    oldSource = @_shaderDocs[shaderType].getValue()
+  _handleShanderSourceChange: =>
+    newSource = @_state.shaderSource
+    oldSource = @_doc.getValue()
     unless newSource is oldSource
-      @_shaderDocs[shaderType].setValue(newSource)
+      @_doc.setValue newSource
     return
 
 
-  _handleShaderErrorsChange: (shaderType) =>
-    if shaderType is @_activeCodeEditor
-      errors = []
-      for err in @_state.getShaderErrors(shaderType)
-        line = Math.max(err.line, 0)
-        errors.push(
-          message: err.message
-          from:
-            line: line
-            ch: err.start
-          to:
-            line: line
-            ch: err.end
-        )
+  _handleShaderErrorsChange: =>
+    errors = []
+    for err in @_state.shaderErrors
+      line = Math.max(err.line, 0)
+      errors.push(
+        message: err.message
+        from:
+          line: line
+          ch: err.start
+        to:
+          line: line
+          ch: err.end
+      )
 
-      @_lintingCallback @_codemirror, errors
+    @_lintingCallback @_codemirror, errors
     return
 
   # @private

@@ -44,10 +44,8 @@
         <option>TRIANGLE_STRIP</option>
         <option>TRIANGLE_FAN</option>
     </select>
-    <p>Vertex shader</p>
-    <textarea id="VERTEX_SHADER"></textarea>
-    <p>Fragment shader</p>
-    <textarea id="FRAGMENT_SHADER"></textarea>
+    <p>Source</p>
+    <textarea id="shaderSource"></textarea>
     <p>Mouse</p>
     <input id="mouseX" style="width: 30px">
     <input id="mouseY" style="width: 30px">
@@ -65,22 +63,24 @@
     Tamarind.debugMode = true;
     var state = new Tamarind.State();
     var canvas = new Tamarind.WebGLCanvas(state);
-    canvas.appendTo(document.getElementById("viewport"))
+    canvas.appendTo(document.getElementById("viewport"));
 
 
     bindInputToProperty("vertexCount", parseInt);
     bindInputToProperty("drawingMode");
     bindInputToProperty("mouseX");
     bindInputToProperty("mouseY");
-    bindInputToShader("FRAGMENT_SHADER");
-    bindInputToShader("VERTEX_SHADER");
+    bindInputToProperty("shaderSource");
 
 
-    state.on(state.SHADER_ERRORS_CHANGE, function(errors) {
+    state.on(state.SHADER_ERRORS_CHANGE, function() {
         var compileEvents = document.getElementById("compileEvents");
-        var prefix = compileEvents.value.length ? "\n" : "";
-        compileEvents.value = compileEvents.value + prefix + errors;
-    })
+        var text = "";
+        state.shaderErrors.forEach(function(error) {
+            text += error.line + ": " + error.message
+        });
+        compileEvents.value = text;
+    });
 
 
     function bindInputToProperty(propertyName, type) {
@@ -88,18 +88,10 @@
       inputElement.value = state[propertyName];
       var update = function() {
         state[propertyName] = type ? type(inputElement.value) : inputElement.value;
-      }
+      };
       inputElement.addEventListener("input", update);
     }
 
-    function bindInputToShader(shaderType) {
-      var inputElement = document.getElementById(shaderType);
-      inputElement.value = state.getShaderSource(shaderType);
-      var update = function() {
-        state.setShaderSource(shaderType, inputElement.value);
-      }
-      inputElement.addEventListener("input", update);
-    }
 
     function bindInput(inputElement, initialValue, oninput) {
       inputElement.value = initialValue;

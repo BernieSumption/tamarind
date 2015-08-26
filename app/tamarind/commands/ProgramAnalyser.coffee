@@ -9,53 +9,10 @@ CommandError = require('./CommandError.coffee')
 class ProgramAnalyser
 
   # @param @_directives [CommandParser]
-  constructor: (parser) ->
-    @_shaders =
-      FRAGMENT_SHADER: new ShaderAnalyser(parser, constants.FRAGMENT_SHADER)
-      VERTEX_SHADER:   new ShaderAnalyser(parser, constants.VERTEX_SHADER)
-
-  setShaderSource: (shaderType, source) ->
-    thisType = @_shaders[shaderType]
-    otherType = @_shaders[otherShaderType shaderType]
-
-    thisType.setSource source
-
-    thisType.validateAgainstOtherShader otherType
-    otherType.validateAgainstOtherShader thisType
-
-    return
-
-
-
-  getCommandErrors: (shaderType) ->
-    return @_shaders[shaderType].errors
-
-
-  hasErrors: ->
-    return @_shaders.VERTEX_SHADER.errors.length > 0 or @_shaders.FRAGMENT_SHADER.errors.length > 0
-
-
-  getCommands: ->
-    return @_shaders.VERTEX_SHADER.commands.concat(@_shaders.FRAGMENT_SHADER.commands)
-
-
-class ShaderAnalyser
-
-  constructor: (@_parser, @_shaderType) ->
+  constructor: (@_parser) ->
     @_reset()
 
-  _reset: ->
-    @unvalidatedErrors = []
-    @unvalidatedCommands = []
-    @errors = []
-    @commands = []
-    @inputCommandsByUniformName = {}
-    @standaloneCommandsByTypeName = {}
-    return
-
-
-  setSource: (source) ->
-
+  setShaderSource: (source) ->
     @_reset()
 
     for command in @_parser.parseGLSL source
@@ -68,39 +25,32 @@ class ShaderAnalyser
         else if command.isStandalone()
           @standaloneCommandsByTypeName[command.type.name] = command
 
+    return
 
-  # Apply validation rules that depend on the other shader
-  # @param other [ShaderCommands]
-  validateAgainstOtherShader: (other) ->
-    @errors = @unvalidatedErrors.slice()
+
+  getCommandErrors: () ->
+    return @errors.slice()
+
+
+  hasErrors: ->
+    return @errors.length > 0
+
+
+  getCommands: ->
+    return @commands.slice()
+
+
+
+  _reset: ->
+    @unvalidatedErrors = []
+    @unvalidatedCommands = []
+    @errors = []
     @commands = []
-
-    for command in @unvalidatedCommands
-      if command.isInput()
-        otherCommand = other.inputCommandsByUniformName[command.uniformName]
-        if otherCommand
-          prettyOtherType = otherShaderType(@_shaderType).toLowerCase().replace('_', ' ')
-          @errors.push new CommandError(
-            "uniform '#{otherCommand.uniformName}' already has a '#{otherCommand.type.name}' command in the #{prettyOtherType}",
-            command.line, command.start, command.end)
-        else
-          @commands.push command
-      else
-        otherCommand = other.standaloneCommandsByTypeName[command.type.name]
-        if otherCommand
-          prettyOtherType = otherShaderType(@_shaderType).toLowerCase().replace('_', ' ')
-          @errors.push new CommandError("there is already a '#{otherCommand.type.name}' command in the #{prettyOtherType}",
-            command.line, command.start, command.end)
-        else
-          @commands.push command
-    
+    @inputCommandsByUniformName = {}
+    @standaloneCommandsByTypeName = {}
+    return
 
 
-otherShaderType = (shaderType) ->
-  if shaderType is constants.FRAGMENT_SHADER
-    return constants.VERTEX_SHADER
-  if shaderType is constants.VERTEX_SHADER
-    return constants.FRAGMENT_SHADER
-  throw new Error("invalid shader type '#{shaderType}'")
+
 
 module.exports = ProgramAnalyser

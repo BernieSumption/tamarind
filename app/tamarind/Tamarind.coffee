@@ -16,8 +16,6 @@ require '../styles/all.less'
 class Tamarind extends UIComponent
 
   # Various aliases that define the public API
-  @FRAGMENT_SHADER = constants.FRAGMENT_SHADER
-  @VERTEX_SHADER = constants.VERTEX_SHADER
   @State = State
   @WebGLCanvas = WebGLCanvas
 
@@ -28,14 +26,6 @@ class Tamarind extends UIComponent
 
   TEMPLATE = """
     <div class="tamarind">
-      <div class="tamarind-menu">
-        <a href="javascript:void(0)" name="#{constants.FRAGMENT_SHADER}" class="tamarind-menu-button tamarind-icon-fragment-shader" title="Fragment shader">
-          <span class="tamarind-menu-icon-overlay" title="Fragment shader has errors"></span>
-        </a>
-        <a href="javascript:void(0)" name="#{constants.VERTEX_SHADER}" class="tamarind-menu-button tamarind-icon-vertex-shader" title="Vertex shader">
-          <span class="tamarind-menu-icon-overlay" title="Vertex shader has errors"></span>
-        </a>
-      </div>
       <div class="tamarind-editor-panel">
       </div>
       <div class="tamarind-render-panel">
@@ -73,49 +63,6 @@ class Tamarind extends UIComponent
     @_codeEditor = new CodeEditor(@_state)
     @_codeEditor.appendTo editorPanel
 
-
-    @_links = @csss '.tamarind-menu a', 2
-    @_element.addEventListener 'click', @_handleMenuLinkClick
-
-
-    @_state.onPropertyChange 'selectedTab', @_handleMenuItemSelect
-    @_handleMenuItemSelect()
-
-    @_state.on @_state.SHADER_ERRORS_CHANGE, @_handleShaderErrorsChange
-    @_handleShaderErrorsChange()
-
-
-
-  # @private
-  _handleMenuItemSelect: =>
-    item = @_state.selectedTab
-
-    @_codeEditor.swapShaderType item
-
-    for link in @_links
-      if link.name is item
-        link.classList.add('is-selected')
-      else
-        link.classList.remove('is-selected')
-
-    return
-
-
-  _handleMenuLinkClick: (event) =>
-    if event.target not in @_links
-      return
-    @_state.selectedTab = event.target.name
-    return
-
-
-  _handleShaderErrorsChange: =>
-    fsError = @css '.tamarind-icon-fragment-shader .tamarind-menu-icon-overlay'
-    vsError = @css '.tamarind-icon-vertex-shader .tamarind-menu-icon-overlay'
-
-    @setClassIf 'is-visible', @_state.hasShaderErrors(constants.FRAGMENT_SHADER), fsError
-    @setClassIf 'is-visible', @_state.hasShaderErrors(constants.VERTEX_SHADER), vsError
-
-    return
 
 
 module.exports = Tamarind

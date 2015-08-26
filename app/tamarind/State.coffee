@@ -44,20 +44,23 @@ class State extends EventEmitter
   # @property [boolean] Whether the control draw is open allowing the user to interact with the shader
   controlsExpanded: false
 
+  # @property [string] The current GLSL shader source code
+  shaderSource: ''
+
+  # @property [string] A list of ShaderCompileError objects associated with the current `shaderSource`
+  shaderErrors: []
+
   # @property [Array] A read-only array of Input objects
   inputs: []
 
-  # @property [String] the name of the currently selected UI tab. Not saved and restored.
-  selectedTab: constants.FRAGMENT_SHADER
-
-  # @property [string] Name of event emitted when shaders change. The shader type, e.g. constants.FRAGMENT_SHADER, is passed as the event argument.
-  SHADER_CHANGE: 'shaderChange'
+  # @property [string] Name of event emitted when shader source code changes
+  SHADER_SOURCE_CHANGE: 'shaderSourceChange'
 
   # @property [string] This event is dispatched asynchronously when any non-transient state changes, with
   #                    one event dispatched per animation frame if there were 1 or more changes in the previous frame
   CHANGE: 'change'
 
-  # @property [string] Name of event emitted when shaders change. The shader type, e.g. constants.FRAGMENT_SHADER, will be the event argument.
+  # @property [string] Name of event emitted when shaders change.
   SHADER_ERRORS_CHANGE: 'shaderErrorsChange'
 
   # @property [string] Name of event dispatched when the value of a specific input changes. The input name is passed as an event argument.
@@ -80,8 +83,7 @@ class State extends EventEmitter
   _resetState: ->
     # state that is save()'d and restore()'d
     @_persistent = {
-      FRAGMENT_SHADER: constants.DEFAULT_FSHADER_SOURCE
-      VERTEX_SHADER: constants.DEFAULT_VSHADER_SOURCE
+      shaderSource: constants.DEFAULT_SOURCE
       vertexCount: PROPERTY_DEFAULTS.vertexCount
       drawingMode: PROPERTY_DEFAULTS.drawingMode
       controlsExpanded: PROPERTY_DEFAULTS.controlsExpanded
@@ -92,16 +94,10 @@ class State extends EventEmitter
 
     # state that is reset each time we restore()
     @_transient = {
-      shaders:
-        FRAGMENT_SHADER:
-          errors: []
-          errorText: []
-        VERTEX_SHADER:
-          errors: []
-          errorText: []
+      shaderErrors: []
+      shaderErrorText: ''
       inputs: []
       propertyJSON: {}
-      selectedTab: PROPERTY_DEFAULTS.selectedTab
       inputsByName: {}
     }
 
@@ -109,59 +105,26 @@ class State extends EventEmitter
 
 
 
-  # Get the source code for a shader
-  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
-  getShaderSource: (shaderType) ->
-    @_validateShaderType(shaderType)
-    return @_persistent[shaderType]
-
-
-  # Set the source code for a shader
-  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
-  # @param value GLSL source code for the shader
-  setShaderSource: (shaderType, source) ->
-    @_validateShaderType(shaderType)
-    utils.validateType(source, 'string', 'shaderType')
-    if @_persistent[shaderType] isnt source
-      hadErrorsBefore = @_analyser.hasErrors shaderType
-      @_persistent[shaderType] = source
-      @_analyser.setShaderSource(shaderType, source)
-      @_setInputs(@_analyser.getCommands())
-      @emit @SHADER_CHANGE, shaderType
-      if hadErrorsBefore or @_analyser.hasErrors(shaderType)
-        @emit @SHADER_ERRORS_CHANGE, shaderType
-      @scheduleChangeEvent()
-    return
-
-
-
-
-  # Return true is getShaderErrors(shaderType) would return an array of length > 1
-  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
-  hasShaderErrors: (shaderType) ->
-    @_validateShaderType(shaderType)
-    return @_transient.shaders[shaderType].errors.length > 0
+  # Return true is getShaderErrors() would return an array of length > 1
+  hasShaderErrors: ->
+    return @_transient.shaderErrors.length > 0
 
   # Get the list of ShaderCompileError error objects for a shader
-  # @param shaderType either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
-  getShaderErrors: (shaderType) ->
-    @_validateShaderType(shaderType)
-    sourceErrors = @_transient.shaders[shaderType].errors
-    commandErrors = @_analyser.getCommandErrors(shaderType)
+  getShaderErrors: () ->
+    sourceErrors = @_transient.shaderErrors
+    commandErrors = @_analyser.getCommandErrors()
     return sourceErrors.concat(commandErrors)
 
 
   # Set the list of errors for a shader
-  # @param shaderType [string] either constants.VERTEX_SHADER or constants.FRAGMENT_SHADER
   # @param errorText [String] the error text returned by the browser, used for the purposes of checking if the errors have changed
   # @param errors [number] an array of ShaderCompileError objects
-  setShaderErrors: (shaderType, errorText, errors) ->
-    @_validateShaderType(shaderType)
+  setShaderErrors: (errorText, errors) ->
     utils.validateType(errors, Array, 'errors')
-    if @_transient.shaders[shaderType].errorText isnt errorText
-      @_transient.shaders[shaderType].errorText = errorText
-      @_transient.shaders[shaderType].errors = errors
-      @emit @SHADER_ERRORS_CHANGE, shaderType
+    if @_transient.shaderErrorText isnt errorText
+      @_transient.shaderErrorText = errorText
+      @_transient.shaderErrors = errors
+      @emit @SHADER_ERRORS_CHANGE
 
     return
 
@@ -196,11 +159,8 @@ class State extends EventEmitter
     @emit PROPERTY_CHANGE_EVENTS.inputs, @_transient.inputs
     @scheduleChangeEvent()
 
-    if @_analyser.getCommandErrors(constants.FRAGMENT_SHADER).length > 0
-      @emit @SHADER_ERRORS_CHANGE, constants.FRAGMENT_SHADER
-
-    if @_analyser.getCommandErrors(constants.VERTEX_SHADER).length > 0
-      @emit @SHADER_ERRORS_CHANGE, constants.VERTEX_SHADER
+    if @_analyser.getCommandErrors().length > 0
+      @emit @SHADER_ERRORS_CHANGE
 
     return
 
@@ -240,9 +200,7 @@ class State extends EventEmitter
   restore: (saved) ->
     @_resetState()
     for key, value of JSON.parse(saved)
-      if key is constants.FRAGMENT_SHADER or key is constants.VERTEX_SHADER
-        @setShaderSource key, value
-      else if WRITABLE_PROPERTIES[key]
+      if WRITABLE_PROPERTIES[key]
         @[key] = value
         @emit PROPERTY_CHANGE_EVENTS[key], value
       else if key is 'inputValues'
@@ -263,10 +221,6 @@ class State extends EventEmitter
         return
     return
 
-  # @private
-  _validateShaderType: (shaderType) ->
-    if @_persistent[shaderType] is undefined
-      throw new Error("Invalid shader type: #{shaderType}")
 
 
   PROPERTY_DEFAULTS = {}
@@ -283,7 +237,7 @@ class State extends EventEmitter
       throw new Error('No default value for property ' + propertyName)
 
     PROPERTY_DEFAULTS[propertyName] = defaultValue
-    PROPERTY_CHANGE_EVENTS[propertyName] = propertyName + 'Changed'
+    PROPERTY_CHANGE_EVENTS[propertyName] = propertyName + 'Change'
 
     unless readOnly
       WRITABLE_PROPERTIES[propertyName] = true
@@ -309,6 +263,7 @@ class State extends EventEmitter
     return
 
 
+  _defineProperty 'shaderSource', '_persistent'
   _defineProperty 'vertexCount', '_persistent'
   _defineProperty 'drawingMode', '_persistent'
   _defineProperty 'controlsExpanded', '_persistent'
@@ -317,6 +272,6 @@ class State extends EventEmitter
   _defineProperty 'canvasWidth', '_lifetime'
   _defineProperty 'canvasHeight', '_lifetime'
   _defineProperty 'inputs', '_transient', true
-  _defineProperty 'selectedTab', '_transient'
+  _defineProperty 'shaderErrors', '_transient', true
 
 module.exports = State

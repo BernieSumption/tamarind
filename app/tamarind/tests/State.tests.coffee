@@ -50,7 +50,7 @@ describe 'State', ->
     state.setShaderSource constants.FRAGMENT_SHADER, 'frag' # yes event
     state.setShaderSource constants.FRAGMENT_SHADER, 'frag' # no event
 
-    expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER]
+    expectCallHistory listener.SHADER_SOURCE_CHANGE, [constants.FRAGMENT_SHADER]
 
     return
 
@@ -84,7 +84,7 @@ describe 'State', ->
 
 
     expect(listener.inputs.calls.count()).toEqual 1
-    expectCallHistory listener.SHADER_CHANGE, [constants.FRAGMENT_SHADER, constants.VERTEX_SHADER]
+    expectCallHistory listener.SHADER_SOURCE_CHANGE, [constants.FRAGMENT_SHADER, constants.VERTEX_SHADER]
     expectCallHistory listener.INPUT_VALUE_CHANGE, [ 'foo' ]
     expectCallHistory listener.controlsExpanded, [false]
 
@@ -108,12 +108,9 @@ describe 'State', ->
     state = new State()
     saved = state.save()
     state.setShaderErrors constants.VERTEX_SHADER, '', [new ShaderCompileError('', 1)]
-    state.selectedTab = constants.VERTEX_SHADER
-    expect(state.selectedTab).toEqual(constants.VERTEX_SHADER)
 
     state.restore(saved)
 
-    expect(state.selectedTab).not.toEqual(constants.VERTEX_SHADER)
     expect(state.getShaderErrors constants.VERTEX_SHADER).toEqual([])
 
     return

@@ -26,14 +26,6 @@
   (function() {
     Tamarind.debugMode = true;
     var state = new Tamarind.State();
-    if (window.localStorage && window.localStorage['demoSave']) {
-//      try {
-        state.restore(window.localStorage['demoSave'])
-//      } catch (e) {
-//        alert('Error restoring save! ' + e);
-//        console.error(e);
-//      }
-    }
     state.on(state.CHANGE, function() {
       window.localStorage['demoSave'] = state.save();
     });
@@ -54,6 +46,15 @@
       console.log("RESTORING from " + file, JSON.parse(saves[file]));
       state.restore(saves[file]);
     };
+
+    if (window.localStorage && window.localStorage['demoSave']) {
+//      try {
+      state.restore(window.localStorage['demoSave'])
+//      } catch (e) {
+//        alert('Error restoring save! ' + e);
+//        console.error(e);
+//      }
+    }
   })()
 </script>
 <noscript>JavaScript is disabled, so this demo won't work.</noscript>
